@@ -1,0 +1,260 @@
+<title>오행 작명소</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Song+Myung&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 레이아웃: 왼쪽 '사주 명식' 고정 패널 + 오른쪽 이름 카드 목록 (모바일은 한 줄) — 쪽빛(인디고) 먹색 위에 오방색을 오행 표시에만 사용 */
+:root {
+  --bg: #eef1f4;          /* 옅은 청자빛 종이 */
+  --surface: #ffffff;
+  --sunk: #e3e8ee;
+  --ink: #18212e;         /* 먹색 */
+  --muted: #5b6676;
+  --line: #cfd6df;
+  --accent: #2d3f8f;      /* 쪽빛 */
+  --accent-ink: #ffffff;
+  --seal: #b23a2b;        /* 낙관 붉은색 */
+  --wood: #2f7a55; --fire: #c0392b; --earth: #a57412; --metal: #6c7480; --water: #1f4f8a;
+  --good: #2f7a55; --half: #a57412; --bad: #b23a2b;
+  --f-display: "Song Myung", "Nanum Myeongjo", "Batang", serif;
+  --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10151d; --surface: #182029; --sunk: #0c1117; --ink: #e6eaf0; --muted: #98a3b3; --line: #2b3542;
+  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563;
+  --wood: #6cc497; --fire: #ef7f70; --earth: #e2b75a; --metal: #b4bcc8; --water: #79aee8;
+  --good: #6cc497; --half: #e2b75a; --bad: #ef7f70; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #10151d; --surface: #182029; --sunk: #0c1117; --ink: #e6eaf0; --muted: #98a3b3; --line: #2b3542;
+  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563;
+  --wood: #6cc497; --fire: #ef7f70; --earth: #e2b75a; --metal: #b4bcc8; --water: #79aee8;
+  --good: #6cc497; --half: #e2b75a; --bad: #ef7f70; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px }
+.wrap { max-width: 1180px; margin: 0 auto }
+h1, h2, h3, h4 { text-wrap: balance; margin: 0 }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: .86em }
+.muted { color: var(--muted) }
+.err { color: var(--bad) }
+
+/* 머리 */
+.mast { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 28px 18px; border-bottom: 1px solid var(--line) }
+.brand { display: flex; align-items: center; gap: 14px }
+.seal { width: 52px; height: 52px; border: 2px solid var(--seal); color: var(--seal); display: grid; grid-template-columns: 1fr 1fr; place-items: center;
+  font-family: var(--f-display); font-size: 19px; line-height: 1; padding: 4px; border-radius: 3px; transform: rotate(-3deg) }
+.brand h1 { font-family: var(--f-display); font-weight: 400; font-size: clamp(26px, 4vw, 34px); letter-spacing: .02em }
+.brand p { margin: 2px 0 0; color: var(--muted); font-size: 13px }
+.tabs { display: flex; gap: 4px; background: var(--sunk); padding: 4px; border-radius: 8px }
+.tabs button { border: 0; background: none; color: var(--muted); font: 500 14px var(--f-body); padding: 8px 14px; border-radius: 6px; cursor: pointer }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .08) }
+
+/* 본문 그리드 */
+.grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 28px; padding-top: 24px; align-items: start }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr) } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 14px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px) }
+@media (max-width: 860px) { .panel { position: static } }
+.panel h2, .sec h2 { font: 600 12px var(--f-body); letter-spacing: .12em; color: var(--muted) }
+.field { display: grid; gap: 5px }
+.field label, .lbl { font-size: 13px; font-weight: 500 }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+input[type=text], input[type=date], input[type=time], select {
+  width: 100%; font: 15px var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-width: 0 }
+input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted) }
+.btn { font: 600 15px var(--f-body); border: 0; border-radius: 7px; padding: 11px 16px; cursor: pointer; background: var(--accent); color: var(--accent-ink) }
+.btn.ghost { background: none; color: var(--accent); border: 1px solid var(--accent) }
+
+/* 사주 명식 */
+#sajuOut { display: grid; gap: 12px; border-top: 1px dashed var(--line); padding-top: 14px }
+.pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px }
+.pillar { display: grid; justify-items: center; gap: 2px; background: var(--bg); border-radius: 6px; padding: 8px 2px }
+.pillar.me { outline: 1.5px solid var(--accent) }
+.pillar.ghost { opacity: .55 }
+.plabel { font-size: 11px; color: var(--muted) }
+.gz { font-family: var(--f-display); font-size: 28px; line-height: 1.15 }
+.pko { font-size: 12px; color: var(--muted) }
+.sajumeta { margin: 0; font-size: 12px; color: var(--muted) }
+.bars { display: grid; gap: 5px }
+.bar { display: grid; grid-template-columns: 22px 1fr 18px; align-items: center; gap: 8px; font-size: 13px }
+.bl { font-family: var(--f-display); font-size: 16px }
+.track { height: 8px; background: var(--sunk); border-radius: 4px; overflow: hidden }
+.fill { display: block; height: 100% }
+.bn { font-family: var(--f-mono); font-size: 12px; text-align: right }
+.yong { margin: 0; display: grid; gap: 6px; font-size: 13px }
+.yong div { display: grid; grid-template-columns: 74px 1fr; gap: 8px; align-items: center }
+.yong dt { color: var(--muted) } .yong dd { margin: 0 }
+
+/* 오행 색 */
+.el-wood { color: var(--wood) } .el-fire { color: var(--fire) } .el-earth { color: var(--earth) } .el-metal { color: var(--metal) } .el-water { color: var(--water) }
+.el-bg-wood { background: var(--wood) } .el-bg-fire { background: var(--fire) } .el-bg-earth { background: var(--earth) } .el-bg-metal { background: var(--metal) } .el-bg-water { background: var(--water) }
+.el { display: inline-flex; align-items: baseline; gap: 1px; font-family: var(--f-display); font-size: 15px; border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; line-height: 1.35 }
+.el small { font-family: var(--f-body); font-size: 10px }
+
+/* 결과 영역 */
+.sec { display: grid; gap: 14px; min-width: 0 }
+.sechead { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap }
+.sechead h3 { font-family: var(--f-display); font-weight: 400; font-size: 24px }
+.sechead p { margin: 4px 0 0; color: var(--muted); font-size: 13px }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 14px }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0 }
+.chead { display: flex; justify-content: space-between; align-items: center }
+.rank { font-family: var(--f-mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 50%; width: 26px; height: 26px; display: grid; place-items: center }
+.score { --p: 80; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; align-content: center;
+  background: radial-gradient(closest-side, var(--surface) 78%, transparent 80% 100%), conic-gradient(var(--seal) calc(var(--p) * 1%), var(--sunk) 0) }
+.score b { font-family: var(--f-mono); font-size: 17px; line-height: 1 } .score small { font-size: 10px; color: var(--muted) }
+.chars { display: flex; gap: 6px }
+.ch { flex: 1; display: grid; justify-items: center; gap: 1px; padding: 8px 2px; border-radius: 6px; background: var(--bg); min-width: 0; text-align: center }
+.ch.sur { background: none; border: 1px dashed var(--line) }
+.hz { font-family: var(--f-display); font-size: 40px; line-height: 1.1 }
+.hk { font-weight: 600; font-size: 15px }
+.hs { font-size: 12px; color: var(--muted); overflow-wrap: anywhere }
+.hm { font-size: 11px; color: var(--muted); display: flex; gap: 4px; align-items: center; font-family: var(--f-mono) }
+.meaning { margin: 0; font-size: 13px }
+.parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 12px }
+.parts li { display: grid; grid-template-columns: 62px 1fr 44px; gap: 8px; align-items: center }
+.pt { height: 5px; background: var(--sunk); border-radius: 3px; overflow: hidden } .pt i { display: block; height: 100%; background: var(--accent) }
+.parts .num { text-align: right; color: var(--muted) }
+.warn { margin: 0; font-size: 12px; color: var(--bad) }
+details { border-top: 1px solid var(--line); padding-top: 8px }
+summary { cursor: pointer; font-size: 13px; font-weight: 500; color: var(--accent) }
+details h4 { font-size: 12px; color: var(--muted); font-weight: 600; margin: 12px 0 6px; letter-spacing: .04em }
+.tw { overflow-x: auto }
+table { border-collapse: collapse; font-size: 12px; width: 100% }
+th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top }
+th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowrap; color: var(--muted) }
+.pill { font-size: 11px; padding: 1px 6px; border-radius: 10px; white-space: nowrap; border: 1px solid currentColor }
+.g2 { color: var(--good) } .g1 { color: var(--half) } .g0 { color: var(--bad) }
+.facts, .alts { margin: 0; padding-left: 16px; font-size: 12px; display: grid; gap: 6px }
+.copy { justify-self: start; font: 500 12px var(--f-body); background: none; border: 1px solid var(--line); color: var(--ink); border-radius: 5px; padding: 5px 10px; cursor: pointer }
+.copy.sel { user-select: all }
+.more { justify-self: center }
+
+/* 한자 찾기 */
+.findbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px }
+.findbar .field { flex: 1 1 160px }
+.candwrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px }
+.cand { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px }
+.cand h4 { font-size: 13px; margin-bottom: 8px }
+.cand ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 4px 10px; font-size: 13px; max-height: 210px; overflow: auto }
+.cand li { display: flex; gap: 5px; align-items: baseline } .cand li b { font-family: var(--f-display); font-size: 18px; font-weight: 400 }
+
+/* 기준 안내 */
+.guide { display: grid; gap: 18px; max-width: 900px; padding-top: 24px }
+.guide section { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px }
+.guide h3 { font-family: var(--f-display); font-weight: 400; font-size: 21px; margin-bottom: 10px }
+.guide p, .guide li { max-width: 68ch }
+.guide ul { padding-left: 18px; display: grid; gap: 4px }
+.weights { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 10px }
+.weights div { background: var(--bg); border-radius: 6px; padding: 10px 12px } .weights b { font-family: var(--f-mono); font-size: 20px; display: block }
+@media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease both } @keyframes rise { from { transform: translateY(6px); opacity: .4 } } }
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div class="brand">
+      <div class="seal" aria-hidden="true"><span>五</span><span>行</span><span>作</span><span>名</span></div>
+      <div><h1>오행 작명소</h1><p>사주 · 오행 · 음양 · 81수리 · 항렬자로 이름과 한자를 짓습니다</p></div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="rec" id="t-rec" aria-selected="true">사주 맞춤 추천</button>
+      <button role="tab" data-tab="find" id="t-find" aria-selected="false">이름 한자 찾기</button>
+      <button role="tab" data-tab="guide" id="t-guide" aria-selected="false">작명 기준</button>
+    </nav>
+  </header>
+
+  <div class="grid" id="mainGrid">
+    <form class="panel" id="recForm" autocomplete="off">
+      <h2>사주 명식 입력</h2>
+      <div class="row">
+        <div class="field"><label for="sur">성씨</label><select id="sur"></select></div>
+        <div class="field"><label for="gender">성별</label>
+          <select id="gender"><option value="M">남자</option><option value="F">여자</option><option value="U">무관</option></select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="cal">달력</label><select id="cal"><option value="solar">양력</option><option value="lunar">음력</option></select></div>
+        <div class="field"><label for="bdate">생년월일</label><input type="date" id="bdate" value="2025-03-15" min="1900-01-01" max="2050-12-31"></div>
+      </div>
+      <label class="check" id="leapWrap" hidden><input type="checkbox" id="leap"> 윤달</label>
+      <div class="row">
+        <div class="field"><label for="btime">태어난 시각</label><input type="time" id="btime" value="08:30"></div>
+        <div class="field" style="align-content:end"><label class="check"><input type="checkbox" id="tunknown"> 시간 모름</label></div>
+      </div>
+      <label class="check"><input type="checkbox" id="correct" checked> 서울 경도 보정(−30분) 적용</label>
+      <div class="row">
+        <div class="field"><label for="hangEum">항렬자 음</label><input type="text" id="hangEum" placeholder="예: 준, 영, 수" maxlength="1"></div>
+        <div class="field"><label for="hangPos">위치</label><select id="hangPos"><option value="0">이름 첫 글자</option><option value="1">이름 끝 글자</option></select></div>
+      </div>
+      <div class="field"><label for="hangSel">항렬자 한자</label><select id="hangSel"></select><small class="muted" id="hangHint"></small></div>
+      <label class="check"><input type="checkbox" id="allowOne"> 외자 이름 포함</label>
+      <button class="btn" type="submit">이름 추천 받기</button>
+      <div id="sajuOut"></div>
+    </form>
+
+    <main>
+      <section class="sec" role="tabpanel" id="p-rec">
+        <div class="sechead">
+          <div><h3>사주 맞춤 추천 이름</h3><p id="recMeta"></p></div>
+          <button class="btn ghost" type="button" id="moreBtn">다른 이름 5개 보기</button>
+        </div>
+        <div class="cards" id="recOut"></div>
+      </section>
+
+      <section class="sec" role="tabpanel" id="p-find" hidden>
+        <form class="findbar" id="findForm" autocomplete="off">
+          <div class="field"><label for="wantName">원하는 이름 (성 제외, 한글)</label><input type="text" id="wantName" value="서윤" maxlength="2"></div>
+          <label class="check"><input type="checkbox" id="useSaju" checked> 왼쪽 사주 반영</label>
+          <button class="btn" type="submit">한자 추천</button>
+        </form>
+        <div><h3 class="sechead" style="font-family:var(--f-display);font-weight:400;font-size:24px">추천 한자 조합</h3><p class="muted" id="findMeta" style="margin:4px 0 0;font-size:13px"></p></div>
+        <div class="cards" id="findOut"></div>
+        <button class="btn ghost more" type="button" id="findMore" hidden>조합 더 보기</button>
+        <div class="candwrap" id="candOut"></div>
+      </section>
+
+      <section role="tabpanel" id="p-guide" hidden>
+        <div class="guide">
+          <section>
+            <h3>점수는 이렇게 매깁니다 (100점)</h3>
+            <div class="weights">
+              <div><b>40</b>원형이정 4격 81수리 — 원·형·이·정격 각 10점 (길 10, 반길 5, 흉 0)</div>
+              <div><b>25</b>자원오행 — 이름 한자의 오행이 사주에 부족한 오행(용신)을 채우는지 + 성→이름 상생 흐름</div>
+              <div><b>15</b>발음오행 — 초성 오행이 성→이름 순으로 상생하는지</div>
+              <div><b>10</b>음양 — 획수 홀(양)·짝(음)이 섞여 조화로운지</div>
+              <div><b>10</b>삼원오행 — 천격·인격·지격 수리오행의 상생</div>
+            </div>
+          </section>
+          <section>
+            <h3>계산 기준</h3>
+            <ul>
+              <li><b>사주팔자</b>: 연주는 입춘, 월주는 12절기(태양 황경)로 나눕니다. 일주는 율리우스 적일로 계산하며, 23시 이후 출생은 다음 날 자시로 봅니다. 시간 모름이면 시주 없이 6글자로 봅니다.</li>
+              <li><b>용신</b>: 일간과 같은 오행·생해 주는 오행의 힘으로 신강·신약을 나눈 뒤(억부법), 신약이면 인성·비겁, 신강이면 식상·재성·관성 중 약한 오행을 보완 오행으로 정합니다. 사주에 아예 없는 오행도 보완 대상에 넣습니다.</li>
+              <li><b>획수</b>: 강희자전 원획법입니다. 氵=水 4획, 扌=手 4획, 忄=心 4획, 艹=艸 6획, 王(구슬옥)=玉 5획, 礻=示 5획, 月(육달월)=肉 6획, 좌阝=阜 8획, 우阝=邑 7획, 辶=辵 7획으로 셉니다.</li>
+              <li><b>발음오행</b>: 훈민정음 기준 ㄱㅋ 木 · ㄴㄷㄹㅌ 火 · ㅇㅎ 土 · ㅅㅈㅊ 金 · ㅁㅂㅍ 水 (현재 가장 널리 쓰는 분류).</li>
+              <li><b>원형이정</b>: 원격=이름 두 자, 형격=성+이름 첫 자, 이격=성+이름 끝 자, 정격=전체. 81을 넘으면 80을 뺍니다.</li>
+              <li><b>두음법칙</b>: 律(률)은 ‘율’, 寧(녕)은 ‘영’처럼 이름에서 쓰는 소리로도 찾습니다.</li>
+            </ul>
+          </section>
+          <section>
+            <h3>꼭 확인하세요</h3>
+            <ul>
+              <li>수록 한자는 이름에 자주 쓰는 552자입니다. 인명용 한자 목록은 개정되므로 출생신고 전에는 <a href="https://efamily.scourt.go.kr" target="_blank" rel="noopener">대법원 전자가족관계등록시스템</a>에서 인명용 한자인지 다시 확인하세요.</li>
+              <li>자원오행은 부수와 글자 뜻으로 정했습니다. 81수리 일부 수(27·28·51·71·77·78 등)와 자원오행은 유파에 따라 판단이 다릅니다.</li>
+              <li>여성 이름에서 21·23·33·39수를 ‘과강’으로 피하는 전통 유파도 있으나 이 앱은 감점하지 않습니다.</li>
+              <li>1908~1961년 일부 기간의 표준시 차이와 서머타임은 반영하지 않습니다. 해당 기간 출생이면 시간을 직접 보정해 입력하세요.</li>
+              <li>결과는 성명학 이론에 따른 참고용입니다. 최종 결정은 가족의 뜻과 부르기 쉬운지를 함께 보세요.</li>
+            </ul>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="korean-lunar-calendar.min.js"></script>
+<script src="hanja-data.js"></script>
+<script src="engine.js"></script>
+<script src="app.js"></script>
