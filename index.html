@@ -69,7 +69,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-v
 .btn.ghost { background: none; color: var(--accent); border: 1px solid var(--accent) }
 
 /* 사주 명식 */
-#sajuOut { display: grid; gap: 12px; border-top: 1px dashed var(--line); padding-top: 14px }
+.sajuout { display: grid; gap: 12px; border-top: 1px dashed var(--line); padding-top: 14px }
 .pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px }
 .pillar { display: grid; justify-items: center; gap: 2px; background: var(--bg); border-radius: 6px; padding: 8px 2px }
 .pillar.me { outline: 1.5px solid var(--accent) }
@@ -188,6 +188,8 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
   .panel.collapsed #sajuOut { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-top: 10px }
   .panel.collapsed .sajumeta, .panel.collapsed .bars, .panel.collapsed .pko, .panel.collapsed .yong div:not(.need) { display: none }
   .panel.collapsed .gz { font-size: 20px }
+  #f-sajuOut .sajumeta, #f-sajuOut .bars, #f-sajuOut .pko, #f-sajuOut .yong div:not(.need) { display: none }
+  #f-sajuOut .gz { font-size: 20px }
   .panel.collapsed .pillar { padding: 4px 2px }
   .panel.collapsed .plabel { font-size: 10px }
   input[type=text], input[type=date], input[type=time], select { font-size: 16px; min-height: 46px }
@@ -196,7 +198,7 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
   .btn { min-height: 50px; font-size: 16px; border-radius: 10px }
 
   /* 사주 명식: 한눈에 보이게 압축 */
-  #sajuOut { gap: 10px; padding-top: 12px }
+  .sajuout { gap: 10px; padding-top: 12px }
   .pillars { gap: 5px }
   .pillar { padding: 6px 2px }
   .gz { font-size: 24px }
@@ -233,6 +235,10 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
   .weights { grid-template-columns: minmax(0, 1fr) }
 }
 
+.guidebox { margin-top: 32px; border-top: 1px solid var(--line); padding-top: 14px }
+.guidebox > summary { font-size: 15px; min-height: 44px; display: flex; align-items: center }
+.guidebox .guide { padding-top: 12px }
+
 @media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease both } @keyframes rise { from { transform: translateY(6px); opacity: .4 } } }
 </style>
 
@@ -243,20 +249,20 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
       <div><h1>오행 작명소</h1><p>사주 · 오행 · 음양 · 81수리 · 항렬자로 이름과 한자를 짓습니다</p></div>
     </div>
     <nav class="tabs" role="tablist">
-      <button role="tab" data-tab="rec" id="t-rec" aria-selected="true"><span class="ti" aria-hidden="true">名</span><span class="lf">사주 맞춤 추천</span><span class="ls">이름 추천</span></button>
-      <button role="tab" data-tab="find" id="t-find" aria-selected="false"><span class="ti" aria-hidden="true">字</span><span class="lf">이름 한자 찾기</span><span class="ls">한자 찾기</span></button>
-      <button role="tab" data-tab="guide" id="t-guide" aria-selected="false"><span class="ti" aria-hidden="true">典</span><span class="lf">작명 기준</span><span class="ls">작명 기준</span></button>
+      <button role="tab" data-tab="rec" id="t-rec" aria-selected="true" aria-controls="p-rec"><span class="ti" aria-hidden="true">名</span><span class="lf">① 이름 추천</span><span class="ls">이름 추천</span></button>
+      <button role="tab" data-tab="find" id="t-find" aria-selected="false" aria-controls="p-find"><span class="ti" aria-hidden="true">字</span><span class="lf">② 이름으로 한자 찾기</span><span class="ls">한자 찾기</span></button>
     </nav>
   </header>
 
-  <div class="grid" id="mainGrid">
+  <!-- 탭 ①: 생년월일시로 이름 추천 -->
+  <div class="grid" role="tabpanel" id="p-rec" aria-labelledby="t-rec">
     <form class="panel" id="recForm" autocomplete="off">
-      <h2>사주 명식 입력</h2>
+      <h2>① 이름 추천 · 아기 정보</h2>
       <button type="button" class="fsum" id="fsum" aria-expanded="false" aria-controls="fbody">
         <span class="fsum-t" id="fsumText"></span><span class="fedit" id="feditLbl">정보 수정</span></button>
       <div class="fbody" id="fbody">
       <div class="row">
-        <div class="field"><label for="sur">성씨</label><select id="sur"></select></div>
+        <div class="field"><label for="sur">성씨</label><select id="sur" class="sursel"></select></div>
         <div class="field"><label for="gender">성별</label>
           <select id="gender"><option value="M">남자</option><option value="F">여자</option><option value="U">무관</option></select></div>
       </div>
@@ -278,32 +284,52 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
       <label class="check"><input type="checkbox" id="allowOne"> 외자 이름 포함</label>
       <button class="btn" type="submit">이름 추천 받기</button>
       </div>
-      <div id="sajuOut"></div>
+      <div id="sajuOut" class="sajuout"></div>
     </form>
+    <section class="sec">
+      <div class="sechead">
+        <div><h3>사주 맞춤 추천 이름</h3><p id="recMeta"></p></div>
+        <button class="btn ghost" type="button" id="moreBtn"><span aria-hidden="true">↻</span> 다른 이름 5개 보기</button>
+      </div>
+      <div class="cards" id="recOut"></div>
+    </section>
+  </div>
 
-    <main>
-      <section class="sec" role="tabpanel" id="p-rec">
-        <div class="sechead">
-          <div><h3>사주 맞춤 추천 이름</h3><p id="recMeta"></p></div>
-          <button class="btn ghost" type="button" id="moreBtn"><span aria-hidden="true">↻</span> 다른 이름 5개 보기</button>
-        </div>
-        <div class="cards" id="recOut"></div>
-      </section>
+  <!-- 탭 ②: 원하는 이름 → 한자 추천 -->
+  <div class="grid" role="tabpanel" id="p-find" aria-labelledby="t-find" hidden>
+    <form class="panel" id="findForm" autocomplete="off">
+      <h2>② 원하는 이름 입력</h2>
+      <div class="row">
+        <div class="field"><label for="f-sur">성씨</label><select id="f-sur" class="sursel"></select></div>
+        <div class="field"><label for="wantName">이름 (성 제외)</label><input type="text" id="wantName" value="서윤" maxlength="2" placeholder="예: 서윤"></div>
+      </div>
+      <label class="check"><input type="checkbox" id="useSaju"> 생년월일시(사주)도 반영하기</label>
+      <div class="fbody" id="f-birth" hidden>
+      <div class="row">
+        <div class="field"><label for="f-cal">달력</label><select id="f-cal"><option value="solar">양력</option><option value="lunar">음력</option></select></div>
+        <div class="field"><label for="f-bdate">생년월일</label><input type="date" id="f-bdate" value="2025-03-15" min="1900-01-01" max="2050-12-31"></div>
+      </div>
+      <label class="check" id="f-leapWrap" hidden><input type="checkbox" id="f-leap"> 윤달</label>
+      <div class="row">
+        <div class="field"><label for="f-btime">태어난 시각</label><input type="time" id="f-btime" value="08:30"></div>
+        <div class="field" style="align-content:end"><label class="check"><input type="checkbox" id="f-tunknown"> 시간 모름</label></div>
+      </div>
+      <label class="check"><input type="checkbox" id="f-correct" checked> 서울 경도 보정(−30분) 적용</label>
+      </div>
+      <button class="btn" type="submit">한자 추천 받기</button>
+      <div id="f-sajuOut" class="sajuout" hidden></div>
+    </form>
+    <section class="sec">
+      <div class="sechead"><div><h3>추천 한자 조합</h3><p id="findMeta"></p></div></div>
+      <div class="cards" id="findOut"></div>
+      <button class="btn ghost more" type="button" id="findMore" hidden>조합 6개 더 보기</button>
+      <div class="candwrap" id="candOut"></div>
+    </section>
+  </div>
 
-      <section class="sec" role="tabpanel" id="p-find" hidden>
-        <form class="findbar" id="findForm" autocomplete="off">
-          <div class="field"><label for="wantName">원하는 이름 (성 제외, 한글)</label><input type="text" id="wantName" value="서윤" maxlength="2"></div>
-          <label class="check"><input type="checkbox" id="useSaju" checked> 입력한 사주 반영</label>
-          <button class="btn" type="submit">한자 추천</button>
-        </form>
-        <div><h3 class="sechead" style="font-family:var(--f-display);font-weight:400;font-size:24px">추천 한자 조합</h3><p class="muted" id="findMeta" style="margin:4px 0 0;font-size:13px"></p></div>
-        <div class="cards" id="findOut"></div>
-        <button class="btn ghost more" type="button" id="findMore" hidden>조합 더 보기</button>
-        <div class="candwrap" id="candOut"></div>
-      </section>
-
-      <section role="tabpanel" id="p-guide" hidden>
-        <div class="guide">
+  <details class="guidebox">
+    <summary>작명 기준과 점수 계산법 보기</summary>
+    <div class="guide">
           <section>
             <h3>점수는 이렇게 매깁니다 (100점)</h3>
             <div class="weights">
@@ -336,9 +362,7 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
             </ul>
           </section>
         </div>
-      </section>
-    </main>
-  </div>
+  </details>
 </div>
 
 <script src="korean-lunar-calendar.min.js"></script>

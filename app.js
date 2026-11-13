@@ -19,33 +19,32 @@
 
   // ---------- 성씨 선택 ----------
   const surSel = $('#sur');
-  const surKos = [...new Set(SURNAMES.map(s => s[0]))];
-  surSel.innerHTML = surKos.map(k => {
-    const opts = SURNAMES.filter(s => s[0] === k);
-    return opts.map(s => `<option value="${s[0]}|${s[1]}">${s[0]} (${s[1]})</option>`).join('');
-  }).join('');
-  function surname() {
-    const [ko, hanja] = surSel.value.split('|');
+  const surOpts = SURNAMES.map(s => `<option value="${s[0]}|${s[1]}">${s[0]} (${s[1]})</option>`).join('');
+  document.querySelectorAll('.sursel').forEach(el => (el.innerHTML = surOpts));
+  // p: 입력칸 아이디 앞머리 ('' = ① 이름 추천 탭, 'f-' = ② 한자 찾기 탭)
+  function surname(p = '') {
+    const [ko, hanja] = $('#' + p + 'sur').value.split('|');
     const row = SURNAMES.find(s => s[0] === ko && s[1] === hanja);
     return { ko, hanja, strokes: row[2], els: row[3] };
   }
 
   // ---------- 사주 입력 ----------
-  function readBirth() {
-    const v = $('#bdate').value; if (!v) return null;
+  function readBirth(p = '') {
+    const f = id => $('#' + p + id);
+    const v = f('bdate').value; if (!v) return null;
     let [y, m, d] = v.split('-').map(Number);
-    if ($('#cal').value === 'lunar') {
+    if (f('cal').value === 'lunar') {
       const c = new KoreanLunarCalendar();
-      if (!c.setLunarDate(y, m, d, $('#leap').checked)) return { error: '음력 날짜를 확인해 주세요 (1000~2050년, 해당 월의 일수).' };
+      if (!c.setLunarDate(y, m, d, f('leap').checked)) return { error: '음력 날짜를 확인해 주세요 (1000~2050년, 해당 월의 일수).' };
       const s = c.getSolarCalendar(); y = s.year; m = s.month; d = s.day;
     }
-    const tUnknown = $('#tunknown').checked, t = $('#btime').value;
+    const tUnknown = f('tunknown').checked, t = f('btime').value;
     const [hh, mi] = (!tUnknown && t) ? t.split(':').map(Number) : [null, null];
-    return N.saju({ y, m, d, hour: hh, minute: mi, correct: $('#correct').checked });
+    return N.saju({ y, m, d, hour: hh, minute: mi, correct: f('correct').checked });
   }
 
-  function renderSaju(sj) {
-    const box = $('#sajuOut');
+  function renderSaju(sj, p = '') {
+    const box = $('#' + p + 'sajuOut');
     if (!sj) { box.innerHTML = '<p class="muted">생년월일을 입력하면 사주 오행 분석이 표시됩니다.</p>'; return; }
     if (sj.error) { box.innerHTML = `<p class="err">${esc(sj.error)}</p>`; return; }
     const ps = [...sj.pillars].reverse(); // 시·일·월·연 순(전통 표기)
@@ -71,9 +70,8 @@
   }
 
   // ---------- 이름 카드 ----------
-  function nameCard(item, rank) {
+  function nameCard(item, rank, sur) {
     const { given, ev } = item;
-    const sur = surname();
     const fullKo = sur.ko + given.map(g => g.ko).join('');
     const fullH = sur.hanja + given.map(g => g.ch).join('');
     const chars = [
@@ -177,7 +175,7 @@
     if (!pool.length) { $('#recOut').innerHTML = '<p class="muted">조건에 맞는 이름이 없습니다. 항렬자나 성별 조건을 바꿔 보세요.</p>'; return; }
     const { pick, reset } = pickFive(); round = reset ? 1 : round + 1;
     $('#recMeta').textContent = `${pool.length}개 후보 중 ${round}번째 추천 · 지금까지 ${shown.size}개 제안`;
-    $('#recOut').innerHTML = (reset ? '<p class="muted">상위 후보를 모두 보여드려 처음부터 다시 추천합니다.</p>' : '') + pick.map((x, k) => nameCard(x, k + 1)).join('');
+    $('#recOut').innerHTML = (reset ? '<p class="muted">상위 후보를 모두 보여드려 처음부터 다시 추천합니다.</p>' : '') + pick.map((x, k) => nameCard(x, k + 1, surname())).join('');
   }
 
   // ---------- 기능 2: 한자 찾기 ----------
@@ -186,22 +184,24 @@
     const raw = $('#wantName').value.replace(/\s/g, '');
     const out = $('#findOut');
     if (!/^[가-힣]{1,2}$/.test(raw)) { out.innerHTML = '<p class="err">이름(성 제외)을 한글 1~2자로 입력해 주세요. 예: 서윤</p>'; $('#findMore').hidden = true; return; }
-    const sj = $('#useSaju').checked ? readBirth() : null;
-    renderSaju(readBirth());
+    const use = $('#useSaju').checked;
+    const sj = use ? readBirth('f-') : null;
+    $('#f-sajuOut').hidden = !use;
+    if (use) renderSaju(sj, 'f-');
     const syl = raw.split('');
     const missing = syl.filter(s => !N.candidates(s).length);
     const cand = syl.map(s => `<div class="cand"><h4>‘${s}’ 후보 한자 <span class="muted">${N.candidates(s).length}자</span></h4>
         <ul>${N.candidates(s).map(h => `<li>${elTag(h.el)}<b>${h.ch}</b> ${esc(h.hun)} ${h.eum} <span class="num">${h.strokes}획</span></li>`).join('') || '<li class="muted">데이터에 없는 음입니다</li>'}</ul></div>`).join('');
     $('#candOut').innerHTML = cand;
     if (missing.length) { out.innerHTML = `<p class="err">‘${missing.join(', ')}’ 음의 이름용 한자가 데이터에 없어 한자 조합을 만들 수 없습니다.</p>`; $('#findMore').hidden = true; return; }
-    findList = N.rankHanja(surname(), syl, sj && !sj.error ? sj : null, null);
+    findList = N.rankHanja(surname('f-'), syl, sj && !sj.error ? sj : null, null);
     findShown = 0; out.innerHTML = '';
-    $('#findMeta').textContent = `${surname().ko}${raw} · 가능한 한자 조합 ${findList.length}개를 점수순으로 정렬했습니다${sj && !sj.error ? ' (사주 반영)' : ' (사주 미반영)'}.`;
+    $('#findMeta').textContent = `${surname('f-').ko}${raw} · 가능한 한자 조합 ${findList.length}개를 점수순으로 정렬했습니다${sj && !sj.error ? ' (사주 반영)' : ' (사주 미반영)'}.`;
     moreFind();
   }
   function moreFind() {
     const next = findList.slice(findShown, findShown + 6);
-    $('#findOut').insertAdjacentHTML('beforeend', next.map((x, k) => nameCard(x, findShown + k + 1)).join(''));
+    $('#findOut').insertAdjacentHTML('beforeend', next.map((x, k) => nameCard(x, findShown + k + 1, surname('f-'))).join(''));
     findShown += next.length;
     $('#findMore').hidden = findShown >= findList.length;
   }
@@ -232,27 +232,34 @@
     document.querySelectorAll('[role=tabpanel]').forEach(p => (p.hidden = p.id !== 'p-' + t));
     try { localStorage.setItem('naming-tab', t); } catch (e) {}
   }
-  document.querySelectorAll('[role=tab]').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+  document.querySelectorAll('[role=tab]').forEach(b => b.addEventListener('click', () => { setTab(b.dataset.tab); window.scrollTo(0, 0); }));
 
   // ---------- 이벤트 ----------
-  $('#cal').addEventListener('change', () => ($('#leapWrap').hidden = $('#cal').value !== 'lunar'));
-  $('#tunknown').addEventListener('change', () => ($('#btime').disabled = $('#tunknown').checked));
+  ['', 'f-'].forEach(p => {
+    $('#' + p + 'cal').addEventListener('change', () => ($('#' + p + 'leapWrap').hidden = $('#' + p + 'cal').value !== 'lunar'));
+    $('#' + p + 'tunknown').addEventListener('change', () => ($('#' + p + 'btime').disabled = $('#' + p + 'tunknown').checked));
+  });
+  $('#useSaju').addEventListener('change', () => { $('#f-birth').hidden = !$('#useSaju').checked; showFind(); });
   $('#hangEum').addEventListener('input', fillHangSel);
   $('#recForm').addEventListener('submit', e => {
     e.preventDefault(); showRecs(true);
-    if (!$('#p-find').hidden) showFind();
-    if (mobile.matches) { setCollapsed(true); $('main').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    if (mobile.matches) { setCollapsed(true); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
-  $('#moreBtn').addEventListener('click', () => { showRecs(false); (mobile.matches ? $('#p-rec') : $('#recOut')).scrollIntoView({ behavior: 'smooth', block: 'start' }); });
-  $('#findForm').addEventListener('submit', e => { e.preventDefault(); showFind(); });
+  $('#moreBtn').addEventListener('click', () => { showRecs(false); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  $('#findForm').addEventListener('submit', e => {
+    e.preventDefault(); showFind();
+    if (mobile.matches) $('#findMeta').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   $('#findMore').addEventListener('click', moreFind);
-  ['#sur', '#bdate', '#btime', '#cal', '#leap', '#tunknown', '#correct'].forEach(s => $(s).addEventListener('change', () => renderSaju(readBirth())));
+  ['', 'f-'].forEach(p => ['sur', 'bdate', 'btime', 'cal', 'leap', 'tunknown', 'correct'].forEach(id =>
+    $('#' + p + id).addEventListener('change', () => { if (!p || $('#useSaju').checked) renderSaju(readBirth(p), p); })));
 
   // ---------- 첫 화면: 예시 값으로 바로 결과 표시 ----------
   fillHangSel();
   updateSummary();
   if (mobile.matches) setCollapsed(true);
   let tab = 'rec'; try { tab = localStorage.getItem('naming-tab') || 'rec'; } catch (e) {}
+  if (tab !== 'rec' && tab !== 'find') tab = 'rec';
   setTab(tab);
   showRecs(true);
   showFind();
