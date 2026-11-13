@@ -65,7 +65,7 @@
       <div class="bars">${bars}</div>
       <dl class="yong">
         <div><dt>일간</dt><dd>${sj.dayMaster.stem}(${sj.dayMaster.ko}) ${elTag(sj.dayMaster.el)} · ${sj.strong ? '신강' : '신약'}</dd></div>
-        <div><dt>보완할 오행</dt><dd>${sj.need.map(elTag).join(' ')}</dd></div>
+        <div class="need"><dt>보완할 오행</dt><dd>${sj.need.map(elTag).join(' ')}</dd></div>
         <div><dt>피할 오행</dt><dd>${sj.avoid.length ? sj.avoid.map(elTag).join(' ') : '<span class="muted">없음</span>'}</dd></div>
       </dl>`;
   }
@@ -206,6 +206,26 @@
     $('#findMore').hidden = findShown >= findList.length;
   }
 
+  // ---------- 모바일: 명식 입력 접기/펼치기 ----------
+  const mobile = window.matchMedia('(max-width: 760px)');
+  const panel = $('#recForm');
+  function updateSummary() {
+    const g = { M: '남', F: '여', U: '성별 무관' }[$('#gender').value];
+    const d = $('#bdate').value.replace(/-/g, '.');
+    const t = $('#tunknown').checked ? '시간 모름' : ($('#btime').value || '시간 모름');
+    const cal = $('#cal').value === 'lunar' ? ('음력' + ($('#leap').checked ? '(윤)' : '')) : '양력';
+    const hs = $('#hangSel').value;
+    $('#fsumText').textContent = `${surSel.value.replace('|', '(')}) · ${g} · ${cal} ${d} ${t}${hs ? ' · 항렬 ' + hs : ''}`;
+  }
+  function setCollapsed(c) {
+    panel.classList.toggle('collapsed', c);
+    $('#fsum').setAttribute('aria-expanded', String(!c));
+    $('#feditLbl').textContent = c ? '정보 수정' : '접기';
+  }
+  $('#fsum').addEventListener('click', () => setCollapsed(!panel.classList.contains('collapsed')));
+  panel.addEventListener('change', updateSummary);
+  panel.addEventListener('input', updateSummary);
+
   // ---------- 탭 ----------
   function setTab(t) {
     document.querySelectorAll('[role=tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
@@ -218,14 +238,20 @@
   $('#cal').addEventListener('change', () => ($('#leapWrap').hidden = $('#cal').value !== 'lunar'));
   $('#tunknown').addEventListener('change', () => ($('#btime').disabled = $('#tunknown').checked));
   $('#hangEum').addEventListener('input', fillHangSel);
-  $('#recForm').addEventListener('submit', e => { e.preventDefault(); showRecs(true); });
-  $('#moreBtn').addEventListener('click', () => { showRecs(false); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  $('#recForm').addEventListener('submit', e => {
+    e.preventDefault(); showRecs(true);
+    if (!$('#p-find').hidden) showFind();
+    if (mobile.matches) { setCollapsed(true); $('main').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
+  $('#moreBtn').addEventListener('click', () => { showRecs(false); (mobile.matches ? $('#p-rec') : $('#recOut')).scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   $('#findForm').addEventListener('submit', e => { e.preventDefault(); showFind(); });
   $('#findMore').addEventListener('click', moreFind);
   ['#sur', '#bdate', '#btime', '#cal', '#leap', '#tunknown', '#correct'].forEach(s => $(s).addEventListener('change', () => renderSaju(readBirth())));
 
   // ---------- 첫 화면: 예시 값으로 바로 결과 표시 ----------
   fillHangSel();
+  updateSummary();
+  if (mobile.matches) setCollapsed(true);
   let tab = 'rec'; try { tab = localStorage.getItem('naming-tab') || 'rec'; } catch (e) {}
   setTab(tab);
   showRecs(true);

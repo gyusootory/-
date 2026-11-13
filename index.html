@@ -150,6 +150,89 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 .guide ul { padding-left: 18px; display: grid; gap: 4px }
 .weights { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 10px }
 .weights div { background: var(--bg); border-radius: 6px; padding: 10px 12px } .weights b { font-family: var(--f-mono); font-size: 20px; display: block }
+[hidden] { display: none !important }
+.fsum, .ls, .ti { display: none }
+.fbody { display: grid; gap: 14px }
+#moreBtn span { font-size: 1.1em }
+
+/* ───────── 모바일 (폰 화면) ─────────
+   상단: 접히는 '명식 요약 바' · 가운데: 이름 카드 · 하단: 엄지로 누르는 탭바 + 떠 있는 '다른 이름' 버튼 */
+@media (max-width: 760px) {
+  body { font-size: 15px; padding-block: 0 calc(84px + env(safe-area-inset-bottom, 0px)) }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg) }
+  .mast { padding-block: 14px 12px; border: 0 }
+  .seal { width: 38px; height: 38px; font-size: 14px; padding: 3px }
+  .brand { gap: 10px }
+  .brand h1 { font-size: 22px }
+  .brand p { display: none }
+  .grid { padding-top: 4px; gap: 18px }
+
+  /* 하단 탭바 */
+  .tabs { position: fixed; z-index: 20; left: 0; right: 0; bottom: 0; border-radius: 0; gap: 0; padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+    background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -4px 16px rgb(0 0 0 / .06) }
+  .tabs button { flex: 1; display: grid; justify-items: center; gap: 1px; padding: 6px 4px; min-height: 52px; font-size: 12px; border-radius: 8px }
+  .tabs button[aria-selected="true"] { background: none; box-shadow: none; color: var(--accent) }
+  .tabs .ti { display: block; font-family: var(--f-display); font-size: 22px; line-height: 1.1 }
+  .tabs button[aria-selected="true"] .ti { color: var(--seal) }
+  .lf { display: none } .ls { display: inline }
+
+  /* 명식 패널: 요약 바로 접힘 */
+  .panel { padding: 14px; gap: 12px; border-radius: 14px }
+  .panel > h2 { display: none }
+  .fsum { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; color: var(--ink); font: 500 14px var(--f-body); min-height: 48px }
+  .fsum-t { min-width: 0; overflow-wrap: anywhere }
+  .fedit { flex: none; font-size: 13px; color: var(--accent); font-weight: 600 }
+  .panel.collapsed .fbody { display: none }
+  /* 접힌 상태: 사주는 네 기둥 + 보완할 오행만 간단히 */
+  .panel.collapsed #sajuOut { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-top: 10px }
+  .panel.collapsed .sajumeta, .panel.collapsed .bars, .panel.collapsed .pko, .panel.collapsed .yong div:not(.need) { display: none }
+  .panel.collapsed .gz { font-size: 20px }
+  .panel.collapsed .pillar { padding: 4px 2px }
+  .panel.collapsed .plabel { font-size: 10px }
+  input[type=text], input[type=date], input[type=time], select { font-size: 16px; min-height: 46px }
+  .check { font-size: 14px; min-height: 32px }
+  .check input { width: 20px; height: 20px }
+  .btn { min-height: 50px; font-size: 16px; border-radius: 10px }
+
+  /* 사주 명식: 한눈에 보이게 압축 */
+  #sajuOut { gap: 10px; padding-top: 12px }
+  .pillars { gap: 5px }
+  .pillar { padding: 6px 2px }
+  .gz { font-size: 24px }
+  .bars { grid-template-columns: repeat(5, 1fr); gap: 6px }
+  .bar { grid-template-columns: 1fr; justify-items: center; gap: 3px; background: var(--bg); border-radius: 6px; padding: 6px 4px }
+  .bar .track { width: 100%; height: 5px }
+  .bl { font-size: 17px } .bn { text-align: center }
+  .yong div { grid-template-columns: 82px 1fr }
+
+  /* 결과 */
+  .sec { gap: 12px }
+  .sechead h3 { font-size: 21px }
+  .cards { grid-template-columns: minmax(0, 1fr); gap: 12px }
+  .card { padding: 14px; gap: 10px; border-radius: 14px }
+  .hz { font-size: 36px }
+  .score { width: 54px; height: 54px }
+  .parts { grid-template-columns: repeat(5, 1fr); gap: 6px }
+  .parts li { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 3px; font-size: 11px }
+  .parts .pt { width: 100% }
+  .parts .num { text-align: center; font-size: 10px }
+  summary { min-height: 40px; display: flex; align-items: center; font-size: 14px }
+  .copy { min-height: 40px; font-size: 13px }
+
+  /* 떠 있는 '다른 이름 5개' 버튼 */
+  #moreBtn { position: fixed; z-index: 19; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 999px; padding: 0 20px; min-height: 50px;
+    box-shadow: 0 6px 18px rgb(20 30 70 / .28) }
+
+  .findbar { border-radius: 14px; gap: 10px }
+  .findbar .field, .findbar .btn { flex: 1 1 100% }
+  .cand ul { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .guide { padding-top: 4px; gap: 12px }
+  .guide section { padding: 16px; border-radius: 14px }
+  .weights { grid-template-columns: minmax(0, 1fr) }
+}
+
 @media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease both } @keyframes rise { from { transform: translateY(6px); opacity: .4 } } }
 </style>
 
@@ -160,15 +243,18 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
       <div><h1>오행 작명소</h1><p>사주 · 오행 · 음양 · 81수리 · 항렬자로 이름과 한자를 짓습니다</p></div>
     </div>
     <nav class="tabs" role="tablist">
-      <button role="tab" data-tab="rec" id="t-rec" aria-selected="true">사주 맞춤 추천</button>
-      <button role="tab" data-tab="find" id="t-find" aria-selected="false">이름 한자 찾기</button>
-      <button role="tab" data-tab="guide" id="t-guide" aria-selected="false">작명 기준</button>
+      <button role="tab" data-tab="rec" id="t-rec" aria-selected="true"><span class="ti" aria-hidden="true">名</span><span class="lf">사주 맞춤 추천</span><span class="ls">이름 추천</span></button>
+      <button role="tab" data-tab="find" id="t-find" aria-selected="false"><span class="ti" aria-hidden="true">字</span><span class="lf">이름 한자 찾기</span><span class="ls">한자 찾기</span></button>
+      <button role="tab" data-tab="guide" id="t-guide" aria-selected="false"><span class="ti" aria-hidden="true">典</span><span class="lf">작명 기준</span><span class="ls">작명 기준</span></button>
     </nav>
   </header>
 
   <div class="grid" id="mainGrid">
     <form class="panel" id="recForm" autocomplete="off">
       <h2>사주 명식 입력</h2>
+      <button type="button" class="fsum" id="fsum" aria-expanded="false" aria-controls="fbody">
+        <span class="fsum-t" id="fsumText"></span><span class="fedit" id="feditLbl">정보 수정</span></button>
+      <div class="fbody" id="fbody">
       <div class="row">
         <div class="field"><label for="sur">성씨</label><select id="sur"></select></div>
         <div class="field"><label for="gender">성별</label>
@@ -191,6 +277,7 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
       <div class="field"><label for="hangSel">항렬자 한자</label><select id="hangSel"></select><small class="muted" id="hangHint"></small></div>
       <label class="check"><input type="checkbox" id="allowOne"> 외자 이름 포함</label>
       <button class="btn" type="submit">이름 추천 받기</button>
+      </div>
       <div id="sajuOut"></div>
     </form>
 
@@ -198,7 +285,7 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
       <section class="sec" role="tabpanel" id="p-rec">
         <div class="sechead">
           <div><h3>사주 맞춤 추천 이름</h3><p id="recMeta"></p></div>
-          <button class="btn ghost" type="button" id="moreBtn">다른 이름 5개 보기</button>
+          <button class="btn ghost" type="button" id="moreBtn"><span aria-hidden="true">↻</span> 다른 이름 5개 보기</button>
         </div>
         <div class="cards" id="recOut"></div>
       </section>
@@ -206,7 +293,7 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
       <section class="sec" role="tabpanel" id="p-find" hidden>
         <form class="findbar" id="findForm" autocomplete="off">
           <div class="field"><label for="wantName">원하는 이름 (성 제외, 한글)</label><input type="text" id="wantName" value="서윤" maxlength="2"></div>
-          <label class="check"><input type="checkbox" id="useSaju" checked> 왼쪽 사주 반영</label>
+          <label class="check"><input type="checkbox" id="useSaju" checked> 입력한 사주 반영</label>
           <button class="btn" type="submit">한자 추천</button>
         </form>
         <div><h3 class="sechead" style="font-family:var(--f-display);font-weight:400;font-size:24px">추천 한자 조합</h3><p class="muted" id="findMeta" style="margin:4px 0 0;font-size:13px"></p></div>
