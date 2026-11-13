@@ -1,0 +1,971 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오행 작명소</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Song+Myung&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 레이아웃: 왼쪽 '사주 명식' 고정 패널 + 오른쪽 이름 카드 목록 (모바일은 한 줄) — 쪽빛(인디고) 먹색 위에 오방색을 오행 표시에만 사용 */
+:root {
+  --bg: #eef1f4;          /* 옅은 청자빛 종이 */
+  --surface: #ffffff;
+  --sunk: #e3e8ee;
+  --ink: #18212e;         /* 먹색 */
+  --muted: #5b6676;
+  --line: #cfd6df;
+  --accent: #2d3f8f;      /* 쪽빛 */
+  --accent-ink: #ffffff;
+  --seal: #b23a2b;        /* 낙관 붉은색 */
+  --wood: #2f7a55; --fire: #c0392b; --earth: #a57412; --metal: #6c7480; --water: #1f4f8a;
+  --good: #2f7a55; --half: #a57412; --bad: #b23a2b;
+  --f-display: "Song Myung", "Nanum Myeongjo", "Batang", serif;
+  --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10151d; --surface: #182029; --sunk: #0c1117; --ink: #e6eaf0; --muted: #98a3b3; --line: #2b3542;
+  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563;
+  --wood: #6cc497; --fire: #ef7f70; --earth: #e2b75a; --metal: #b4bcc8; --water: #79aee8;
+  --good: #6cc497; --half: #e2b75a; --bad: #ef7f70; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #10151d; --surface: #182029; --sunk: #0c1117; --ink: #e6eaf0; --muted: #98a3b3; --line: #2b3542;
+  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563;
+  --wood: #6cc497; --fire: #ef7f70; --earth: #e2b75a; --metal: #b4bcc8; --water: #79aee8;
+  --good: #6cc497; --half: #e2b75a; --bad: #ef7f70; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px }
+.wrap { max-width: 1180px; margin: 0 auto }
+h1, h2, h3, h4 { text-wrap: balance; margin: 0 }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: .86em }
+.muted { color: var(--muted) }
+.err { color: var(--bad) }
+
+/* 머리 */
+.mast { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 28px 18px; border-bottom: 1px solid var(--line) }
+.brand { display: flex; align-items: center; gap: 14px }
+.seal { width: 52px; height: 52px; border: 2px solid var(--seal); color: var(--seal); display: grid; grid-template-columns: 1fr 1fr; place-items: center;
+  font-family: var(--f-display); font-size: 19px; line-height: 1; padding: 4px; border-radius: 3px; transform: rotate(-3deg) }
+.brand h1 { font-family: var(--f-display); font-weight: 400; font-size: clamp(26px, 4vw, 34px); letter-spacing: .02em }
+.brand p { margin: 2px 0 0; color: var(--muted); font-size: 13px }
+.tabs { display: flex; gap: 4px; background: var(--sunk); padding: 4px; border-radius: 8px }
+.tabs button { border: 0; background: none; color: var(--muted); font: 500 14px var(--f-body); padding: 8px 14px; border-radius: 6px; cursor: pointer }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .08) }
+
+/* 본문 그리드 */
+.grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 28px; padding-top: 24px; align-items: start }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr) } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 14px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px) }
+@media (max-width: 860px) { .panel { position: static } }
+.panel h2, .sec h2 { font: 600 12px var(--f-body); letter-spacing: .12em; color: var(--muted) }
+.field { display: grid; gap: 5px }
+.field label, .lbl { font-size: 13px; font-weight: 500 }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+input[type=text], input[type=date], input[type=time], select {
+  width: 100%; font: 15px var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-width: 0 }
+input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted) }
+.btn { font: 600 15px var(--f-body); border: 0; border-radius: 7px; padding: 11px 16px; cursor: pointer; background: var(--accent); color: var(--accent-ink) }
+.btn.ghost { background: none; color: var(--accent); border: 1px solid var(--accent) }
+
+/* 사주 명식 */
+#sajuOut { display: grid; gap: 12px; border-top: 1px dashed var(--line); padding-top: 14px }
+.pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px }
+.pillar { display: grid; justify-items: center; gap: 2px; background: var(--bg); border-radius: 6px; padding: 8px 2px }
+.pillar.me { outline: 1.5px solid var(--accent) }
+.pillar.ghost { opacity: .55 }
+.plabel { font-size: 11px; color: var(--muted) }
+.gz { font-family: var(--f-display); font-size: 28px; line-height: 1.15 }
+.pko { font-size: 12px; color: var(--muted) }
+.sajumeta { margin: 0; font-size: 12px; color: var(--muted) }
+.bars { display: grid; gap: 5px }
+.bar { display: grid; grid-template-columns: 22px 1fr 18px; align-items: center; gap: 8px; font-size: 13px }
+.bl { font-family: var(--f-display); font-size: 16px }
+.track { height: 8px; background: var(--sunk); border-radius: 4px; overflow: hidden }
+.fill { display: block; height: 100% }
+.bn { font-family: var(--f-mono); font-size: 12px; text-align: right }
+.yong { margin: 0; display: grid; gap: 6px; font-size: 13px }
+.yong div { display: grid; grid-template-columns: 74px 1fr; gap: 8px; align-items: center }
+.yong dt { color: var(--muted) } .yong dd { margin: 0 }
+
+/* 오행 색 */
+.el-wood { color: var(--wood) } .el-fire { color: var(--fire) } .el-earth { color: var(--earth) } .el-metal { color: var(--metal) } .el-water { color: var(--water) }
+.el-bg-wood { background: var(--wood) } .el-bg-fire { background: var(--fire) } .el-bg-earth { background: var(--earth) } .el-bg-metal { background: var(--metal) } .el-bg-water { background: var(--water) }
+.el { display: inline-flex; align-items: baseline; gap: 1px; font-family: var(--f-display); font-size: 15px; border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; line-height: 1.35 }
+.el small { font-family: var(--f-body); font-size: 10px }
+
+/* 결과 영역 */
+.sec { display: grid; gap: 14px; min-width: 0 }
+.sechead { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap }
+.sechead h3 { font-family: var(--f-display); font-weight: 400; font-size: 24px }
+.sechead p { margin: 4px 0 0; color: var(--muted); font-size: 13px }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 14px }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0 }
+.chead { display: flex; justify-content: space-between; align-items: center }
+.rank { font-family: var(--f-mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 50%; width: 26px; height: 26px; display: grid; place-items: center }
+.score { --p: 80; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; align-content: center;
+  background: radial-gradient(closest-side, var(--surface) 78%, transparent 80% 100%), conic-gradient(var(--seal) calc(var(--p) * 1%), var(--sunk) 0) }
+.score b { font-family: var(--f-mono); font-size: 17px; line-height: 1 } .score small { font-size: 10px; color: var(--muted) }
+.chars { display: flex; gap: 6px }
+.ch { flex: 1; display: grid; justify-items: center; gap: 1px; padding: 8px 2px; border-radius: 6px; background: var(--bg); min-width: 0; text-align: center }
+.ch.sur { background: none; border: 1px dashed var(--line) }
+.hz { font-family: var(--f-display); font-size: 40px; line-height: 1.1 }
+.hk { font-weight: 600; font-size: 15px }
+.hs { font-size: 12px; color: var(--muted); overflow-wrap: anywhere }
+.hm { font-size: 11px; color: var(--muted); display: flex; gap: 4px; align-items: center; font-family: var(--f-mono) }
+.meaning { margin: 0; font-size: 13px }
+.parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 12px }
+.parts li { display: grid; grid-template-columns: 62px 1fr 44px; gap: 8px; align-items: center }
+.pt { height: 5px; background: var(--sunk); border-radius: 3px; overflow: hidden } .pt i { display: block; height: 100%; background: var(--accent) }
+.parts .num { text-align: right; color: var(--muted) }
+.warn { margin: 0; font-size: 12px; color: var(--bad) }
+details { border-top: 1px solid var(--line); padding-top: 8px }
+summary { cursor: pointer; font-size: 13px; font-weight: 500; color: var(--accent) }
+details h4 { font-size: 12px; color: var(--muted); font-weight: 600; margin: 12px 0 6px; letter-spacing: .04em }
+.tw { overflow-x: auto }
+table { border-collapse: collapse; font-size: 12px; width: 100% }
+th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top }
+th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowrap; color: var(--muted) }
+.pill { font-size: 11px; padding: 1px 6px; border-radius: 10px; white-space: nowrap; border: 1px solid currentColor }
+.g2 { color: var(--good) } .g1 { color: var(--half) } .g0 { color: var(--bad) }
+.facts, .alts { margin: 0; padding-left: 16px; font-size: 12px; display: grid; gap: 6px }
+.copy { justify-self: start; font: 500 12px var(--f-body); background: none; border: 1px solid var(--line); color: var(--ink); border-radius: 5px; padding: 5px 10px; cursor: pointer }
+.copy.sel { user-select: all }
+.more { justify-self: center }
+
+/* 한자 찾기 */
+.findbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px }
+.findbar .field { flex: 1 1 160px }
+.candwrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px }
+.cand { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px }
+.cand h4 { font-size: 13px; margin-bottom: 8px }
+.cand ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 4px 10px; font-size: 13px; max-height: 210px; overflow: auto }
+.cand li { display: flex; gap: 5px; align-items: baseline } .cand li b { font-family: var(--f-display); font-size: 18px; font-weight: 400 }
+
+/* 기준 안내 */
+.guide { display: grid; gap: 18px; max-width: 900px; padding-top: 24px }
+.guide section { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px }
+.guide h3 { font-family: var(--f-display); font-weight: 400; font-size: 21px; margin-bottom: 10px }
+.guide p, .guide li { max-width: 68ch }
+.guide ul { padding-left: 18px; display: grid; gap: 4px }
+.weights { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 10px }
+.weights div { background: var(--bg); border-radius: 6px; padding: 10px 12px } .weights b { font-family: var(--f-mono); font-size: 20px; display: block }
+[hidden] { display: none !important }
+.fsum, .ls, .ti { display: none }
+.fbody { display: grid; gap: 14px }
+#moreBtn span { font-size: 1.1em }
+
+/* ───────── 모바일 (폰 화면) ─────────
+   상단: 접히는 '명식 요약 바' · 가운데: 이름 카드 · 하단: 엄지로 누르는 탭바 + 떠 있는 '다른 이름' 버튼 */
+@media (max-width: 760px) {
+  body { font-size: 15px; padding-block: 0 calc(84px + env(safe-area-inset-bottom, 0px)) }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg) }
+  .mast { padding-block: 14px 12px; border: 0 }
+  .seal { width: 38px; height: 38px; font-size: 14px; padding: 3px }
+  .brand { gap: 10px }
+  .brand h1 { font-size: 22px }
+  .brand p { display: none }
+  .grid { padding-top: 4px; gap: 18px }
+
+  /* 하단 탭바 */
+  .tabs { position: fixed; z-index: 20; left: 0; right: 0; bottom: 0; border-radius: 0; gap: 0; padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+    background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -4px 16px rgb(0 0 0 / .06) }
+  .tabs button { flex: 1; display: grid; justify-items: center; gap: 1px; padding: 6px 4px; min-height: 52px; font-size: 12px; border-radius: 8px }
+  .tabs button[aria-selected="true"] { background: none; box-shadow: none; color: var(--accent) }
+  .tabs .ti { display: block; font-family: var(--f-display); font-size: 22px; line-height: 1.1 }
+  .tabs button[aria-selected="true"] .ti { color: var(--seal) }
+  .lf { display: none } .ls { display: inline }
+
+  /* 명식 패널: 요약 바로 접힘 */
+  .panel { padding: 14px; gap: 12px; border-radius: 14px }
+  .panel > h2 { display: none }
+  .fsum { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; color: var(--ink); font: 500 14px var(--f-body); min-height: 48px }
+  .fsum-t { min-width: 0; overflow-wrap: anywhere }
+  .fedit { flex: none; font-size: 13px; color: var(--accent); font-weight: 600 }
+  .panel.collapsed .fbody { display: none }
+  /* 접힌 상태: 사주는 네 기둥 + 보완할 오행만 간단히 */
+  .panel.collapsed #sajuOut { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-top: 10px }
+  .panel.collapsed .sajumeta, .panel.collapsed .bars, .panel.collapsed .pko, .panel.collapsed .yong div:not(.need) { display: none }
+  .panel.collapsed .gz { font-size: 20px }
+  .panel.collapsed .pillar { padding: 4px 2px }
+  .panel.collapsed .plabel { font-size: 10px }
+  input[type=text], input[type=date], input[type=time], select { font-size: 16px; min-height: 46px }
+  .check { font-size: 14px; min-height: 32px }
+  .check input { width: 20px; height: 20px }
+  .btn { min-height: 50px; font-size: 16px; border-radius: 10px }
+
+  /* 사주 명식: 한눈에 보이게 압축 */
+  #sajuOut { gap: 10px; padding-top: 12px }
+  .pillars { gap: 5px }
+  .pillar { padding: 6px 2px }
+  .gz { font-size: 24px }
+  .bars { grid-template-columns: repeat(5, 1fr); gap: 6px }
+  .bar { grid-template-columns: 1fr; justify-items: center; gap: 3px; background: var(--bg); border-radius: 6px; padding: 6px 4px }
+  .bar .track { width: 100%; height: 5px }
+  .bl { font-size: 17px } .bn { text-align: center }
+  .yong div { grid-template-columns: 82px 1fr }
+
+  /* 결과 */
+  .sec { gap: 12px }
+  .sechead h3 { font-size: 21px }
+  .cards { grid-template-columns: minmax(0, 1fr); gap: 12px }
+  .card { padding: 14px; gap: 10px; border-radius: 14px }
+  .hz { font-size: 36px }
+  .score { width: 54px; height: 54px }
+  .parts { grid-template-columns: repeat(5, 1fr); gap: 6px }
+  .parts li { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 3px; font-size: 11px }
+  .parts .pt { width: 100% }
+  .parts .num { text-align: center; font-size: 10px }
+  summary { min-height: 40px; display: flex; align-items: center; font-size: 14px }
+  .copy { min-height: 40px; font-size: 13px }
+
+  /* 떠 있는 '다른 이름 5개' 버튼 */
+  #moreBtn { position: fixed; z-index: 19; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 999px; padding: 0 20px; min-height: 50px;
+    box-shadow: 0 6px 18px rgb(20 30 70 / .28) }
+
+  .findbar { border-radius: 14px; gap: 10px }
+  .findbar .field, .findbar .btn { flex: 1 1 100% }
+  .cand ul { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .guide { padding-top: 4px; gap: 12px }
+  .guide section { padding: 16px; border-radius: 14px }
+  .weights { grid-template-columns: minmax(0, 1fr) }
+}
+
+@media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease both } @keyframes rise { from { transform: translateY(6px); opacity: .4 } } }
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div class="brand">
+      <div class="seal" aria-hidden="true"><span>五</span><span>行</span><span>作</span><span>名</span></div>
+      <div><h1>오행 작명소</h1><p>사주 · 오행 · 음양 · 81수리 · 항렬자로 이름과 한자를 짓습니다</p></div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="rec" id="t-rec" aria-selected="true"><span class="ti" aria-hidden="true">名</span><span class="lf">사주 맞춤 추천</span><span class="ls">이름 추천</span></button>
+      <button role="tab" data-tab="find" id="t-find" aria-selected="false"><span class="ti" aria-hidden="true">字</span><span class="lf">이름 한자 찾기</span><span class="ls">한자 찾기</span></button>
+      <button role="tab" data-tab="guide" id="t-guide" aria-selected="false"><span class="ti" aria-hidden="true">典</span><span class="lf">작명 기준</span><span class="ls">작명 기준</span></button>
+    </nav>
+  </header>
+
+  <div class="grid" id="mainGrid">
+    <form class="panel" id="recForm" autocomplete="off">
+      <h2>사주 명식 입력</h2>
+      <button type="button" class="fsum" id="fsum" aria-expanded="false" aria-controls="fbody">
+        <span class="fsum-t" id="fsumText"></span><span class="fedit" id="feditLbl">정보 수정</span></button>
+      <div class="fbody" id="fbody">
+      <div class="row">
+        <div class="field"><label for="sur">성씨</label><select id="sur"></select></div>
+        <div class="field"><label for="gender">성별</label>
+          <select id="gender"><option value="M">남자</option><option value="F">여자</option><option value="U">무관</option></select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="cal">달력</label><select id="cal"><option value="solar">양력</option><option value="lunar">음력</option></select></div>
+        <div class="field"><label for="bdate">생년월일</label><input type="date" id="bdate" value="2025-03-15" min="1900-01-01" max="2050-12-31"></div>
+      </div>
+      <label class="check" id="leapWrap" hidden><input type="checkbox" id="leap"> 윤달</label>
+      <div class="row">
+        <div class="field"><label for="btime">태어난 시각</label><input type="time" id="btime" value="08:30"></div>
+        <div class="field" style="align-content:end"><label class="check"><input type="checkbox" id="tunknown"> 시간 모름</label></div>
+      </div>
+      <label class="check"><input type="checkbox" id="correct" checked> 서울 경도 보정(−30분) 적용</label>
+      <div class="row">
+        <div class="field"><label for="hangEum">항렬자 음</label><input type="text" id="hangEum" placeholder="예: 준, 영, 수" maxlength="1"></div>
+        <div class="field"><label for="hangPos">위치</label><select id="hangPos"><option value="0">이름 첫 글자</option><option value="1">이름 끝 글자</option></select></div>
+      </div>
+      <div class="field"><label for="hangSel">항렬자 한자</label><select id="hangSel"></select><small class="muted" id="hangHint"></small></div>
+      <label class="check"><input type="checkbox" id="allowOne"> 외자 이름 포함</label>
+      <button class="btn" type="submit">이름 추천 받기</button>
+      </div>
+      <div id="sajuOut"></div>
+    </form>
+
+    <main>
+      <section class="sec" role="tabpanel" id="p-rec">
+        <div class="sechead">
+          <div><h3>사주 맞춤 추천 이름</h3><p id="recMeta"></p></div>
+          <button class="btn ghost" type="button" id="moreBtn"><span aria-hidden="true">↻</span> 다른 이름 5개 보기</button>
+        </div>
+        <div class="cards" id="recOut"></div>
+      </section>
+
+      <section class="sec" role="tabpanel" id="p-find" hidden>
+        <form class="findbar" id="findForm" autocomplete="off">
+          <div class="field"><label for="wantName">원하는 이름 (성 제외, 한글)</label><input type="text" id="wantName" value="서윤" maxlength="2"></div>
+          <label class="check"><input type="checkbox" id="useSaju" checked> 입력한 사주 반영</label>
+          <button class="btn" type="submit">한자 추천</button>
+        </form>
+        <div><h3 class="sechead" style="font-family:var(--f-display);font-weight:400;font-size:24px">추천 한자 조합</h3><p class="muted" id="findMeta" style="margin:4px 0 0;font-size:13px"></p></div>
+        <div class="cards" id="findOut"></div>
+        <button class="btn ghost more" type="button" id="findMore" hidden>조합 더 보기</button>
+        <div class="candwrap" id="candOut"></div>
+      </section>
+
+      <section role="tabpanel" id="p-guide" hidden>
+        <div class="guide">
+          <section>
+            <h3>점수는 이렇게 매깁니다 (100점)</h3>
+            <div class="weights">
+              <div><b>40</b>원형이정 4격 81수리 — 원·형·이·정격 각 10점 (길 10, 반길 5, 흉 0)</div>
+              <div><b>25</b>자원오행 — 이름 한자의 오행이 사주에 부족한 오행(용신)을 채우는지 + 성→이름 상생 흐름</div>
+              <div><b>15</b>발음오행 — 초성 오행이 성→이름 순으로 상생하는지</div>
+              <div><b>10</b>음양 — 획수 홀(양)·짝(음)이 섞여 조화로운지</div>
+              <div><b>10</b>삼원오행 — 천격·인격·지격 수리오행의 상생</div>
+            </div>
+          </section>
+          <section>
+            <h3>계산 기준</h3>
+            <ul>
+              <li><b>사주팔자</b>: 연주는 입춘, 월주는 12절기(태양 황경)로 나눕니다. 일주는 율리우스 적일로 계산하며, 23시 이후 출생은 다음 날 자시로 봅니다. 시간 모름이면 시주 없이 6글자로 봅니다.</li>
+              <li><b>용신</b>: 일간과 같은 오행·생해 주는 오행의 힘으로 신강·신약을 나눈 뒤(억부법), 신약이면 인성·비겁, 신강이면 식상·재성·관성 중 약한 오행을 보완 오행으로 정합니다. 사주에 아예 없는 오행도 보완 대상에 넣습니다.</li>
+              <li><b>획수</b>: 강희자전 원획법입니다. 氵=水 4획, 扌=手 4획, 忄=心 4획, 艹=艸 6획, 王(구슬옥)=玉 5획, 礻=示 5획, 月(육달월)=肉 6획, 좌阝=阜 8획, 우阝=邑 7획, 辶=辵 7획으로 셉니다.</li>
+              <li><b>발음오행</b>: 훈민정음 기준 ㄱㅋ 木 · ㄴㄷㄹㅌ 火 · ㅇㅎ 土 · ㅅㅈㅊ 金 · ㅁㅂㅍ 水 (현재 가장 널리 쓰는 분류).</li>
+              <li><b>원형이정</b>: 원격=이름 두 자, 형격=성+이름 첫 자, 이격=성+이름 끝 자, 정격=전체. 81을 넘으면 80을 뺍니다.</li>
+              <li><b>두음법칙</b>: 律(률)은 ‘율’, 寧(녕)은 ‘영’처럼 이름에서 쓰는 소리로도 찾습니다.</li>
+            </ul>
+          </section>
+          <section>
+            <h3>꼭 확인하세요</h3>
+            <ul>
+              <li>수록 한자는 이름에 자주 쓰는 552자입니다. 인명용 한자 목록은 개정되므로 출생신고 전에는 <a href="https://efamily.scourt.go.kr" target="_blank" rel="noopener">대법원 전자가족관계등록시스템</a>에서 인명용 한자인지 다시 확인하세요.</li>
+              <li>자원오행은 부수와 글자 뜻으로 정했습니다. 81수리 일부 수(27·28·51·71·77·78 등)와 자원오행은 유파에 따라 판단이 다릅니다.</li>
+              <li>여성 이름에서 21·23·33·39수를 ‘과강’으로 피하는 전통 유파도 있으나 이 앱은 감점하지 않습니다.</li>
+              <li>1908~1961년 일부 기간의 표준시 차이와 서머타임은 반영하지 않습니다. 해당 기간 출생이면 시간을 직접 보정해 입력하세요.</li>
+              <li>결과는 성명학 이론에 따른 참고용입니다. 최종 결정은 가족의 뜻과 부르기 쉬운지를 함께 보세요.</li>
+            </ul>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(e,t){typeof exports==`object`&&typeof module<`u`?module.exports=t():typeof define==`function`&&define.amd?define([],t):(e=typeof globalThis<`u`?globalThis:e||self,e.KoreanLunarCalendar=t())})(this,function(){var e={KOREAN_LUNAR_MIN_VALUE:10000101,KOREAN_LUNAR_MAX_VALUE:20501118,KOREAN_SOLAR_MIN_VALUE:10000213,KOREAN_SOLAR_MAX_VALUE:20501231,KOREAN_LUNAR_BASE_YEAR:1e3,SOLAR_LUNAR_DAY_DIFF:43,LUNAR_SMALL_MONTH_DAY:29,LUNAR_BIG_MONTH_DAY:30,SOLAR_SMALL_YEAR_DAY:365,SOLAR_BIG_YEAR_DAY:366,SOLAR_DAYS:[31,28,31,30,31,30,31,31,30,31,30,31,29],KOREAN_CHEONGAN:[44049,51012,48337,51221,47924,44592,44221,49888,51076,44228].map(e=>String.fromCharCode(e)),KOREAN_GANJI:[51088,52629,51064,47896,51652,49324,50724,48120,49888,50976,49696,54644].map(e=>String.fromCharCode(e)),KOREAN_GAPJA_UNIT:[45380,50900,51068].map(e=>String.fromCharCode(e)),CHINESE_CHEONGAN:[30002,20057,19993,19969,25098,24049,24218,36763,22764,30328].map(e=>String.fromCharCode(e)),CHINESE_GANJI:[23376,19985,23493,21359,36784,24051,21320,26410,30003,37193,25100,20133].map(e=>String.fromCharCode(e)),CHINESE_GAPJA_UNIT:[24180,26376,26085].map(e=>String.fromCharCode(e)),INTERCALATION_STR:[50980,38287].map(e=>String.fromCharCode(e)),KOREAN_LUNAR_DATA:[2194016855,2197734699,2193886506,2194017621,3271595437,2193884522,2194016621,2197837021,3267626157,2193885773,2197827149,2193885990,3271600982,2194016981,2193883994,2197842298,3267758427,2193884315,2197834395,2193885771,3271674533,2193884842,2194016981,2197852893,3267625653,2194016599,2197705902,2194017431,3267626571,2197759306,2194017705,2197857974,3267757677,2193883758,2197907758,2193885486,3267628182,2197835157,2193886538,2197867881,3267627864,2194148715,2197918315,2193883741,3267627307,2197838507,2193885845,2193886026,3271696043,2193883861,2197927258,2194015419,3267625563,2197845303,2193884459,2193884821,3271571285,2193884842,2198063797,2193883765,3267626166,2197850718,2193885782,2193886502,3271581350,2194017621,2193884586,2197822826,3267758445,2197861551,2193884317,2193885773,3271589165,2193885862,2194017109,2197833173,3267625818,2194016605,2197885299,2193884251,3271596623,2193884747,2193885861,2197842793,3267757749,2193883866,2197826230,2194016567,3271476375,2194017431,2193884747,2197718698,3267759525,2193884596,2198030957,2193883822,3267628641,2197826862,2193886358,2197855565,2193886538,2194017637,2197906837,2194015581,3267625581,2197826141,2193885483,2197858967,3267627669,2193886026,2197850970,2194016981,3267757403,2197832375,2193884247,2193884459,3271564587,2193884821,2197853997,2193884586,3267758773,2197837037,2193884342,2194016855,3271504974,2193886502,2197929618,2194017621,3267626410,2197850554,2194016621,2193884334,3271576221,2193885773,2193886501,2197827365,3267627860,2198056297,2193883866,2194016605,3271648411,2193884315,2193885771,2197834571,3267626661,2197863251,2193884852,2194016950,3271657814,2194016663,2193884311,2197833367,3267626315,2197735077,2194017701,2193884588,3271797429,2193883758,2193885486,2197843118,3267628182,2193886538,2197827402,2194017621,3271603563,2194015579,2193883741,2197846333,3267627303,2193885845,2197904661,2193886026,3267758933,2197885653,2194015451,2197721694,3267758679,2193884459,2197842603,2193884821,3267626666,2197830570,2194016949,2197861559,3267626158,2194016855,2197714222,2193886502,3267759763,2197837525,2193884586,2194016693,3271566701,2193884334,2197924429,2193885773,3267628326,2197843301,2193886034,2194017642,3271567066,2194016605,2197931165,2193884315,3267627595,2197850795,2193884837,2193886036,3271576500,2194016950,2194016603,2197824823,3267626135,2197853775,2193884491,2193884837,3271653061,2193884588,2194016950,2197895278,3267627310,2197867671,2193886358,2193886538,3271593386,2194017109,2193884522,2197969627,3267625565,2193885486,2197826859,2193885845,3271597389,2193885994,2194017109,2197845365,3267626202,2194016859,2197833047,2193884459,3271674515,2193884819,2193884842,2197850842,3267758821,2193884342,2197834414,2194016855,3267626279,2197759270,2194017875,2197857995,3267626410,2194015661,2197906605,2193884334,3267627598,2197835085,2193886502,2197863763,3267627858,2194017130,2197919082,2194015575,3267626141,2197903899,2193885771,2193885861,3271564965,2193886034,2197863258,2194016950,3267758427,2197841079,2193884311,2193884747,3271571275,2193884837,2197862067,2193884588,3267758774,2197914285,2193884318,2193885773,3271581003,2193885989,2193886034,2197892690,3267758938,2197858654,2194016603,2193884315,3271584343,2193885771,2193885861,2197834661,3267626708,2197867222,2194016950,2194016567,2197849247,2193884311,2193884747,2197706442,3267759525,2193884586,2197822828,2194016878,3271604527,2193885486,2193886358,2197847381,3267628362,2194017621,2197894485,2193884522,3267758701,2197822045,2193885483,2197850715,3267627669,2193885994,2197904170,2194016981,3267626202,2197822650,2194016855,2197853487,3267626279,2193884819,2197845683,2193884842,3267758773,2197828981,2193884342,2197867111,3267627566,2193886486,2197851798,2193886538,3267759530,2197837290,2194015597,2193884334,3271632989,2193885741,2197859607,2193885861,3267627858,2197847412,2194016986,2194015581,3271570747,2193884251,2193885739,2197887531,3267627685,2197855061,2193884850,2194016982,3271644470,2194016567,2193884247,2197830231,3267626283,2197727910,2194017685,2193884586,3271654060,2194016878,2193884462,2197830830,3267627606,2197863723,2193886506,2194017621,3271595437,2193884522,2194016877,2197837149,3267626283,2193885837,2197827157,2193885994,3271600982,2194016981,2193884378,2197842554,3267758679,2193884443,2197899799,2193884755,3271673513,2193884586,2194016949,2197852861,3267625654,2194016823,2197706030,2193886486,2194017867,2197698386,2194017706,2197927348,3267757421,2193883822,2197846589,2193885741,3267628309,2197835157,2193886034,2197867369,3267758810,2194015581,2197918299,2193884251,3267627563,2197838507,2193885845,2193886034,3271564970,2194016950,2197865819,2194015415,3267626071,2197845303,2193884459,2193884821,3271640725,2193884586,2197867189,2194016878,3267626158,2197850718,2193885782,2193886506,3271585450,2194017621,2193884522,2197891418,3267758429,2197861551,2193884315,2193885773,3271589165,2193885994,2194017109,2197833173,3267625690,2194016603,2197885271,2193884315,3271596623,2193884747,2193884841,2197842666,3267757749,2193883830,2197826222,2194016567,3271537814,2193886358,2194017867,2197714610,3267759530,2194015661,2197828461,2193883758,3267627310,2197826861,2193886357,2197855565,3267627850,2194017129,2197906778,2194015579,3267625565,2197826139,2193885483,2197858967,3267626645,2193885002,2197850970,2194016950,3267757371,2197832375,2193883735,2193884459,3271564587,2193884821,2197853869,2193884586,3267758773,2197837037,2193884334,2194016855,3271504974,2193886506,2197929364,2194017109,2193884522,2197846394,2194016605,2193884334,3271576219,2193885773,2193886501,2197887658,3267758933,2197853549,2193883866,2194016603,3271578807,2193884311,2193885771,2197834571,3267626665,2197867221,2194015669,2193883830,3271592286,2194016559,2193884311,2197702294,3267628362,2197868197,2194017641,2194015597,3271664309,2193883758,2193885486,2197843117,3267628181,2193886538,2197827402,2194017113,3271607661,2194015579,2193883741,2197846331,3267627307,2193885845,2197904149,2193884874,3267758805,2197885622,2194015419,2197852767,3267625559,2193884459,2197711530,2194017941,3267626666,2197830570,2194016949,2197861559,3267626158,2194016855,2197714221,2193886502,3267759509,2197837269,2193884522,2194016621,3271566685,2193884334,2197858895,2193885773,3267628325,2197843305,2194017109,2193883994,3271568058,2194016603,2197931163,2193884311,3267627595,2197850923,2193884837,2193884884,3271772853,2193883830,2194016567,2197824815,3267626135,2197722702,2193886538,2194017957,3271648937,2194015597,2193883830,2197895262,3267627310,2197863575,2193885845,2193886538,3271593386,2194017101,2194015595,2197832411,3267625565,2193885485,2197826859,2193885845,3271596877,2193884842,2194016981,2197841269,3267757243,2193883739,2197894231,2193884459,3271539348,2194017941,2193884842,2197850842,3267758517,2193884342,2197834414,2194016847,3267495206,2197892390,2194017621,2197923241,3267626346,2194016621,2197906589,2193884318,3267627597,2197835085,2193886501,2197863763,3267627860,2194017114,2197915994,2194016603,3267626139,2197834391,2193885771,2193885861,3271564965,2193884884,2197994203,2193883830,3267758391,2197841071,2193884311,2193884747,3271440202,2194017701,2197862069,2194015597,3267625646,2197846334,2193885486,2193886358,3271646485,2193886538,2194017701,2197894485,3267626346,2197846650,2194016861,2193885485,3271584427,2193885845,2193886026,2197834666,3267758805,2193884506,2197891258,2194016859,3271587127,2193884459,2193884819,2197903125,3267626666,2194016981,2197829045,2193884342,3271592542,2193885774,2193886502,2197843622,3267628370,2194017706,2197898858,2194015597,3267626158,2197830301,2193885773,2197847339,3267627813,2193886546,2197904724,2194017114,3267757405,2197828955,2193884315,2197845591,2193885771,2193885861,2197842789,2193884882,3267758810,2197833142,2194016567,2193884311,3271571095,2193884749,2197714602,2194017701,3267626410,2197838572,2194016942,2193885486,3271572782,2193886358,2197916997,2193886538,3267759445,2197906837,2193884522,2194016877,3271574877,2193884461,2193885845,2197896341,3267627850,2197912394,2194016981,2193884506,3271645754,2194016859,2193884459,2197899799,3267626643,2197853867,2193884842,2194016949,3271582965,2193884342,2194016855,2197701934,3267628310,2194017939,2197698386,2194017706,3271652778,2194015597,2193884334,2197903901,3267627565,2193886485,2197835173,2193886034,3271597418,2194016986,2194015581,2197906075,3267626075,2193885739,2197838635,2193885845,3267627858,2197891762,2194016982,2197910870,3267757367,2193884247,2197837399,2193884459,3267626645,2197829525,2193884586,2197858998,3267758701,2193884334,2197842542,2193885782,3267628330,2197839530,2194017621,2193884586,3271572330,2194016877,2197845181,2193884331,3267627661,2197839189,2193885994,2194017109,3271574997,2193884378,2194016605,2197824855,3267626139,2197842583,2193884747,2193884841,2197834666,2194015925,2193883834,2197826230,3267758391,2197710126,2193886486,2194017867,3271448274,2194017705,2194015669,2197828461,3267625646,2193885742,2197827117,2193886357,3271585109,2193886034,2194017129,2197833178,3267757405,2193883741,2197830235,2193885739,3271654027,2193885845,2193886026,2197904170,3267758805,2194015579,2197832375,2193883735,3271595311,2193884459,2193884821,2197841621,3267626410,2194016949,2197833069,2193884334,3267758679,2197763158,2193886506,2197913226,3267759445,2193884586,2197838554,2194016605,3267626158,2197834411,2193885773,2197851435,3267627817,2194017109,2197845365,2193883866,3267758429,2197837015,2193884315,2193885771,3271637579,2193884841,2197850841,2194015925,3267625654,2197903670,2194016567,2193884311,3271444118,2193886794,2197860006,2194017705,3267757485,2197906093,2193883822,2193885486,3271580845,2193886357,2193886538,2197896522,3267758953,2197845370,2194015579,2193883741,3271579995,2193885483,2193885845,2197835157,3267627850,2194017109,2197825237,2194015579,3271582327,2193883735,2193884459,2197707434,3267759765,2193884842,2197830570,2194016949,2197849277,2193884334,2194016855,2197706061,3267628326,2194017685,2197898837,2193884522,3267758509,2197824861,2193884334,2197842523,3267627597,2193886501,2197839273,2194017109,3267626346,2197826266,2194016605,2197845179,3267626139,2193885771,2197838667,2193884841,3267627732,2197965749,2193883830,2194016603,3271566647,2193884311,2197710422,2193886794,3267759781,2197903017,2194015669,2193883830,3271637166,2193885486,2197912717,2193886357,3267628362,2197908874,2194017129,2194015597,3271639643,2193883741,2193885485,2197826859,3267627669,2197847381,2193886026,2194017109,3271644501,2194015451,2193883739,2197895255,3267626283,2197850779,2193884821,2193884842,3271584490,2194016949,2193884342,2197834414,3267758679,2193884455,2197698342,2194017685,3271587509,2193884522,2194016685,2197837021,3267626158,2193885774,2197835085,2193886501,3271593305,2193886036,2194017642,2197907802,3267758427,2193884315,2197834395,2193885771,3271600935,2193884837,2193884884,2197973877,3267625654,2194016603,2197836983,2193884311,3267626571,2197698378,2194017957,2197849817,3267757485,2193883830,2197838190,2193885486,3267628182,2197835413,2193886538,2194017701,3271567189,2193884524,2197977787,2193883741,3267627309,2197839019,2193885845,2193886026,3271637834,2194017109,2197853533,2193884346,3267758683,2197837143,2193884459,2193885845,3271576469,2193884842,2194016981,2197825205,3267626166,2197842542,2194016855,2193884455,3271448230,2194017683,2193884586,2197830506,3267758445,2197861551,2193884334,2193885773,3271650573,2193886501,2193886546,2197839316,3267758954,2194016621,2197824859,2193884315,3271588439,2193885771,2193885989,2197904165,3267626708,2194016986,2197895350]},t={YEAR_CHEONGAN:6,YEAR_GANJI:0,MONTH_CHEONGAN:3,MONTH_GANJI:1,DAY_CHEONGAN:4,DAY_GANJI:2};return class{constructor(){this.cumulativeLunarYearDays=new Map,this.cumulativeSolarYearDays=new Map,this.solarCalendar={year:0,month:0,day:0},this.lunarCalendar={year:0,month:0,day:0,intercalation:!1};let e=new Date;this.setSolarDate(e.getFullYear(),e.getMonth()+1,e.getDate())}getLunarData(t){return e.KOREAN_LUNAR_DATA[t-e.KOREAN_LUNAR_BASE_YEAR]}getLunarIntercalationMonth(e){return e>>12&15}getLunarYearDays(e){return this.getLunarData(e)>>17&511}getLunarMonthDays(t,n,r){let i=this.getLunarData(t);return(r&&this.getLunarIntercalationMonth(i)===n?(i>>16&1)>0:(i>>12-n&1)>0)?e.LUNAR_BIG_MONTH_DAY:e.LUNAR_SMALL_MONTH_DAY}getLunarDaysBeforeBaseYear(e){return this.accumulateYearDays(e,this.cumulativeLunarYearDays,e=>this.getLunarYearDays(e))}getLunarDaysBeforeBaseMonth(t,n,r){let i=0;if(t>=e.KOREAN_LUNAR_BASE_YEAR&&n>0){for(let e=1;e<n+1;e++)i+=this.getLunarMonthDays(t,e,!1);if(r){let e=this.getLunarIntercalationMonth(this.getLunarData(t));e>0&&e<n+1&&(i+=this.getLunarMonthDays(t,e,!0))}}return i}getLunarAbsDays(e,t,n,r){let i=this.getLunarDaysBeforeBaseYear(e-1)+this.getLunarDaysBeforeBaseMonth(e,t-1,!0)+n;return r&&this.getLunarIntercalationMonth(this.getLunarData(e))===t&&(i+=this.getLunarMonthDays(e,t,!1)),i}isSolarIntercalationYear(e){return(e>>30&1)>0}getSolarYearDays(t){return this.isSolarIntercalationYear(this.getLunarData(t))?e.SOLAR_BIG_YEAR_DAY:e.SOLAR_SMALL_YEAR_DAY}getSolarMonthDays(t,n){return n===2&&this.isSolarIntercalationYear(this.getLunarData(t))?e.SOLAR_DAYS[12]:e.SOLAR_DAYS[n-1]}getSolarDaysBeforeBaseYear(e){return this.accumulateYearDays(e,this.cumulativeSolarYearDays,e=>this.getSolarYearDays(e))}accumulateYearDays(t,n,r){let i=n.get(t);if(i!==void 0)return i;let a=e.KOREAN_LUNAR_BASE_YEAR,o=n.get(t-1),s=0;if(o!==void 0&&t>a)s=o+r(t);else for(let e=a;e<t+1;e++)s+=r(e);return n.set(t,s),s}getSolarDaysBeforeBaseMonth(e,t){let n=0;for(let r=1;r<t+1;r++)n+=this.getSolarMonthDays(e,r);return n}getSolarAbsDays(t,n,r){return this.getSolarDaysBeforeBaseYear(t-1)+this.getSolarDaysBeforeBaseMonth(t,n-1)+r-e.SOLAR_LUNAR_DAY_DIFF}setSolarDateByLunarDate(e,t,n,r){let i=this.getLunarAbsDays(e,t,n,r),a=i<this.getSolarAbsDays(e+1,1,1)?e:e+1,o=0,s=0;for(let e=12;e>0;e--){let t=this.getSolarAbsDays(a,e,1);if(i>=t){o=e,s=i-t+1;break}}this.solarCalendar={year:a,month:o,day:s}}setLunarDateBySolarDate(e,t,n){let r=this.getSolarAbsDays(e,t,n),i=r>=this.getLunarAbsDays(e,1,1,!1)?e:e-1,a=0,o=0,s=!1;for(let e=12;e>0;e--)if(r>=this.getLunarAbsDays(i,e,1,!1)){a=e,this.getLunarIntercalationMonth(this.getLunarData(i))===e&&(s=r>=this.getLunarAbsDays(i,e,1,!0)),o=r-this.getLunarAbsDays(i,a,1,s)+1;break}this.lunarCalendar={year:i,month:a,day:o,intercalation:s}}checkValidDate(t,n,r,i,a){let o=!1;if(!Number.isInteger(r)||!Number.isInteger(i)||!Number.isInteger(a))return!1;let s=r*1e4+i*100+a;if((t?e.KOREAN_LUNAR_MIN_VALUE:e.KOREAN_SOLAR_MIN_VALUE)<=s&&(t?e.KOREAN_LUNAR_MAX_VALUE:e.KOREAN_SOLAR_MAX_VALUE)>=s&&i>0&&i<13&&a>0){if(t&&n&&this.getLunarIntercalationMonth(this.getLunarData(r))!==i)return!1;let e=t?this.getLunarMonthDays(r,i,n):this.getSolarMonthDays(r,i);if(!t&&r===1582&&i===10&&a>4&&a<15)return!1;a<=e&&(o=!0)}return o}setLunarDate(e,t,n,r){let i=!1;return this.checkValidDate(!0,r,e,t,n)&&(this.lunarCalendar={year:e,month:t,day:n,intercalation:r&&this.getLunarIntercalationMonth(this.getLunarData(e))===t},this.setSolarDateByLunarDate(e,t,n,r),i=!0),i}setSolarDate(e,t,n){let r=!1;return this.checkValidDate(!1,!1,e,t,n)&&(this.solarCalendar={year:e,month:t,day:n},this.setLunarDateBySolarDate(e,t,n),r=!0),r}computeGapJa(){let n=this.lunarCalendar,r=this.getLunarAbsDays(n.year,n.month,n.day,!!n.intercalation);if(r<=0)return{cheongan:{year:0,month:0,day:0},ganji:{year:0,month:0,day:0}};let i=e.KOREAN_LUNAR_BASE_YEAR,a=e.KOREAN_CHEONGAN.length,o=e.KOREAN_GANJI.length,s=n.month+12*(n.year-i);return{cheongan:{year:(n.year+t.YEAR_CHEONGAN-i)%a,month:(s+t.MONTH_CHEONGAN)%a,day:(r+t.DAY_CHEONGAN)%a},ganji:{year:(n.year+t.YEAR_GANJI-i)%o,month:(s+t.MONTH_GANJI)%o,day:(r+t.DAY_GANJI)%o}}}getGapJaIndex(){return this.computeGapJa()}getGapja(t){let n=this.getGapJaIndex(),r=t?e.CHINESE_CHEONGAN:e.KOREAN_CHEONGAN,i=t?e.CHINESE_GANJI:e.KOREAN_GANJI,a=t?e.CHINESE_GAPJA_UNIT:e.KOREAN_GAPJA_UNIT,o=t?`${e.INTERCALATION_STR[1]}${e.CHINESE_GAPJA_UNIT[1]}`:`${e.INTERCALATION_STR[0]}${e.KOREAN_GAPJA_UNIT[1]}`;return{year:`${r[n.cheongan.year]}${i[n.ganji.year]}${a[0]}`,month:`${r[n.cheongan.month]}${i[n.ganji.month]}${a[1]}`,day:`${r[n.cheongan.day]}${i[n.ganji.day]}${a[2]}`,intercalation:this.lunarCalendar.intercalation?o:``}}getKoreanGapja(){return this.getGapja()}getChineseGapja(){return this.getGapja(!0)}getLunarCalendar(){return{...this.lunarCalendar}}getSolarCalendar(){return{...this.solarCalendar}}}});
+//# sourceMappingURL=korean-lunar-calendar.min.js.map
+</script>
+<script>
+// 자동 생성 파일 (tools/build_data.py) — 직접 수정하지 마세요
+// HANJA: [한자, 음, 훈, 원획수, 자원오행, 강희부수번호]
+const HANJA = [["佳","가","아름다울",8,"火",9],["嘉","가","아름다울",14,"水",30],["珂","가","옥이름",10,"金",96],["珈","가","머리꾸미개",10,"金",96],["可","가","옳을",5,"水",30],["歌","가","노래",14,"金",76],["康","강","편안할",11,"土",53],["剛","강","굳셀",10,"金",18],["江","강","강",7,"水",85],["建","건","세울",9,"土",54],["健","건","굳셀",11,"火",9],["乾","건","하늘",11,"金",5],["潔","결","깨끗할",16,"水",85],["結","결","맺을",12,"木",120],["謙","겸","겸손할",17,"金",149],["京","경","서울",8,"土",8],["景","경","볕",12,"火",72],["慶","경","경사",15,"木",61],["敬","경","공경",13,"金",66],["炅","경","빛날",8,"火",86],["卿","경","벼슬",11,"木",26],["璟","경","옥빛",17,"金",96],["瓊","경","구슬",20,"金",96],["鏡","경","거울",19,"金",167],["耕","경","밭갈",10,"木",127],["寬","관","너그러울",15,"土",40],["冠","관","갓",9,"木",14],["光","광","빛",6,"火",10],["廣","광","넓을",15,"土",53],["求","구","구할",6,"水",85],["球","구","공",12,"金",96],["救","구","구원할",11,"金",66],["圭","규","홀",6,"土",32],["奎","규","별",9,"木",37],["揆","규","헤아릴",13,"木",64],["珪","규","홀",11,"金",96],["規","규","법",11,"火",147],["均","균","고를",7,"土",32],["鈞","균","서른근",12,"金",167],["根","근","뿌리",10,"木",75],["瑾","근","아름다운옥",16,"金",96],["謹","근","삼갈",18,"金",149],["槿","근","무궁화",15,"木",75],["起","기","일어날",10,"火",156],["基","기","터",11,"土",32],["琪","기","옥",13,"金",96],["麒","기","기린",19,"土",198],["錡","기","솥",16,"金",167],["箕","기","키",14,"木",118],["祺","기","길할",13,"木",113],["娜","나","아리따울",10,"土",38],["奈","나","어찌",8,"木",37],["男","남","사내",7,"土",102],["南","남","남녘",9,"火",24],["多","다","많을",6,"水",36],["茶","다","차",12,"木",140],["丹","단","붉을",4,"火",3],["端","단","바를",14,"金",117],["檀","단","박달나무",17,"木",75],["潭","담","못",16,"水",85],["淡","담","맑을",12,"水",85],["大","대","큰",3,"木",37],["垈","대","터",8,"土",32],["德","덕","큰",15,"火",60],["道","도","길",16,"土",162],["度","도","법도",9,"土",53],["燾","도","비칠",18,"火",86],["都","도","도읍",16,"土",163],["島","도","섬",10,"土",46],["導","도","이끌",15,"木",41],["東","동","동녘",8,"木",75],["桐","동","오동나무",10,"木",75],["棟","동","마루",12,"木",75],["斗","두","말",4,"火",68],["蘭","란","난초",23,"木",140],["嵐","람","남기",12,"土",46],["來","래","올",8,"火",9],["麗","려","고울",19,"火",198],["蓮","련","연꽃",17,"木",140],["玲","령","옥소리",10,"金",96],["怜","령","영리할",9,"火",61],["禮","례","예도",18,"木",113],["路","로","길",13,"土",157],["露","로","이슬",20,"水",173],["律","률","법칙",9,"火",60],["栗","률","밤",10,"木",75],["利","리","이로울",7,"金",18],["理","리","다스릴",12,"金",96],["璃","리","유리",16,"金",96],["莉","리","말리",13,"木",140],["俐","리","영리할",9,"火",9],["隣","린","이웃",20,"土",170],["璘","린","옥빛",17,"金",96],["麟","린","기린",23,"土",198],["潾","린","맑을",16,"水",85],["林","림","수풀",8,"木",75],["琳","림","옥",13,"金",96],["亮","량","밝을",9,"火",8],["良","량","어질",7,"土",138],["明","명","밝을",8,"火",72],["銘","명","새길",14,"金",167],["鳴","명","울",14,"火",196],["溟","명","바다",14,"水",85],["睦","목","화목할",13,"木",109],["武","무","굳셀",8,"土",77],["茂","무","무성할",11,"木",140],["珷","무","옥돌",13,"金",96],["文","문","글월",4,"木",67],["汶","문","물이름",8,"水",85],["紋","문","무늬",10,"木",120],["聞","문","들을",14,"水",128],["美","미","아름다울",9,"土",123],["微","미","작을",13,"火",60],["薇","미","장미",19,"木",140],["民","민","백성",5,"火",83],["敏","민","민첩할",11,"金",66],["旻","민","하늘",8,"火",72],["玟","민","옥돌",9,"金",96],["珉","민","옥돌",10,"金",96],["旼","민","화할",8,"火",72],["慜","민","총명할",15,"火",61],["培","배","북돋울",11,"土",32],["範","범","법",15,"木",118],["汎","범","넓을",7,"水",85],["炳","병","밝을",9,"火",86],["秉","병","잡을",8,"木",115],["昞","병","밝을",9,"火",72],["昺","병","밝을",9,"火",72],["寶","보","보배",20,"土",40],["甫","보","클",7,"水",101],["普","보","넓을",12,"火",72],["輔","보","도울",14,"火",159],["福","복","복",14,"木",113],["鳳","봉","봉새",14,"火",196],["峯","봉","봉우리",10,"土",46],["富","부","부유할",12,"土",40],["扶","부","도울",8,"木",64],["彬","빈","빛날",11,"火",59],["斌","빈","빛날",11,"木",67],["賓","빈","손",14,"金",154],["思","사","생각",9,"火",61],["士","사","선비",3,"木",33],["師","사","스승",10,"木",50],["尙","상","숭상할",8,"金",42],["祥","상","상서로울",11,"木",113],["相","상","서로",9,"木",109],["常","상","항상",11,"木",50],["翔","상","날",12,"火",124],["瑞","서","상서",14,"金",96],["書","서","글",10,"木",73],["序","서","차례",7,"土",53],["舒","서","펼",12,"火",135],["緖","서","실마리",15,"木",120],["栖","서","깃들",10,"木",75],["恕","서","용서할",10,"火",61],["敍","서","펼",11,"金",66],["錫","석","주석",16,"金",167],["碩","석","클",14,"金",112],["奭","석","클",15,"木",37],["善","선","착할",12,"水",30],["宣","선","베풀",9,"土",40],["璇","선","옥",16,"金",96],["鮮","선","고울",17,"水",195],["先","선","먼저",6,"火",10],["嬋","선","고울",15,"土",38],["雪","설","눈",11,"水",173],["卨","설","사람이름",11,"火",25],["燮","섭","불꽃",17,"火",86],["成","성","이룰",7,"金",62],["星","성","별",9,"火",72],["聖","성","성인",13,"水",128],["誠","성","정성",14,"金",149],["晟","성","밝을",11,"火",72],["盛","성","성할",12,"金",108],["城","성","재",10,"土",32],["性","성","성품",9,"火",61],["世","세","인간",5,"火",1],["細","세","가늘",11,"木",120],["勢","세","형세",13,"土",19],["歲","세","해",13,"土",77],["昭","소","밝을",9,"火",72],["素","소","흴",10,"木",120],["炤","소","밝을",9,"火",86],["笑","소","웃음",10,"木",118],["韶","소","풍류",14,"金",180],["松","송","소나무",8,"木",75],["頌","송","칭송할",13,"火",181],["秀","수","빼어날",7,"木",115],["洙","수","물가",10,"水",85],["守","수","지킬",6,"土",40],["壽","수","목숨",14,"水",33],["修","수","닦을",10,"火",9],["粹","수","순수할",14,"木",119],["琇","수","옥돌",12,"金",96],["授","수","줄",12,"木",64],["淑","숙","맑을",12,"水",85],["順","순","순할",12,"火",181],["淳","순","순박할",12,"水",85],["純","순","순수할",10,"木",120],["珣","순","옥이름",11,"金",96],["瑟","슬","큰거문고",14,"金",96],["承","승","이을",8,"木",64],["昇","승","오를",8,"火",72],["勝","승","이길",12,"土",19],["丞","승","도울",6,"木",1],["升","승","되",4,"木",24],["時","시","때",10,"火",72],["始","시","비로소",8,"土",38],["詩","시","시",13,"金",149],["施","시","베풀",9,"土",70],["植","식","심을",12,"木",75],["信","신","믿을",9,"火",9],["新","신","새",13,"金",69],["晨","신","새벽",11,"火",72],["宸","신","대궐",10,"土",40],["雅","아","맑을",12,"火",172],["娥","아","예쁠",10,"土",38],["亞","아","버금",8,"火",7],["兒","아","아이",8,"水",10],["芽","아","싹",10,"木",140],["阿","아","언덕",13,"土",170],["安","안","편안",6,"土",40],["晏","안","늦을",10,"火",72],["岸","안","언덕",8,"土",46],["愛","애","사랑",13,"火",61],["陽","양","볕",17,"土",170],["洋","양","큰바다",10,"水",85],["揚","양","날릴",13,"木",64],["彦","언","선비",9,"火",59],["如","여","같을",6,"土",38],["汝","여","너",7,"水",85],["姸","연","고울",9,"土",38],["娟","연","예쁠",10,"土",38],["延","연","끌",7,"土",54],["然","연","그럴",12,"火",86],["淵","연","못",12,"水",85],["硏","연","갈",11,"金",112],["演","연","펼",15,"水",85],["燕","연","제비",16,"火",86],["沇","연","물이름",8,"水",85],["悅","열","기쁠",11,"火",61],["烈","열","매울",10,"火",86],["燁","엽","빛날",16,"火",86],["永","영","길",5,"水",85],["英","영","꽃부리",11,"木",140],["映","영","비칠",9,"火",72],["榮","영","영화",14,"木",75],["暎","영","비칠",13,"火",72],["泳","영","헤엄칠",9,"水",85],["瑛","영","옥빛",14,"金",96],["煐","영","빛날",13,"火",86],["渶","영","물맑을",13,"水",85],["寧","녕","편안할",14,"土",40],["藝","예","재주",21,"木",140],["叡","예","밝을",16,"水",29],["睿","예","슬기",14,"木",109],["譽","예","기릴",21,"金",149],["芮","예","성씨",10,"木",140],["旿","오","밝을",8,"火",72],["悟","오","깨달을",11,"火",61],["玉","옥","구슬",5,"金",96],["溫","온","따뜻할",14,"水",85],["穩","온","평온할",19,"木",115],["完","완","완전할",7,"土",40],["婉","완","예쁠",11,"土",38],["堯","요","요임금",12,"土",32],["瑤","요","아름다운옥",15,"金",96],["曜","요","빛날",18,"火",72],["耀","요","빛날",20,"火",124],["勇","용","날랠",9,"土",19],["容","용","얼굴",10,"土",40],["鎔","용","녹일",18,"金",167],["龍","룡","용",16,"土",212],["宇","우","집",6,"土",40],["祐","우","도울",10,"木",113],["佑","우","도울",7,"火",9],["友","우","벗",4,"水",29],["雨","우","비",8,"水",173],["優","우","넉넉할",17,"火",9],["羽","우","깃",6,"火",124],["旴","우","해돋을",7,"火",72],["玗","우","옥돌",8,"金",96],["瑀","우","패옥",14,"金",96],["旭","욱","아침해",6,"火",72],["昱","욱","빛날",9,"火",72],["煜","욱","빛날",13,"火",86],["郁","욱","성할",13,"土",163],["頊","욱","삼갈",13,"火",181],["雲","운","구름",12,"水",173],["運","운","옮길",16,"土",162],["芸","운","향풀",10,"木",140],["澐","운","큰물결",16,"水",85],["雄","웅","수컷",12,"火",172],["元","원","으뜸",4,"木",10],["媛","원","여자",12,"土",38],["源","원","근원",14,"水",85],["遠","원","멀",17,"土",162],["苑","원","나라동산",11,"木",140],["原","원","언덕",10,"土",27],["圓","원","둥글",13,"土",31],["瑗","원","구슬",14,"金",96],["沅","원","물이름",8,"水",85],["偉","위","클",11,"火",9],["暐","위","햇빛",13,"火",72],["有","유","있을",6,"水",74],["裕","유","넉넉할",13,"木",145],["柔","유","부드러울",9,"木",75],["侑","유","도울",8,"火",9],["惟","유","생각할",12,"火",61],["維","유","벼리",14,"木",120],["由","유","말미암을",5,"木",102],["儒","유","선비",16,"火",9],["唯","유","오직",11,"水",30],["柳","류","버들",9,"木",75],["流","류","흐를",10,"水",85],["允","윤","진실로",4,"土",10],["潤","윤","윤택할",16,"水",85],["胤","윤","맏아들",11,"水",130],["玧","윤","귀막이옥",9,"金",96],["鈗","윤","창",12,"金",167],["尹","윤","다스릴",4,"土",44],["昀","윤","햇빛",8,"火",72],["恩","은","은혜",10,"火",61],["銀","은","은",14,"金",167],["殷","은","성할",10,"金",79],["垠","은","지경",9,"土",32],["誾","은","향기",15,"金",149],["珢","은","옥돌",11,"金",96],["應","응","응할",17,"火",61],["義","의","옳을",13,"火",123],["宜","의","마땅할",8,"土",40],["儀","의","거동",15,"火",9],["誼","의","정",15,"金",149],["伊","이","저",6,"火",9],["怡","이","기쁠",9,"火",61],["珥","이","귀고리",11,"金",96],["頤","이","턱",16,"火",181],["翼","익","날개",18,"火",124],["益","익","더할",10,"金",108],["翊","익","도울",11,"火",124],["仁","인","어질",4,"火",9],["寅","인","범",11,"土",40],["印","인","도장",6,"木",26],["認","인","알",14,"金",149],["逸","일","편안할",15,"土",162],["溢","일","넘칠",14,"水",85],["鎰","일","중량",18,"金",167],["慈","자","사랑",14,"火",61],["章","장","글",11,"金",117],["長","장","긴",8,"木",168],["璋","장","홀",16,"金",96],["在","재","있을",6,"土",32],["才","재","재주",3,"木",64],["材","재","재목",7,"木",75],["宰","재","재상",10,"土",40],["載","재","실을",13,"火",159],["哉","재","어조사",9,"水",30],["栽","재","심을",10,"木",75],["梓","재","가래나무",11,"木",75],["財","재","재물",10,"金",154],["典","전","법",8,"土",12],["全","전","온전할",6,"木",11],["銓","전","저울질할",14,"金",167],["正","정","바를",5,"土",77],["定","정","정할",8,"土",40],["貞","정","곧을",9,"金",154],["庭","정","뜰",10,"土",53],["廷","정","조정",7,"土",54],["晶","정","맑을",12,"火",72],["禎","정","상서로울",14,"木",113],["靜","정","고요할",16,"木",174],["政","정","정사",8,"金",66],["精","정","정할",14,"木",119],["鼎","정","솥",12,"火",206],["珽","정","옥이름",12,"金",96],["姃","정","단정할",8,"土",38],["汀","정","물가",6,"水",85],["炡","정","빛날",9,"火",86],["齊","제","가지런할",14,"土",210],["濟","제","건널",18,"水",85],["悌","제","공경할",11,"火",61],["祚","조","복",10,"木",113],["照","조","비칠",13,"火",86],["朝","조","아침",12,"水",74],["存","존","있을",6,"水",39],["鍾","종","쇠북",17,"金",167],["宗","종","마루",8,"土",40],["琮","종","옥홀",13,"金",96],["周","주","두루",8,"水",30],["柱","주","기둥",9,"木",75],["珠","주","구슬",11,"金",96],["宙","주","집",8,"土",40],["澍","주","단비",16,"水",85],["姝","주","예쁠",9,"土",38],["俊","준","준걸",9,"火",9],["準","준","준할",14,"水",85],["峻","준","높을",10,"土",46],["浚","준","깊을",11,"水",85],["晙","준","밝을",11,"火",72],["埈","준","높을",10,"土",32],["駿","준","준마",17,"火",187],["竣","준","마칠",12,"金",117],["濬","준","깊을",18,"水",85],["仲","중","버금",6,"火",9],["重","중","무거울",9,"土",166],["志","지","뜻",7,"火",61],["智","지","지혜",12,"火",72],["知","지","알",8,"金",111],["址","지","터",7,"土",32],["芝","지","지초",10,"木",140],["祉","지","복",9,"木",113],["枝","지","가지",8,"木",75],["持","지","가질",10,"木",64],["旨","지","뜻",6,"火",72],["眞","진","참",10,"木",109],["珍","진","보배",10,"金",96],["振","진","떨칠",11,"木",64],["鎭","진","진압할",18,"金",167],["晉","진","나아갈",10,"火",72],["辰","진","별",7,"土",161],["進","진","나아갈",15,"土",162],["津","진","나루",10,"水",85],["瑨","진","옥돌",15,"金",96],["燦","찬","빛날",17,"火",86],["贊","찬","도울",19,"金",154],["讚","찬","기릴",26,"金",149],["璨","찬","옥빛",18,"金",96],["粲","찬","정미",13,"木",119],["澯","찬","맑을",17,"水",85],["昌","창","창성할",8,"火",72],["彰","창","드러날",14,"火",59],["暢","창","화창할",14,"火",72],["滄","창","큰바다",14,"水",85],["彩","채","채색",11,"火",59],["采","채","캘",8,"木",165],["埰","채","영지",11,"土",32],["綵","채","비단",14,"木",120],["菜","채","나물",14,"木",140],["天","천","하늘",4,"火",37],["泉","천","샘",9,"水",85],["哲","철","밝을",10,"水",30],["喆","철","밝을",12,"水",30],["澈","철","맑을",16,"水",85],["徹","철","통할",15,"火",60],["淸","청","맑을",12,"水",85],["靑","청","푸를",8,"木",174],["初","초","처음",7,"金",18],["春","춘","봄",9,"火",72],["忠","충","충성",8,"火",61],["充","충","채울",6,"火",10],["致","치","이를",9,"土",133],["治","치","다스릴",9,"水",85],["卓","탁","높을",8,"木",24],["泰","태","클",9,"水",85],["太","태","클",4,"木",37],["兌","태","기쁠",7,"金",10],["台","태","별",5,"水",30],["澤","택","못",17,"水",85],["宅","택","집",6,"土",40],["平","평","평평할",5,"土",51],["弼","필","도울",12,"金",57],["夏","하","여름",10,"火",35],["河","하","물",9,"水",85],["賀","하","하례",12,"金",154],["霞","하","노을",17,"水",173],["昰","하","여름",9,"火",72],["廈","하","큰집",13,"土",53],["荷","하","연꽃",13,"木",140],["學","학","배울",16,"水",39],["鶴","학","학",21,"火",196],["漢","한","한수",15,"水",85],["韓","한","나라",17,"金",178],["翰","한","편지",16,"火",124],["瀚","한","넓고클",20,"水",85],["閑","한","한가할",12,"木",169],["恒","항","항상",10,"火",61],["沆","항","넓을",8,"水",85],["海","해","바다",11,"水",85],["偕","해","함께",11,"火",9],["諧","해","화할",16,"金",149],["香","향","향기",9,"木",186],["憲","헌","법",16,"火",61],["軒","헌","집",10,"火",159],["赫","혁","빛날",14,"火",155],["爀","혁","불빛",18,"火",86],["奕","혁","클",9,"木",37],["賢","현","어질",15,"金",154],["炫","현","빛날",9,"火",86],["鉉","현","솥귀",13,"金",167],["玄","현","검을",5,"火",95],["顯","현","나타날",23,"火",181],["泫","현","이슬빛날",9,"水",85],["絃","현","줄",11,"木",120],["晛","현","햇살",11,"火",72],["峴","현","고개",10,"土",46],["現","현","나타날",12,"金",96],["協","협","화합할",8,"金",24],["亨","형","형통할",7,"土",8],["炯","형","빛날",9,"火",86],["馨","형","꽃다울",20,"木",186],["衡","형","저울대",16,"火",144],["瀅","형","물맑을",19,"水",85],["惠","혜","은혜",12,"火",61],["慧","혜","슬기로울",15,"火",61],["蕙","혜","혜초",18,"木",140],["憓","혜","사랑할",16,"火",61],["浩","호","넓을",11,"水",85],["昊","호","하늘",8,"火",72],["皓","호","흴",12,"金",106],["鎬","호","호경",18,"金",167],["晧","호","밝을",11,"火",72],["豪","호","호걸",14,"水",152],["好","호","좋을",6,"土",38],["湖","호","호수",13,"水",85],["祜","호","복",10,"木",113],["護","호","도울",21,"金",149],["弘","홍","넓을",5,"金",57],["洪","홍","넓을",10,"水",85],["泓","홍","물깊을",9,"水",85],["和","화","화할",8,"水",30],["華","화","빛날",14,"木",140],["花","화","꽃",10,"木",140],["煥","환","빛날",13,"火",86],["桓","환","굳셀",10,"木",75],["歡","환","기쁠",22,"金",76],["奐","환","빛날",9,"木",37],["晃","황","밝을",10,"火",72],["煌","황","빛날",13,"火",86],["孝","효","효도",7,"水",39],["曉","효","새벽",16,"火",72],["厚","후","두터울",9,"土",27],["侯","후","제후",9,"火",9],["煦","후","따뜻할",13,"火",86],["珝","후","옥이름",11,"金",96],["后","후","임금",6,"水",30],["勳","훈","공",16,"土",19],["薰","훈","향풀",20,"木",140],["訓","훈","가르칠",10,"金",149],["壎","훈","질나팔",17,"土",32],["輝","휘","빛날",15,"火",159],["徽","휘","아름다울",17,"火",60],["欣","흔","기쁠",8,"金",76],["昕","흔","아침",8,"火",72],["欽","흠","공경할",12,"金",76],["喜","희","기쁠",12,"水",30],["熙","희","빛날",14,"火",86],["希","희","바랄",7,"木",50],["姬","희","계집",10,"土",38],["禧","희","복",17,"木",113],["曦","희","햇빛",20,"火",72],["憙","희","기쁠",16,"火",61],["熹","희","빛날",16,"火",86]];
+// SURNAMES: [한글, 한자, [글자별 원획], [글자별 자원오행]]
+const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","朴",[6],["木"]],["최","崔",[11],["土"]],["정","鄭",[19],["土"]],["정","丁",[2],["土"]],["정","程",[12],["木"]],["강","姜",[9],["土"]],["강","康",[11],["土"]],["강","江",[7],["水"]],["조","趙",[14],["火"]],["조","曺",[10],["火"]],["조","曹",[11],["火"]],["윤","尹",[4],["土"]],["장","張",[11],["金"]],["장","章",[11],["金"]],["장","蔣",[17],["木"]],["임","林",[8],["木"]],["임","任",[6],["火"]],["한","韓",[17],["金"]],["오","吳",[7],["水"]],["서","徐",[10],["火"]],["신","申",[5],["土"]],["신","辛",[7],["土"]],["신","愼",[14],["火"]],["권","權",[22],["木"]],["황","黃",[12],["土"]],["안","安",[6],["土"]],["송","宋",[7],["土"]],["류","柳",[9],["木"]],["류","劉",[15],["金"]],["유","兪",[9],["木"]],["유","劉",[15],["金"]],["유","柳",[9],["木"]],["전","全",[6],["木"]],["전","田",[5],["土"]],["전","錢",[16],["金"]],["홍","洪",[10],["水"]],["고","高",[10],["土"]],["문","文",[4],["木"]],["양","梁",[11],["木"]],["양","楊",[13],["木"]],["손","孫",[10],["水"]],["배","裵",[14],["木"]],["백","白",[5],["金"]],["허","許",[11],["金"]],["남","南",[9],["火"]],["심","沈",[8],["水"]],["노","盧",[16],["金"]],["노","魯",[15],["水"]],["하","河",[9],["水"]],["곽","郭",[15],["土"]],["성","成",[7],["金"]],["차","車",[7],["火"]],["주","朱",[6],["木"]],["주","周",[8],["水"]],["우","禹",[9],["土"]],["구","具",[8],["土"]],["민","閔",[12],["木"]],["나","羅",[20],["土"]],["진","陳",[16],["土"]],["진","秦",[10],["木"]],["지","池",[7],["水"]],["엄","嚴",[20],["水"]],["채","蔡",[17],["木"]],["원","元",[4],["木"]],["천","千",[3],["金"]],["방","方",[4],["土"]],["공","孔",[4],["水"]],["현","玄",[5],["火"]],["함","咸",[9],["水"]],["변","卞",[4],["火"]],["변","邊",[22],["土"]],["염","廉",[13],["土"]],["여","呂",[7],["水"]],["추","秋",[9],["木"]],["도","都",[16],["土"]],["소","蘇",[22],["木"]],["석","石",[5],["金"]],["선","宣",[9],["土"]],["설","薛",[19],["木"]],["마","馬",[10],["火"]],["길","吉",[6],["水"]],["연","延",[7],["土"]],["위","魏",[18],["土"]],["표","表",[9],["木"]],["명","明",[8],["火"]],["기","奇",[8],["木"]],["반","潘",[16],["水"]],["왕","王",[4],["金"]],["금","琴",[13],["金"]],["옥","玉",[5],["金"]],["육","陸",[16],["土"]],["인","印",[6],["木"]],["맹","孟",[8],["水"]],["제","諸",[16],["金"]],["모","毛",[4],["土"]],["탁","卓",[8],["木"]],["국","鞠",[17],["土"]],["어","魚",[11],["水"]],["은","殷",[10],["金"]],["편","片",[4],["土"]],["용","龍",[16],["土"]],["예","芮",[10],["木"]],["경","景",[12],["火"]],["봉","奉",[8],["木"]],["사","史",[5],["水"]],["부","夫",[4],["木"]],["황보","皇甫",[9,7],["金","水"]],["남궁","南宮",[9,10],["火","土"]],["제갈","諸葛",[16,15],["金","木"]],["선우","鮮于",[17,3],["水","土"]],["독고","獨孤",[17,8],["土","水"]],["사공","司空",[5,8],["水","水"]],["서문","西門",[6,8],["土","木"]]];
+
+</script>
+<script>
+// =====================================================================
+// 성명학 엔진: 사주 계산 · 오행 · 음양 · 81수리(원형이정) · 발음오행 · 점수
+// (브라우저와 Node 양쪽에서 동작하도록 작성)
+// =====================================================================
+(function (root) {
+  'use strict';
+
+  // ---------- 기본 상수 ----------
+  const STEMS = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  const STEMS_KO = ['갑','을','병','정','무','기','경','신','임','계'];
+  const BRANCHES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  const BRANCHES_KO = ['자','축','인','묘','진','사','오','미','신','유','술','해'];
+  const ANIMALS = ['쥐','소','호랑이','토끼','용','뱀','말','양','원숭이','닭','개','돼지'];
+  const STEM_EL = ['木','木','火','火','土','土','金','金','水','水'];
+  const BRANCH_EL = ['水','土','木','木','土','火','火','土','金','金','土','水'];
+  const ELS = ['木','火','土','金','水'];
+  const EL_KO = { 木:'목', 火:'화', 土:'토', 金:'금', 水:'수' };
+  const GEN = { 木:'火', 火:'土', 土:'金', 金:'水', 水:'木' };   // 상생: A가 B를 낳음
+  const CTRL = { 木:'土', 土:'水', 水:'火', 火:'金', 金:'木' };  // 상극: A가 B를 누름
+
+  function relation(a, b) {
+    if (a === b) return '비화';
+    if (GEN[a] === b || GEN[b] === a) return '상생';
+    return '상극';
+  }
+  const mod = (n, m) => ((n % m) + m) % m;
+
+  // ---------- 81수리 (원형이정 4격 길흉) ----------
+  // 등급: 2=길, 1=반길, 0=흉  (유파에 따라 일부 수의 판단이 다를 수 있음)
+  const SURI_TXT = `1 태초격 만물의 시작, 큰 뜻을 품고 성공
+2 분리격 분산·이별의 기운, 독립심 약함
+3 명예격 지혜와 재능으로 명예를 얻음
+4 부정격 파란과 고난이 많음
+5 성공격 덕망과 화합으로 크게 성공
+6 계승격 덕이 두텁고 가문을 이어 번창
+7 독립격 강한 의지로 자수성가
+8 발달격 끈기와 노력으로 발전
+9 궁박격 재능은 있으나 곤궁함
+10 공허격 노력에 비해 결실이 적음
+11 신성격 새롭게 일어나 재물이 늘어남
+12 박약격 의지가 약하고 고립되기 쉬움
+13 지모격 총명하고 지략이 뛰어남
+14 이산격 가족과 재물이 흩어지기 쉬움
+15 통솔격 인덕과 리더십으로 존경받음
+16 덕망격 덕망이 높아 귀인의 도움
+17 건창격 강건하고 뜻을 관철함
+18 발전격 지혜와 의지로 크게 발전
+19 고난격 재주는 많으나 장애가 따름
+20 허망격 노력이 헛되기 쉬움
+21 두령격 우두머리가 되어 이름을 떨침
+22 중절격 일이 중도에 꺾이기 쉬움
+23 공명격 왕성한 기운으로 공을 세움
+24 입신격 맨손으로 일어나 재물을 모음
+25 안강격 건강하고 재능을 발휘
+26 영웅격 영웅적 기질, 파란을 동반
+27 중단격 자존심이 강해 중도 좌절 우려
+28 파란격 풍파와 변동이 많음
+29 성공격 지혜와 재력을 겸비
+30 부몽격 길흉이 엇갈리는 부침
+31 융창격 지혜·인덕으로 번영
+32 순풍격 순풍에 돛 단 듯 행운
+33 승천격 용이 하늘에 오르듯 크게 성공
+34 파멸격 뜻밖의 재난과 손실
+35 태평격 온화하고 평안한 삶
+36 의협격 의리가 강하나 파란이 많음
+37 인덕격 성실함과 인덕으로 성공
+38 복록격 학문·예술로 복을 누림
+39 안락격 부귀와 안락을 누림
+40 무상격 성패의 변화가 심함
+41 고명격 덕과 지혜를 갖춰 명성을 얻음
+42 고행격 재능은 많으나 고생이 따름
+43 미혹격 겉은 화려하나 실속이 없음
+44 마장격 일마다 장애가 많음
+45 대지격 큰 뜻을 이루어 번영
+46 부지격 기반이 약해 고생
+47 출세격 귀인의 도움으로 출세
+48 유덕격 덕망과 지혜로 존경받음
+49 은퇴격 길흉이 반복되는 변화
+50 부몽격 성공 뒤 실패가 따르기 쉬움
+51 성패격 성공과 실패가 교차
+52 약진격 선견지명으로 크게 도약
+53 내허격 겉보기와 달리 속이 빔
+54 무공격 노력해도 공이 적음
+55 미달격 뜻을 다 이루지 못함
+56 한탄격 의욕 부족으로 실패
+57 노력격 노력 끝에 성공
+58 후복격 처음은 고생, 나중에 복
+59 재화격 인내가 부족해 어려움
+60 암흑격 방향을 잃기 쉬움
+61 영화격 명예와 재물을 얻음
+62 고독격 고립되기 쉬움
+63 길상격 만사가 순조로움
+64 침체격 침체와 고난
+65 휘양격 크게 빛나고 번영
+66 우매격 진퇴가 어려움
+67 천복격 하늘이 내린 복
+68 명지격 지혜롭고 발명의 재능
+69 종말격 불안정과 곤란
+70 공허격 공허하고 쓸쓸함
+71 견실격 노력하면 발전(반길)
+72 상반격 길흉이 반반
+73 평길격 큰 굴곡 없이 평안
+74 우매격 노력이 결실을 못 맺음
+75 정수격 분수를 지키면 평안
+76 선곤격 처음엔 곤궁
+77 전후격 앞은 길하나 뒤는 흉(반길)
+78 선길격 초반은 길하나 후반 쇠퇴(반길)
+79 종극격 끝이 좋지 않음
+80 종결격 한 주기를 마무리하는 수
+81 환원격 다시 1로 돌아가는 최상의 수`;
+  const GOOD = new Set([1,3,5,6,7,8,11,13,15,16,17,18,21,23,24,25,29,31,32,33,35,37,38,39,41,45,47,48,52,57,58,61,63,65,67,68,73,75,81]);
+  const HALF = new Set([51,71,77,78]);
+  const SURI = {};
+  SURI_TXT.split('\n').forEach(l => {
+    const m = l.match(/^(\d+) (\S+) (.*)$/);
+    const n = +m[1];
+    SURI[n] = { n, name: m[2], desc: m[3], grade: GOOD.has(n) ? 2 : HALF.has(n) ? 1 : 0 };
+  });
+  function suri(n) { while (n > 81) n -= 80; return SURI[n]; }
+  const GRADE_KO = ['흉', '반길', '길'];
+
+  // 수리오행: 획수 끝자리 기준 (1·2 木, 3·4 火, 5·6 土, 7·8 金, 9·0 水)
+  const numEl = n => ['水','木','木','火','火','土','土','金','金','水'][n % 10];
+
+  // ---------- 한글 처리 · 발음오행 ----------
+  const CHO_EL = { 0:'木',1:'木',15:'木', 2:'火',3:'火',4:'火',5:'火',16:'火', 11:'土',18:'土',
+                   9:'金',10:'金',12:'金',13:'金',14:'金', 6:'水',7:'水',8:'水',17:'水' };
+  const CHO_NAME = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+  function decompose(s) {
+    const c = s.charCodeAt(0) - 0xAC00;
+    if (c < 0 || c > 11171) return null;
+    return { cho: Math.floor(c / 588), jung: Math.floor((c % 588) / 28), jong: c % 28 };
+  }
+  const compose = (cho, jung, jong) => String.fromCharCode(0xAC00 + cho * 588 + jung * 28 + jong);
+  // 두음법칙: 률→율, 녕→영, 라→나 …
+  function dooeum(s) {
+    const d = decompose(s); if (!d) return s;
+    const iy = [2,3,6,7,12,17,20].includes(d.jung);
+    if (d.cho === 5) return compose(iy ? 11 : 2, d.jung, d.jong);
+    if (d.cho === 2 && iy) return compose(11, d.jung, d.jong);
+    return s;
+  }
+  function soundEl(s) { const d = decompose(s); return d ? CHO_EL[d.cho] : null; }
+
+  // ---------- 날짜/천문 계산 ----------
+  function jdn(y, m, d) { // 그레고리력 → 율리우스 적일(정수)
+    const a = Math.floor((14 - m) / 12), yy = y + 4800 - a, mm = m + 12 * a - 3;
+    return d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4) - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
+  }
+  function sunLongitude(jd) { // 태양 겉보기 황경(도) — Meeus 저정밀 공식(오차 약 0.01°)
+    const T = (jd - 2451545.0) / 36525, r = Math.PI / 180;
+    const L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
+    const M = 357.52911 + 35999.05029 * T - 0.0001537 * T * T;
+    const C = (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(M * r)
+            + (0.019993 - 0.000101 * T) * Math.sin(2 * M * r) + 0.000289 * Math.sin(3 * M * r);
+    const om = 125.04 - 1934.136 * T;
+    return mod(L0 + C - 0.00569 - 0.00478 * Math.sin(om * r), 360);
+  }
+  const JIEQI = ['입춘','경칩','청명','입하','망종','소서','입추','백로','한로','입동','대설','소한'];
+
+  // ---------- 사주팔자 ----------
+  // opts: {y,m,d, hour, minute (null=시간 모름), correct: true면 동경135°→서울 경도 보정(-30분)}
+  function saju(opts) {
+    const { y, m, d } = opts;
+    const known = opts.hour !== null && opts.hour !== undefined && opts.hour !== '';
+    const hh = known ? +opts.hour : 12, mi = known ? +(opts.minute || 0) : 0;
+    // 절기 판정용 시각(UTC 기준 JD): 한국 표준시 UTC+9
+    const jd = jdn(y, m, d) - 0.5 + (hh - 9) / 24 + mi / 1440;
+    const lon = sunLongitude(jd);
+    const monthIdx = Math.floor(mod(lon - 315, 360) / 30);   // 0 = 寅월(입춘~경칩)
+    let yy = y;
+    if (m <= 2 && monthIdx >= 10) yy = y - 1;                 // 입춘 전이면 전년도
+    const yearGZ = mod(yy - 4, 60);
+    const yS = yearGZ % 10, yB = yearGZ % 12;
+    const mS = mod((yS % 5) * 2 + 2 + monthIdx, 10), mB = (monthIdx + 2) % 12;
+    // 시간: 경도 보정 후 23시 이후면 다음 날 子시로 봄(조자시 기준)
+    let tmin = hh * 60 + mi - (opts.correct === false ? 0 : 30);
+    let dayShift = 0;
+    if (tmin < 0) { tmin += 1440; dayShift = -1; }
+    if (known && tmin >= 23 * 60) dayShift += 1;
+    const dayGZ = mod(jdn(y, m, d) + dayShift + 49, 60);
+    const dS = dayGZ % 10, dB = dayGZ % 12;
+    const pillars = [
+      { label: '연주', s: yS, b: yB },
+      { label: '월주', s: mS, b: mB },
+      { label: '일주', s: dS, b: dB },
+    ];
+    if (known) {
+      const hB = Math.floor((tmin + 60) / 120) % 12;
+      pillars.push({ label: '시주', s: mod((dS % 5) * 2 + hB, 10), b: hB });
+    }
+    // 오행 분포 (월지는 계절의 힘이 커서 가중치 2)
+    const count = { 木:0, 火:0, 土:0, 金:0, 水:0 };
+    pillars.forEach((p, i) => { count[STEM_EL[p.s]] += 1; count[BRANCH_EL[p.b]] += (i === 1 ? 2 : 1); });
+    const raw = { 木:0, 火:0, 土:0, 金:0, 水:0 };
+    pillars.forEach(p => { raw[STEM_EL[p.s]]++; raw[BRANCH_EL[p.b]]++; });
+    // 일간 강약(억부): 나와 같은 오행(비겁) + 나를 낳는 오행(인성) vs 나머지
+    const me = STEM_EL[dS];
+    const mother = ELS.find(e => GEN[e] === me);
+    const total = Object.values(count).reduce((a, b) => a + b, 0) - 1; // 일간 자신 제외
+    const support = count[me] - 1 + count[mother];
+    const strong = support >= total / 2;
+    const child = GEN[me], wealth = CTRL[me], officer = ELS.find(e => CTRL[e] === me);
+    let yong;
+    if (strong) yong = [child, wealth, officer].sort((a, b) => count[a] - count[b]);
+    else yong = [mother, me].sort((a, b) => count[a] - count[b]);
+    const missing = ELS.filter(e => raw[e] === 0);
+    // 필요한 오행 순위: 용신(첫째) > 희신 > 부족 오행
+    const need = [];
+    [yong[0], yong[1], ...missing].forEach(e => { if (e && !need.includes(e)) need.push(e); });
+    const max = Math.max(...ELS.map(e => count[e]));
+    const avoid = ELS.filter(e => count[e] === max && max >= 3 && !need.includes(e));
+    if (strong && !avoid.includes(me) && !need.includes(me)) avoid.push(me);
+    if (!strong && !avoid.includes(wealth) && count[wealth] >= 2 && !need.includes(wealth)) avoid.push(wealth);
+    return {
+      input: opts, hourKnown: known, sajuYear: yy,
+      pillars: pillars.map(p => ({ ...p, stem: STEMS[p.s], branch: BRANCHES[p.b],
+        ko: STEMS_KO[p.s] + BRANCHES_KO[p.b], sEl: STEM_EL[p.s], bEl: BRANCH_EL[p.b] })),
+      animal: ANIMALS[yB], dayMaster: { stem: STEMS[dS], ko: STEMS_KO[dS], el: me },
+      count, raw, strong, need, avoid, missing,
+      jieqi: JIEQI[monthIdx],
+    };
+  }
+
+  // ---------- 한자 DB 색인 ----------
+  let BY_READ = null, BY_CHAR = null;
+  function index(HANJA) {
+    BY_READ = {}; BY_CHAR = {};
+    HANJA.forEach(r => {
+      const h = { ch: r[0], eum: r[1], hun: r[2], strokes: r[3], el: r[4] };
+      BY_CHAR[h.ch] = h;
+      const keys = new Set([h.eum, dooeum(h.eum)]);
+      keys.forEach(k => (BY_READ[k] = BY_READ[k] || []).push(h));
+    });
+  }
+  const candidates = syl => (BY_READ[syl] || []);
+
+  // 뜻이 이름에 어색한 글자(어조사·사물 등): 자동 추천에서 제외, 직접 찾기에서는 감점
+  const AWKWARD = new Set('哉可那奈由唯汝如細勢歲兒阿斗島男南台認印授持枝宅鳴菜茶多栗汎'.split(''));
+  // 전통 성명학의 불용문자(자연물·계절 등 기운이 약하거나 강하다고 보는 글자): 소폭 감점
+  const BULYONG = new Set('雨雪花春夏石玉龍鶴光笑'.split(''));
+
+  // ---------- 성명 평가 ----------
+  // sur: {ko:'김', hanja:'金', strokes:[8], els:['金']}, given: [{ko, ch, strokes, el}], sj: saju 결과(없으면 null)
+  function evaluate(sur, given, sj) {
+    const S = sur.strokes.reduce((a, b) => a + b, 0);
+    const g = given.map(x => x.strokes);
+    // 원형이정 4격
+    let won, hyung, yi, jeong;
+    if (g.length === 1) { won = g[0]; hyung = S + g[0]; yi = S; jeong = S + g[0]; }
+    else { won = g[0] + g[1]; hyung = S + g[0]; yi = S + g[1]; jeong = S + g[0] + g[1]; }
+    const gyeok = [
+      { key: '원격', age: '초년운(~20세)', n: won },
+      { key: '형격', age: '청년운(20~40세)', n: hyung },
+      { key: '이격', age: '장년운(40~60세)', n: yi },
+      { key: '정격', age: '총운(평생)', n: jeong },
+    ].map(x => ({ ...x, ...suri(x.n), num: x.n }));
+    const suriScore = gyeok.reduce((a, x) => a + [0, 5, 10][x.grade], 0); // 40점
+
+    // 음양 (획수 홀=양, 짝=음)
+    const all = [...sur.strokes, ...g];
+    const yy = all.map(n => (n % 2 ? '양' : '음'));
+    const mixed = new Set(yy).size > 1;
+    const yinyangScore = mixed ? 10 : 0;
+
+    // 발음오행 (각 음절 초성)
+    const syl = [...sur.ko.split(''), ...given.map(x => x.ko)];
+    const sEls = syl.map(soundEl);
+    let soundScore = 0; const soundRel = [];
+    for (let i = 0; i < sEls.length - 1; i++) {
+      const r = relation(sEls[i], sEls[i + 1]); soundRel.push(r);
+      soundScore += r === '상생' ? 1 : r === '비화' ? 0.6 : 0;
+    }
+    soundScore = Math.round(soundScore / soundRel.length * 15 * 10) / 10; // 15점
+    if (sEls.length >= 3 && sEls[0] === sEls[1] && sEls[1] === sEls[2]) soundScore = Math.min(soundScore, 6);
+
+    // 삼원오행 (천격=성, 인격=성+이름첫자, 지격=이름 합)
+    const sam = [S, S + g[0], g.reduce((a, b) => a + b, 0)].map(numEl);
+    const samRel = [relation(sam[0], sam[1]), relation(sam[1], sam[2])];
+    const samScore = samRel.reduce((a, r) => a + (r === '상생' ? 5 : r === '비화' ? 3 : 0), 0); // 10점
+
+    // 자원오행 (사주 보완)
+    let jaScore = 0; const jaNote = [];
+    const gEls = given.map(x => x.el);
+    if (sj) {
+      const per = 20 / gEls.length;
+      gEls.forEach((e, i) => {
+        const rank = sj.need.indexOf(e);
+        let p;
+        if (rank === 0) p = 1; else if (rank === 1) p = 0.85; else if (rank > 1) p = 0.7;
+        else if (sj.avoid.includes(e)) p = 0; else p = 0.35;
+        jaScore += per * p;
+        jaNote.push(rank === 0 ? '용신 보완' : rank > 0 ? '부족 오행 보완' : sj.avoid.includes(e) ? '과다 오행(주의)' : '중립');
+      });
+    } else {
+      jaScore = 10; gEls.forEach(() => jaNote.push('사주 미입력'));
+    }
+    // 자원오행 흐름(성→이름 순서의 상생)
+    const flow = [sur.els[sur.els.length - 1], ...gEls];
+    let fl = 0; for (let i = 0; i < flow.length - 1; i++) { const r = relation(flow[i], flow[i + 1]); fl += r === '상생' ? 1 : r === '비화' ? 0.5 : 0; }
+    jaScore += 5 * fl / (flow.length - 1);
+    jaScore = Math.round(jaScore * 10) / 10; // 25점
+
+    // 감점: 같은 한자 반복, 성씨 한자 반복
+    let penalty = 0; const warn = [];
+    if (given.length === 2 && given[0].ch === given[1].ch) { penalty += 10; warn.push('같은 한자가 반복됨'); }
+    if (given.some(x => sur.hanja.includes(x.ch))) { penalty += 8; warn.push('성씨와 같은 한자 사용'); }
+    given.forEach(x => {
+      if (AWKWARD.has(x.ch)) { penalty += 6; warn.push(`${x.ch}(${x.hun}): 이름에 드물게 쓰는 뜻`); }
+      if (BULYONG.has(x.ch)) { penalty += 3; warn.push(`${x.ch}: 전통 불용문자로 보는 유파가 있음`); }
+    });
+    if (gyeok.some(x => x.grade === 0)) warn.push('흉수 포함: ' + gyeok.filter(x => x.grade === 0).map(x => x.key + ' ' + x.num + '수').join(', '));
+
+    const total = Math.max(0, Math.round((suriScore + yinyangScore + soundScore + samScore + jaScore - penalty) * 10) / 10);
+    return {
+      total, grade: total >= 92 ? '최상' : total >= 85 ? '상' : total >= 75 ? '중상' : total >= 65 ? '중' : '보통',
+      parts: { suri: suriScore, yinyang: yinyangScore, sound: soundScore, sam: samScore, ja: jaScore },
+      gyeok, yy, mixed, syl, sEls, soundRel, sam, samRel, gEls, jaNote, warn,
+    };
+  }
+
+  // 한 한글 이름에 대해 가능한 모든 한자 조합을 평가해 점수순 정렬
+  function rankHanja(sur, nameSyl, sj, fixed, strict) {
+    const lists = nameSyl.map((s, i) => (fixed && fixed[i]) ? [fixed[i]]
+      : candidates(s).filter(h => !strict || !(AWKWARD.has(h.ch) || BULYONG.has(h.ch))));
+    if (lists.some(l => !l.length)) return [];
+    const out = [];
+    const rec = (i, acc) => {
+      if (i === lists.length) {
+        const given = acc.map((h, k) => ({ ...h, ko: nameSyl[k] }));
+        out.push({ given, ev: evaluate(sur, given, sj) });
+        return;
+      }
+      lists[i].forEach(h => rec(i + 1, [...acc, h]));
+    };
+    rec(0, []);
+    out.sort((a, b) => b.ev.total - a.ev.total);
+    return out;
+  }
+
+  root.Naming = { STEMS, BRANCHES, ELS, EL_KO, GEN, CTRL, CHO_NAME, relation, suri, GRADE_KO, numEl,
+    decompose, dooeum, soundEl, jdn, sunLongitude, saju, index, candidates, evaluate, rankHanja,
+    byChar: c => BY_CHAR && BY_CHAR[c] };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+// =====================================================================
+// 화면 로직: 입력 → 사주 계산 → 이름 추천 / 한자 찾기 → 카드 렌더링
+// =====================================================================
+(function () {
+  'use strict';
+  const N = window.Naming;
+  N.index(HANJA);
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const EL_CLASS = { 木: 'wood', 火: 'fire', 土: 'earth', 金: 'metal', 水: 'water' };
+  const elTag = e => `<span class="el el-${EL_CLASS[e]}">${e}<small>${N.EL_KO[e]}</small></span>`;
+
+  // ---------- 인기 이름(한글) 후보 ----------
+  const NAMES = {
+    M: '도윤 서준 하준 은우 시우 지호 예준 유준 수호 이준 준우 지후 건우 우진 선우 서진 민준 현우 연우 유찬 정우 승우 시윤 지환 승민 준서 지훈 윤우 태윤 민재 은찬 하율 도현 재윤 시후 한결 준혁 지성 민성 현준 성민 동현 재민 태민 승현 민호 재현 현서 우현 준영 은호 태현 성준 진우 시원 규민 영준 준호 상우 민혁 재원 정민 경민 세진 진호 태준 선호 민규 승준 은성 윤호 지혁 서우 주원 도원 시현 주안 연호 성현 원준 준희 태하 이현 도하 율 윤재 태경 정훈 지완 건희 승훈 현호 우재 해준 하진 경준 범준 석진 의준 상현'.split(' '),
+    F: '서아 하윤 지안 이서 서윤 하은 지우 아윤 수아 윤서 지아 서연 하린 채원 지유 다은 예린 소율 시아 유나 서하 예은 연우 수빈 나은 채윤 민서 지원 서은 예서 윤아 하율 가은 아린 소은 지민 유진 세아 은서 다인 수연 지윤 서현 예원 채은 하연 유주 소윤 다현 서영 민지 수민 혜원 지혜 예진 가윤 나윤 서진 아인 유하 연서 수현 다연 하진 지은 채아 은채 이현 시은 예나 주아 세은 효주 연아 수진 해인 소연 가희 은지 정원 서희 다온 윤하 소희 채린 혜인 예지 아현 지수 하영 서율 리아 미소 보은 선아 은솔'.split(' '),
+  };
+  NAMES.U = [...new Set([...NAMES.M, ...NAMES.F])];
+
+  // ---------- 성씨 선택 ----------
+  const surSel = $('#sur');
+  const surKos = [...new Set(SURNAMES.map(s => s[0]))];
+  surSel.innerHTML = surKos.map(k => {
+    const opts = SURNAMES.filter(s => s[0] === k);
+    return opts.map(s => `<option value="${s[0]}|${s[1]}">${s[0]} (${s[1]})</option>`).join('');
+  }).join('');
+  function surname() {
+    const [ko, hanja] = surSel.value.split('|');
+    const row = SURNAMES.find(s => s[0] === ko && s[1] === hanja);
+    return { ko, hanja, strokes: row[2], els: row[3] };
+  }
+
+  // ---------- 사주 입력 ----------
+  function readBirth() {
+    const v = $('#bdate').value; if (!v) return null;
+    let [y, m, d] = v.split('-').map(Number);
+    if ($('#cal').value === 'lunar') {
+      const c = new KoreanLunarCalendar();
+      if (!c.setLunarDate(y, m, d, $('#leap').checked)) return { error: '음력 날짜를 확인해 주세요 (1000~2050년, 해당 월의 일수).' };
+      const s = c.getSolarCalendar(); y = s.year; m = s.month; d = s.day;
+    }
+    const tUnknown = $('#tunknown').checked, t = $('#btime').value;
+    const [hh, mi] = (!tUnknown && t) ? t.split(':').map(Number) : [null, null];
+    return N.saju({ y, m, d, hour: hh, minute: mi, correct: $('#correct').checked });
+  }
+
+  function renderSaju(sj) {
+    const box = $('#sajuOut');
+    if (!sj) { box.innerHTML = '<p class="muted">생년월일을 입력하면 사주 오행 분석이 표시됩니다.</p>'; return; }
+    if (sj.error) { box.innerHTML = `<p class="err">${esc(sj.error)}</p>`; return; }
+    const ps = [...sj.pillars].reverse(); // 시·일·월·연 순(전통 표기)
+    const cols = ps.map(p => `<div class="pillar${p.label === '일주' ? ' me' : ''}">
+        <span class="plabel">${p.label}</span>
+        <span class="gz el-${EL_CLASS[p.sEl]}">${p.stem}</span>
+        <span class="gz el-${EL_CLASS[p.bEl]}">${p.branch}</span>
+        <span class="pko">${p.ko}</span></div>`).join('');
+    const max = Math.max(...N.ELS.map(e => sj.count[e]), 1);
+    const bars = N.ELS.map(e => `<div class="bar"><span class="bl">${e}</span>
+        <span class="track"><span class="fill el-bg-${EL_CLASS[e]}" style="width:${sj.count[e] / max * 100}%"></span></span>
+        <span class="bn">${sj.raw[e]}</span></div>`).join('');
+    const i = sj.input;
+    box.innerHTML = `
+      <div class="pillars">${cols}${sj.hourKnown ? '' : '<div class="pillar ghost"><span class="plabel">시주</span><span class="gz">?</span><span class="gz">?</span><span class="pko">시간 모름</span></div>'}</div>
+      <p class="sajumeta">양력 ${i.y}.${i.m}.${i.d} · ${sj.animal}띠 · ${sj.jieqi} 절기 구간</p>
+      <div class="bars">${bars}</div>
+      <dl class="yong">
+        <div><dt>일간</dt><dd>${sj.dayMaster.stem}(${sj.dayMaster.ko}) ${elTag(sj.dayMaster.el)} · ${sj.strong ? '신강' : '신약'}</dd></div>
+        <div class="need"><dt>보완할 오행</dt><dd>${sj.need.map(elTag).join(' ')}</dd></div>
+        <div><dt>피할 오행</dt><dd>${sj.avoid.length ? sj.avoid.map(elTag).join(' ') : '<span class="muted">없음</span>'}</dd></div>
+      </dl>`;
+  }
+
+  // ---------- 이름 카드 ----------
+  function nameCard(item, rank) {
+    const { given, ev } = item;
+    const sur = surname();
+    const fullKo = sur.ko + given.map(g => g.ko).join('');
+    const fullH = sur.hanja + given.map(g => g.ch).join('');
+    const chars = [
+      ...sur.hanja.split('').map((c, k) => ({ ch: c, ko: sur.ko[k] || sur.ko, sub: '성씨', strokes: sur.strokes[k], el: sur.els[k], surname: true })),
+      ...given.map(g => ({ ch: g.ch, ko: g.ko, sub: `${g.hun} ${g.eum}`, strokes: g.strokes, el: g.el })),
+    ];
+    const P = ev.parts;
+    const parts = [['수리', P.suri, 40], ['자원오행', P.ja, 25], ['발음오행', P.sound, 15], ['음양', P.yinyang, 10], ['삼원오행', P.sam, 10]];
+    const gy = ev.gyeok.map(g => `<tr><th>${g.key}</th><td>${g.age}</td><td class="num">${g.num}</td>
+        <td><span class="pill g${g.grade}">${N.GRADE_KO[g.grade]}</span></td><td>${g.name} — ${g.desc}</td></tr>`).join('');
+    const alts = (item.alts || []).map(a => `<li><b>${a.given.map(g => g.ch).join('')}</b> ${a.given.map(g => g.hun + ' ' + g.eum).join(', ')} <span class="num">${a.ev.total}점</span></li>`).join('');
+    return `<article class="card">
+      <header class="chead">
+        ${rank ? `<span class="rank">${rank}</span>` : ''}
+        <div class="score" style="--p:${ev.total}"><b>${Math.round(ev.total)}</b><small>${ev.grade}</small></div>
+      </header>
+      <div class="chars">${chars.map(c => `<div class="ch${c.surname ? ' sur' : ''}">
+          <span class="hz">${c.ch}</span><span class="hk">${c.ko}</span>
+          <span class="hs">${esc(c.sub)}</span>
+          <span class="hm">${c.strokes}획 ${elTag(c.el)}</span></div>`).join('')}</div>
+      <p class="meaning">${given.map(g => `<b>${g.ch}</b> ${esc(g.hun)}`).join(' · ')}</p>
+      <ul class="parts">${parts.map(([k, v, m]) => `<li><span>${k}</span><span class="pt"><i style="width:${v / m * 100}%"></i></span><span class="num">${v}/${m}</span></li>`).join('')}</ul>
+      ${ev.warn.length ? `<p class="warn">${ev.warn.map(esc).join(' · ')}</p>` : ''}
+      <details><summary>상세 감명 보기</summary>
+        <h4>원형이정 4격 (81수리)</h4>
+        <div class="tw"><table><tbody>${gy}</tbody></table></div>
+        <h4>음양 · 발음오행 · 삼원오행</h4>
+        <ul class="facts">
+          <li><b>획수 음양</b> ${ev.yy.join(' · ')} → ${ev.mixed ? '음양 조화' : '한쪽으로 치우침'}</li>
+          <li><b>발음오행</b> ${ev.syl.map((s, k) => `${s}(${N.CHO_NAME[N.decompose(s).cho]}) ${elTag(ev.sEls[k])}`).join(' → ')} <span class="muted">${ev.soundRel.join(', ')}</span></li>
+          <li><b>삼원오행</b> 천격 ${elTag(ev.sam[0])} → 인격 ${elTag(ev.sam[1])} → 지격 ${elTag(ev.sam[2])} <span class="muted">${ev.samRel.join(', ')}</span></li>
+          <li><b>자원오행</b> ${given.map((g, k) => `${g.ch} ${elTag(g.el)} <span class="muted">${ev.jaNote[k]}</span>`).join(' / ')}</li>
+        </ul>
+        ${alts ? `<h4>같은 소리의 다른 한자 조합</h4><ul class="alts">${alts}</ul>` : ''}
+      </details>
+      <button class="copy" type="button" data-copy="${esc(fullKo + ' ' + fullH)}">${esc(fullKo)} ${esc(fullH)} 복사</button>
+    </article>`;
+  }
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-copy]'); if (!b) return;
+    const t = b.dataset.copy;
+    const done = () => { const o = b.textContent; b.textContent = '복사됨'; setTimeout(() => (b.textContent = o), 1200); };
+    const fail = () => { b.textContent = t; b.classList.add('sel'); }; // 복사 불가 시 텍스트를 보여 직접 선택하게 함
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, fail); else fail();
+  });
+
+  // ---------- 기능 1: 사주 맞춤 추천 ----------
+  let pool = [], shown = new Set();
+  function hangSpec() {
+    const v = $('#hangSel').value; if (!v) return null;
+    return { h: N.byChar(v), pos: +$('#hangPos').value };
+  }
+  function fillHangSel() {
+    const s = $('#hangEum').value.trim();
+    const list = s ? N.candidates(s) : [];
+    $('#hangSel').innerHTML = '<option value="">항렬자 없음</option>' + list.map(h => `<option value="${h.ch}">${h.ch} (${h.hun} ${h.eum}, ${h.strokes}획)</option>`).join('');
+    if (list.length) $('#hangSel').value = list[0].ch;
+    $('#hangHint').textContent = s && !list.length ? `‘${s}’ 음의 한자가 데이터에 없습니다.` : '';
+  }
+  function buildPool(sj) {
+    const sur = surname();
+    const gender = $('#gender').value;
+    let names = NAMES[gender].filter(n => n.length === 2 || $('#allowOne').checked);
+    const hs = hangSpec();
+    let fixed = null;
+    if (hs) {
+      const other = new Set();
+      NAMES[gender].forEach(n => { if (n.length === 2) other.add(n[1 - hs.pos]); });
+      names = [...other].filter(o => o !== hs.h.eum).map(o => hs.pos === 0 ? hs.h.eum + o : o + hs.h.eum);
+      fixed = hs.pos === 0 ? [hs.h, null] : [null, hs.h];
+    }
+    pool = names.map(n => {
+      const r = N.rankHanja(sur, n.split(''), sj, fixed, true);
+      return r.length ? { hangul: n, ...r[0], alts: r.slice(1, 4) } : null;
+    }).filter(Boolean).sort((a, b) => b.ev.total - a.ev.total);
+    shown = new Set();
+  }
+  function pickFive() {
+    const top = pool.slice(0, Math.max(30, Math.ceil(pool.length * 0.45))).filter(x => !shown.has(x.hangul));
+    let src = top.length >= 5 ? top : pool.filter(x => !shown.has(x.hangul));
+    let reset = false;
+    if (src.length < 5) { shown = new Set(); src = pool.slice(0, 30); reset = true; }
+    // 점수가 높을수록 뽑힐 확률이 높은 가중 무작위 추출
+    const pick = [], bag = [...src];
+    while (pick.length < 5 && bag.length) {
+      const w = bag.map(x => Math.pow(Math.max(x.ev.total - 50, 1), 3));
+      let r = Math.random() * w.reduce((a, b) => a + b, 0), i = 0;
+      while ((r -= w[i]) > 0) i++;
+      pick.push(bag.splice(i, 1)[0]);
+    }
+    pick.sort((a, b) => b.ev.total - a.ev.total).forEach(x => shown.add(x.hangul));
+    return { pick, reset };
+  }
+  let round = 0;
+  function showRecs(rebuild) {
+    const sj = readBirth();
+    renderSaju(sj);
+    if (!sj || sj.error) { $('#recOut').innerHTML = '<p class="muted">생년월일을 먼저 입력해 주세요.</p>'; return; }
+    if (rebuild) { buildPool(sj); round = 0; }
+    if (!pool.length) { $('#recOut').innerHTML = '<p class="muted">조건에 맞는 이름이 없습니다. 항렬자나 성별 조건을 바꿔 보세요.</p>'; return; }
+    const { pick, reset } = pickFive(); round = reset ? 1 : round + 1;
+    $('#recMeta').textContent = `${pool.length}개 후보 중 ${round}번째 추천 · 지금까지 ${shown.size}개 제안`;
+    $('#recOut').innerHTML = (reset ? '<p class="muted">상위 후보를 모두 보여드려 처음부터 다시 추천합니다.</p>' : '') + pick.map((x, k) => nameCard(x, k + 1)).join('');
+  }
+
+  // ---------- 기능 2: 한자 찾기 ----------
+  let findList = [], findShown = 0;
+  function showFind() {
+    const raw = $('#wantName').value.replace(/\s/g, '');
+    const out = $('#findOut');
+    if (!/^[가-힣]{1,2}$/.test(raw)) { out.innerHTML = '<p class="err">이름(성 제외)을 한글 1~2자로 입력해 주세요. 예: 서윤</p>'; $('#findMore').hidden = true; return; }
+    const sj = $('#useSaju').checked ? readBirth() : null;
+    renderSaju(readBirth());
+    const syl = raw.split('');
+    const missing = syl.filter(s => !N.candidates(s).length);
+    const cand = syl.map(s => `<div class="cand"><h4>‘${s}’ 후보 한자 <span class="muted">${N.candidates(s).length}자</span></h4>
+        <ul>${N.candidates(s).map(h => `<li>${elTag(h.el)}<b>${h.ch}</b> ${esc(h.hun)} ${h.eum} <span class="num">${h.strokes}획</span></li>`).join('') || '<li class="muted">데이터에 없는 음입니다</li>'}</ul></div>`).join('');
+    $('#candOut').innerHTML = cand;
+    if (missing.length) { out.innerHTML = `<p class="err">‘${missing.join(', ')}’ 음의 이름용 한자가 데이터에 없어 한자 조합을 만들 수 없습니다.</p>`; $('#findMore').hidden = true; return; }
+    findList = N.rankHanja(surname(), syl, sj && !sj.error ? sj : null, null);
+    findShown = 0; out.innerHTML = '';
+    $('#findMeta').textContent = `${surname().ko}${raw} · 가능한 한자 조합 ${findList.length}개를 점수순으로 정렬했습니다${sj && !sj.error ? ' (사주 반영)' : ' (사주 미반영)'}.`;
+    moreFind();
+  }
+  function moreFind() {
+    const next = findList.slice(findShown, findShown + 6);
+    $('#findOut').insertAdjacentHTML('beforeend', next.map((x, k) => nameCard(x, findShown + k + 1)).join(''));
+    findShown += next.length;
+    $('#findMore').hidden = findShown >= findList.length;
+  }
+
+  // ---------- 모바일: 명식 입력 접기/펼치기 ----------
+  const mobile = window.matchMedia('(max-width: 760px)');
+  const panel = $('#recForm');
+  function updateSummary() {
+    const g = { M: '남', F: '여', U: '성별 무관' }[$('#gender').value];
+    const d = $('#bdate').value.replace(/-/g, '.');
+    const t = $('#tunknown').checked ? '시간 모름' : ($('#btime').value || '시간 모름');
+    const cal = $('#cal').value === 'lunar' ? ('음력' + ($('#leap').checked ? '(윤)' : '')) : '양력';
+    const hs = $('#hangSel').value;
+    $('#fsumText').textContent = `${surSel.value.replace('|', '(')}) · ${g} · ${cal} ${d} ${t}${hs ? ' · 항렬 ' + hs : ''}`;
+  }
+  function setCollapsed(c) {
+    panel.classList.toggle('collapsed', c);
+    $('#fsum').setAttribute('aria-expanded', String(!c));
+    $('#feditLbl').textContent = c ? '정보 수정' : '접기';
+  }
+  $('#fsum').addEventListener('click', () => setCollapsed(!panel.classList.contains('collapsed')));
+  panel.addEventListener('change', updateSummary);
+  panel.addEventListener('input', updateSummary);
+
+  // ---------- 탭 ----------
+  function setTab(t) {
+    document.querySelectorAll('[role=tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
+    document.querySelectorAll('[role=tabpanel]').forEach(p => (p.hidden = p.id !== 'p-' + t));
+    try { localStorage.setItem('naming-tab', t); } catch (e) {}
+  }
+  document.querySelectorAll('[role=tab]').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+
+  // ---------- 이벤트 ----------
+  $('#cal').addEventListener('change', () => ($('#leapWrap').hidden = $('#cal').value !== 'lunar'));
+  $('#tunknown').addEventListener('change', () => ($('#btime').disabled = $('#tunknown').checked));
+  $('#hangEum').addEventListener('input', fillHangSel);
+  $('#recForm').addEventListener('submit', e => {
+    e.preventDefault(); showRecs(true);
+    if (!$('#p-find').hidden) showFind();
+    if (mobile.matches) { setCollapsed(true); $('main').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
+  $('#moreBtn').addEventListener('click', () => { showRecs(false); (mobile.matches ? $('#p-rec') : $('#recOut')).scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  $('#findForm').addEventListener('submit', e => { e.preventDefault(); showFind(); });
+  $('#findMore').addEventListener('click', moreFind);
+  ['#sur', '#bdate', '#btime', '#cal', '#leap', '#tunknown', '#correct'].forEach(s => $(s).addEventListener('change', () => renderSaju(readBirth())));
+
+  // ---------- 첫 화면: 예시 값으로 바로 결과 표시 ----------
+  fillHangSel();
+  updateSummary();
+  if (mobile.matches) setCollapsed(true);
+  let tab = 'rec'; try { tab = localStorage.getItem('naming-tab') || 'rec'; } catch (e) {}
+  setTab(tab);
+  showRecs(true);
+  showFind();
+})();
+
+</script>
+
+</html>
