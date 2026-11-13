@@ -227,7 +227,7 @@
   function index(HANJA) {
     BY_READ = {}; BY_CHAR = {};
     HANJA.forEach(r => {
-      const h = { ch: r[0], eum: r[1], hun: r[2], strokes: r[3], el: r[4] };
+      const h = { ch: r[0], eum: r[1], hun: r[2], strokes: r[3], el: r[4], mean: r[6] || r[2] };
       BY_CHAR[h.ch] = h;
       const keys = new Set([h.eum, dooeum(h.eum)]);
       keys.forEach(k => (BY_READ[k] = BY_READ[k] || []).push(h));

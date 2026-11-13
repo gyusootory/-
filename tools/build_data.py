@@ -43,6 +43,11 @@ def info(ch):
     won = NUM.get(ch) or (rad_strokes(r) + res if res > 0 else tot)
     return r, won, tot
 
+MEAN = {}
+for line in open(os.path.join(ROOT,'tools/meaning_source.txt'), encoding='utf-8'):
+    if line.startswith('#') or not line.strip(): continue
+    for it in line.strip().split('|'):
+        ch, m = it.split(':'); MEAN[ch] = m
 out = []
 for line in open(os.path.join(ROOT,'tools/hanja_source.txt'), encoding='utf-8'):
     line = line.strip()
@@ -53,7 +58,8 @@ for line in open(os.path.join(ROOT,'tools/hanja_source.txt'), encoding='utf-8'):
         r, won, tot = info(ch)
         el = OVR.get(ch) or ELEM.get(r)
         if not el: print('미지정 오행:', ch, r, file=sys.stderr)
-        out.append([ch, eum, hun, won, el or '土', r])
+        if ch not in MEAN: print('풀이 없음:', ch, file=sys.stderr)
+        out.append([ch, eum, hun, won, el or '土', r, MEAN.get(ch, hun)])
 
 sur = []
 for line in open(os.path.join(ROOT,'tools/surname_source.txt'), encoding='utf-8'):

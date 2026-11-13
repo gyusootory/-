@@ -69,6 +69,23 @@
       </dl>`;
   }
 
+  // ---------- 이름 뜻 풀이 문장 ----------
+  // 받침 유무에 따라 조사 선택 (예: 마음+을 / 지혜+를)
+  function josa(word, withB, withoutB) {
+    const c = word.charCodeAt(word.length - 1) - 0xAC00;
+    return word + (c >= 0 && c <= 11171 && c % 28 ? withB : withoutB);
+  }
+  function nameMeaning(given) {
+    const k = given.map(g => g.mean);
+    if (k.length === 1) return `${josa(k[0], '을', '를')} 지닌 사람이 되라는 뜻을 담았습니다.`;
+    const t = [
+      () => `${josa(k[0], '과', '와')} ${josa(k[1], '을', '를')} 함께 지닌 사람이 되라는 뜻을 담았습니다.`,
+      () => `${josa(k[0], '을', '를')} 바탕으로 ${josa(k[1], '을', '를')} 이루어 가는 사람이 되라는 뜻입니다.`,
+      () => `${josa(k[0], '과', '와')} ${josa(k[1], '이', '가')} 조화를 이루는 삶을 바라는 이름입니다.`,
+    ];
+    return t[(given[0].ch.charCodeAt(0) + given[1].ch.charCodeAt(0)) % t.length]();
+  }
+
   // ---------- 이름 카드 ----------
   function nameCard(item, rank, sur) {
     const { given, ev } = item;
@@ -92,7 +109,10 @@
           <span class="hz">${c.ch}</span><span class="hk">${c.ko}</span>
           <span class="hs">${esc(c.sub)}</span>
           <span class="hm">${c.strokes}획 ${elTag(c.el)}</span></div>`).join('')}</div>
-      <p class="meaning">${given.map(g => `<b>${g.ch}</b> ${esc(g.hun)}`).join(' · ')}</p>
+      <div class="meaning">
+        <p class="msent">“${esc(nameMeaning(given))}”</p>
+        <ul class="mlist">${given.map(g => `<li><b>${g.ch}</b><span class="mh">${esc(g.hun)} ${g.eum}</span><span class="mk">${esc(g.mean)}</span></li>`).join('')}</ul>
+      </div>
       <ul class="parts">${parts.map(([k, v, m]) => `<li><span>${k}</span><span class="pt"><i style="width:${v / m * 100}%"></i></span><span class="num">${v}/${m}</span></li>`).join('')}</ul>
       ${ev.warn.length ? `<p class="warn">${ev.warn.map(esc).join(' · ')}</p>` : ''}
       <details><summary>상세 감명 보기</summary>
@@ -191,7 +211,7 @@
     const syl = raw.split('');
     const missing = syl.filter(s => !N.candidates(s).length);
     const cand = syl.map(s => `<div class="cand"><h4>‘${s}’ 후보 한자 <span class="muted">${N.candidates(s).length}자</span></h4>
-        <ul>${N.candidates(s).map(h => `<li>${elTag(h.el)}<b>${h.ch}</b> ${esc(h.hun)} ${h.eum} <span class="num">${h.strokes}획</span></li>`).join('') || '<li class="muted">데이터에 없는 음입니다</li>'}</ul></div>`).join('');
+        <ul>${N.candidates(s).map(h => `<li>${elTag(h.el)}<b>${h.ch}</b> ${esc(h.hun)} ${h.eum} <span class="num">${h.strokes}획</span><small class="ck">${esc(h.mean)}</small></li>`).join('') || '<li class="muted">데이터에 없는 음입니다</li>'}</ul></div>`).join('');
     $('#candOut').innerHTML = cand;
     if (missing.length) { out.innerHTML = `<p class="err">‘${missing.join(', ')}’ 음의 이름용 한자가 데이터에 없어 한자 조합을 만들 수 없습니다.</p>`; $('#findMore').hidden = true; return; }
     findList = N.rankHanja(surname('f-'), syl, sj && !sj.error ? sj : null, null);
