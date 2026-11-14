@@ -397,6 +397,22 @@ summary { color: var(--gold); font-weight: 600 }
   #moreBtn { background: var(--band); color: var(--gold-hi); box-shadow: 0 10px 26px rgb(10 14 21 / .35); border: 1px solid rgb(201 168 106 / .35) }
 }
 
+/* 홈 화면 앱으로 실행할 때만 보이는 시작 인트로 */
+#splash { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; align-content: center; gap: 22px; text-align: center;
+  background: radial-gradient(60% 45% at 50% 42%, #1f2a3e 0%, #121826 55%, #0c111b 100%); color: #efe8d8; transition: opacity .5s ease }
+#splash img { width: 96px; height: 96px; border-radius: 24px; box-shadow: 0 0 0 1px rgb(201 168 106 / .45), 0 16px 44px rgb(0 0 0 / .55) }
+#splash b { font: 600 30px var(--f-display); letter-spacing: .16em; margin-left: .16em }
+#splash span { display: flex; align-items: center; gap: 12px; color: #c9a86a; font: 500 13px var(--f-display); letter-spacing: .5em; margin-left: .5em }
+#splash span::before, #splash span::after { content: ""; width: 34px; height: 1px; background: linear-gradient(90deg, transparent, #c9a86a) }
+#splash span::after { transform: scaleX(-1) }
+#splash.out { opacity: 0; pointer-events: none }
+@media (prefers-reduced-motion: no-preference) {
+  #splash img { animation: spl-in .9s cubic-bezier(.2,.7,.2,1) both }
+  #splash b { animation: spl-in .9s .15s cubic-bezier(.2,.7,.2,1) both }
+  #splash span { animation: spl-in .9s .3s cubic-bezier(.2,.7,.2,1) both }
+  @keyframes spl-in { from { opacity: 0; transform: translateY(8px) scale(.97); filter: blur(2px) } }
+}
+
 @media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease both } @keyframes rise { from { transform: translateY(6px); opacity: .4 } } }
 </style>
 
@@ -404,7 +420,7 @@ summary { color: var(--gold); font-weight: 600 }
   <header class="mast">
     <div class="brand">
       <img class="logo" src="icon-96.png" width="52" height="52" alt="">
-      <div><h1>가치작명소</h1><p>평생 부를 이름, 성명학 기반으로 가치 있게 지어주세요</p></div>
+      <div><h1>가치작명소</h1><p>평생 부를 이름, 성명학 기반으로 가치 있게 지어 드립니다</p></div>
     </div>
     <div class="mast-r">
     <button class="appshare" type="button" id="appShare" aria-label="앱 공유하기">

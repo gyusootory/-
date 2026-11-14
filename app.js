@@ -369,6 +369,20 @@
   ['', 'f-'].forEach(p => ['sur', 'bdate', 'btime', 'cal', 'leap', 'tunknown', 'correct'].forEach(id =>
     $('#' + p + id).addEventListener('change', () => { if (!p || $('#useSaju').checked) renderSaju(readBirth(p), p); })));
 
+  // ---------- 홈 화면 앱으로 켰을 때만: 금빛 인트로 (1.3초, 탭하면 바로 닫힘) ----------
+  (function splash() {
+    const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+    let seen = false; try { seen = sessionStorage.getItem('gachi-splash') === '1'; sessionStorage.setItem('gachi-splash', '1'); } catch (e) {}
+    if (!standalone || seen) return;
+    const logo = document.querySelector('.logo');
+    const el = document.createElement('div'); el.id = 'splash'; el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = `<img src="${logo ? logo.getAttribute('src') : ''}" alt=""><b>가치작명소</b><span>價値作名</span>`;
+    document.body.appendChild(el);
+    const close = () => { el.classList.add('out'); setTimeout(() => el.remove(), 550); };
+    el.addEventListener('click', close);
+    setTimeout(close, matchMedia('(prefers-reduced-motion: reduce)').matches ? 500 : 1300);
+  })();
+
   // ---------- 첫 화면: 모든 칸 비움 + 필수 칸 강조 ----------
   fillHangSel();
   updateSummary();
