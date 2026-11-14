@@ -302,7 +302,7 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 
 
 /* ═════════ 고급 디자인 레이어 (위 기본 규칙을 덮어씀) ═════════ */
-body { letter-spacing: -.005em }
+body { letter-spacing: -.005em; margin: 0 }  /* 웹사이트 단독 실행 시 브라우저 기본 여백 제거 */
 /* 머리띠: 화면 끝까지 이어지는 먹색 띠 */
 .mast { background: var(--band); color: var(--band-ink); box-shadow: 0 0 0 100vmax var(--band); clip-path: inset(0 -100vmax); border: 0;
   padding-block: 22px 22px; align-items: center }
@@ -404,7 +404,7 @@ summary { color: var(--gold); font-weight: 600 }
   <header class="mast">
     <div class="brand">
       <img class="logo" src="icon-96.png" width="52" height="52" alt="">
-      <div><h1>가치작명소</h1><p>사주 · 오행 · 음양 · 81수리 · 항렬자로 이름과 한자를 짓습니다</p></div>
+      <div><h1>가치작명소</h1><p>평생 부를 이름, 성명학 기반으로 가치 있게 지어주세요</p></div>
     </div>
     <div class="mast-r">
     <button class="appshare" type="button" id="appShare" aria-label="앱 공유하기">

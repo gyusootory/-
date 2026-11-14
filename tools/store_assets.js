@@ -47,9 +47,9 @@ img{width:132px;height:132px;border-radius:30px;box-shadow:0 0 0 1px rgb(201 168
 h1{font:600 86px/1 var(--disp);letter-spacing:.14em;margin:0 0 0 .14em}
 .rule{display:flex;align-items:center;gap:16px;margin:30px 0 24px;color:var(--gold);font:500 20px var(--disp);letter-spacing:.5em}
 .rule:before,.rule:after{content:"";width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}.rule:after{transform:scaleX(-1)}
-p{margin:0;font:500 31px/1.4 var(--disp);color:#d9cfb8;letter-spacing:.06em}
+p{margin:0;font:500 30px/1.4 var(--disp);color:#d9cfb8;letter-spacing:.04em}
 </style><div class="frame"></div><div class="wm">名</div>
-<main><img src="${ICON}"><h1>가치작명소</h1><div class="rule">價値作名</div><p>평생 부를 이름, 사주로 짓고 뜻으로 새기다</p></main>`;
+<main><img src="${ICON}"><h1>가치작명소</h1><div class="rule">價値作名</div><p>평생 부를 이름, 성명학 기반으로 가치 있게 지어주세요</p></main>`;
 
 (async () => {
   const b = await chromium.launch();

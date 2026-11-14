@@ -15,7 +15,7 @@ def inline(m):
     return '<script>\n' + js + '\n</script>'
 body = re.sub(r'<script src="([^"]+)"></script>', inline, src)
 
-OGV = '20261114b'  # 미리보기 이미지를 바꾸면 이 값을 바꿔 카톡·SNS가 새 이미지를 다시 읽게 함
+OGV = '20261114c'  # 미리보기 이미지를 바꾸면 이 값을 바꿔 카톡·SNS가 새 이미지를 다시 읽게 함
 OG_DESC = '오행·음양·81수리로 아기 사주에 맞는 이름과 한자를 추천하고, 이름에 담긴 뜻까지 풀어 드립니다.'
 DESC = '아기 생년월일시 사주로 오행·음양·81수리를 계산해 이름과 한자를 추천하고 뜻을 풀어 주는 무료 작명 앱'
 head = ('<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n'
@@ -23,7 +23,7 @@ head = ('<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n'
         f'<meta name="description" content="{DESC}">\n'
         '<meta property="og:type" content="website">\n'
         '<meta property="og:site_name" content="가치작명소">\n'
-        '<meta property="og:title" content="가치작명소 — 평생 부를 이름을 사주로 짓다">\n'
+        '<meta property="og:title" content="가치작명소 — 평생 부를 이름, 성명학 기반으로 가치 있게 지어주세요">\n'
         f'<meta property="og:description" content="{OG_DESC}">\n'
         f'<meta property="og:image" content="{SITE}og.png?v={OGV}">\n'
         '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
