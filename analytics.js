@@ -32,7 +32,9 @@
     try {
       fetch(C.supabaseUrl.replace(/\/$/, '') + '/rest/v1/events', {
         method: 'POST', keepalive: true, body,
-        headers: { apikey: C.supabaseAnonKey, Authorization: 'Bearer ' + C.supabaseAnonKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        headers: Object.assign({ apikey: C.supabaseAnonKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          // 예전 방식 anon 키(eyJ…)만 Authorization에도 넣음. 새 publishable 키(sb_publishable_…)는 apikey 헤더만 사용
+          /^eyJ/.test(C.supabaseAnonKey) ? { Authorization: 'Bearer ' + C.supabaseAnonKey } : {}),
       }).catch(() => {});
     } catch (e) {}
   }
