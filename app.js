@@ -183,7 +183,7 @@
         <span class="bn">${sj.raw[e]}</span></div>`).join('');
     const i = sj.input;
     box.innerHTML = `
-      <div class="pillars">${cols}${sj.hourKnown ? '' : '<div class="pillar ghost"><span class="plabel">시주</span><span class="gz">?</span><span class="gz">?</span><span class="pko">시간 모름</span></div>'}</div>
+      <div class="pillars">${sj.hourKnown ? '' : '<div class="pillar ghost"><span class="plabel">시주</span><span class="gz">?</span><span class="gz">?</span><span class="pko">시간 모름</span></div>'}${cols}</div>
       <p class="sajumeta">양력 ${i.y}.${i.m}.${i.d} · ${sj.animal}띠 · ${sj.jieqi} 절기 구간${sj.tzNote ? ' · ' + sj.tzNote : ''}</p>
       ${sj.jieqiDay ? '<p class="err" style="margin:0;font-size:12px">이날은 절기가 바뀌는 날이라 태어난 시각을 모르면 월주가 달라질 수 있어요. 시각을 입력하면 정확해집니다.</p>' : ''}
       <div class="bars">${bars}</div>
@@ -327,6 +327,7 @@
     const on = saved.some(x => x.key === key);
     document.querySelectorAll('[data-save]').forEach(b => { if (b.dataset.save === key) { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.textContent = on ? '♥ 저장됨' : '♡ 저장'; } });
   }
+  function refreshEndCard() { const ec = document.querySelector('#recOut .endcard'); if (ec) ec.outerHTML = endCard(); }
   function renderSaved() {
     document.querySelectorAll('.cnt').forEach(c => { c.textContent = saved.length || ''; c.hidden = !saved.length; });
     const out = $('#savedOut'); if (!out) return;
@@ -356,7 +357,7 @@
       if (i >= 0) { saved.splice(i, 1); toast('저장을 취소했어요'); }
       else { const info = cardInfo.get(key); if (!info) return; saved.push({ ...info, savedAt: Date.now() }); T('save_name');
         toast(persist() ? '저장했어요 · 아래 ‘저장’ 탭에서 다시 볼 수 있어요' : '이 브라우저에서는 저장이 안 돼요 (개인정보 보호 모드 확인)'); }
-      persist(); syncSaveButtons(key); renderSaved();
+      persist(); syncSaveButtons(key); renderSaved(); updateSaveHint(); refreshEndCard();
     } else if (u) {
       const key = u.dataset.unsave; saved = saved.filter(x => x.key !== key); persist(); renderSaved(); syncSaveButtons(key); toast('삭제했어요');
     }
@@ -395,17 +396,47 @@
     }).filter(Boolean).sort((a, b) => b.ev.total - a.ev.total);
   }
   // 점수 높은 순으로 5개씩 페이지 넘기기 (같은 조건이면 언제나 같은 순서)
-  const PAGE = 5;
-  let recPage = 0;
+  // 기본은 점수 상위 20개(5개씩 4페이지)만 보여 주고, 원하는 사람만 나머지 후보를 열어 봄
+  const PAGE = 5, TOP = 20;
+  let recPage = 0, showAll = false;
+  const hintOff = () => { try { return localStorage.getItem('gachi-hint-off') === '1'; } catch (e) { return false; } };
   function renderRecPage() {
-    const pages = Math.ceil(pool.length / PAGE);
+    const view = showAll ? pool : pool.slice(0, TOP);
+    const pages = Math.ceil(view.length / PAGE);
     recPage = Math.max(0, Math.min(recPage, pages - 1));
-    const from = recPage * PAGE, list = pool.slice(from, from + PAGE);
-    $('#recMeta').textContent = `후보 ${pool.length}개를 점수 높은 순으로 · ${from + 1}~${from + list.length}위`;
-    $('#recOut').innerHTML = list.map((x, k) => nameCard(x, from + k + 1, surname(), 'rec')).join('');
+    const from = recPage * PAGE, list = view.slice(from, from + PAGE), last = recPage >= pages - 1;
+    $('#recMeta').textContent = showAll ? `전체 후보 ${pool.length}개 · ${from + 1}~${from + list.length}위` : `점수 상위 ${view.length}개만 골랐어요 · ${from + 1}~${from + list.length}위`;
+    let html = list.map((x, k) => nameCard(x, from + k + 1, surname(), 'rec')).join('');
+    if (last) html += endCard();
+    $('#recOut').innerHTML = html;
     renderPager($('#recPager'), recPage, pages, n => goRecPage(n));
-    $('#moreBtn').hidden = recPage >= pages - 1;
+    $('#moreBtn').hidden = last;
+    updateSaveHint();
   }
+  // 마지막 페이지 아래 마무리 카드: 저장 안내 + (상위 20개만 보는 중이면) 나머지 후보 열기
+  function endCard() {
+    const n = saved.length, rest = pool.length - TOP;
+    return `<div class="endcard">
+      <span class="empty-seal" aria-hidden="true">藏</span>
+      <div class="ec-tx">
+        <b>${showAll ? `후보 ${pool.length}개를 모두 봤어요` : `상위 ${Math.min(TOP, pool.length)}개를 모두 봤어요`}</b>
+        <p>${n ? `저장한 이름이 <b>${n}개</b> 있어요. 저장 탭에서 모아 보고 가족과 비교해 보세요.` : '마음에 든 이름에 <b>♡ 저장</b>을 눌러 두면, 저장 탭에서 모아 보고 가족과 비교할 수 있어요.'}</p>
+        <div class="ec-act">
+          ${n ? `<button type="button" class="act" data-goto="saved">저장한 이름 ${n}개 보기 ›</button>` : ''}
+          ${!showAll && rest > 0 ? `<button type="button" class="rp-link" data-showall>점수가 조금 낮은 후보 ${rest}개 더 보기</button>` : ''}
+        </div>
+      </div></div>`;
+  }
+  // 결과 위 한 줄 안내 칩: 저장한 이름이 없을 때만, 닫으면 다시 안 보임
+  function updateSaveHint() {
+    const h = $('#saveHint'); if (!h) return;
+    h.hidden = !pool.length || saved.length > 0 || hintOff();
+  }
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-goto="saved"]')) { setTab('saved'); window.scrollTo(0, 0); T('tab', { tab: 'saved' }); }
+    if (e.target.closest('[data-showall]')) { showAll = true; goRecPage(TOP / PAGE); T('show_all'); }
+    if (e.target.closest('#saveHintClose')) { try { localStorage.setItem('gachi-hint-off', '1'); } catch (x) {} $('#saveHint').hidden = true; }
+  });
   function goRecPage(n) {
     recPage = n; renderRecPage(); T('more', { page: recPage + 1 });
     $('#recMeta').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -413,7 +444,8 @@
   // 페이지 번호 줄: ‹ 1 … 4 5 6 … 18 ›
   function renderPager(el, cur, pages, go) {
     if (pages <= 1) { el.hidden = true; return; }
-    const nums = new Set([0, pages - 1, cur - 1, cur, cur + 1].filter(n => n >= 0 && n < pages));
+    const nums = pages <= 6 ? new Set([...Array(pages).keys()])   // 페이지가 적으면 번호를 모두 표시
+      : new Set([0, pages - 1, cur - 1, cur, cur + 1].filter(n => n >= 0 && n < pages));
     const seq = [...nums].sort((a, b) => a - b);
     let html = `<button type="button" data-p="${cur - 1}" ${cur === 0 ? 'disabled' : ''} aria-label="이전 페이지">‹ 이전</button>`;
     seq.forEach((n, i) => {
@@ -428,7 +460,7 @@
     const sj = readBirth();
     renderSaju(sj);
     if (!sj || sj.error) { $('#recOut').innerHTML = '<p class="muted">생년월일을 먼저 입력해 주세요.</p>'; return; }
-    if (rebuild) { buildPool(sj); recPage = 0; }
+    if (rebuild) { buildPool(sj); recPage = 0; showAll = false; }
     if (!pool.length) { $('#recOut').innerHTML = '<p class="muted">조건에 맞는 이름이 없습니다. 항렬자나 성별 조건을 바꿔 보세요.</p>'; $('#recPager').hidden = true; $('#moreBtn').hidden = true; return; }
     renderRecPage();
   }

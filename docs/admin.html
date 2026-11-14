@@ -237,7 +237,7 @@ td.r, th.r { text-align: right }
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = n => n.toLocaleString('ko-KR');
   const LABEL = { visit: '방문', recommend: '이름 추천 받기', more: '다음 페이지 보기', find: '한자 찾기', share_app: '앱 공유', share_name: '이름 공유',
-    copy_name: '이름 복사', detail_open: '상세 감명 열기', info_open: '도움말(ⓘ) 열기', save_name: '이름 저장', mine: '이름 비교', rename_go: '개명 후보 보기', hanja_report: '없는 한자 제보', tab: '탭 이동', install: '홈 화면 설치' };
+    copy_name: '이름 복사', detail_open: '상세 감명 열기', info_open: '도움말(ⓘ) 열기', save_name: '이름 저장', mine: '이름 비교', rename_go: '개명 후보 보기', hanja_report: '없는 한자 제보', show_all: '21위 이하 더 보기', tab: '탭 이동', install: '홈 화면 설치' };
   const dayKey = d => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(d); // YYYY-MM-DD (한국 시간)
   let days = 7, demo = false, lastRows = [];
 
