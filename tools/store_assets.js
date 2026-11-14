@@ -35,6 +35,22 @@ const frame = (img, title, sub) => `<!doctype html><meta charset="utf-8">${fontT
 img{width:860px;border-radius:48px 48px 0 0;box-shadow:0 0 0 2px rgb(201 168 106 / .35),0 -10px 70px rgb(0 0 0 / .5);align-self:end}
 </style><div class="t"><h2>${title}</h2><p>${sub}</p></div><img src="file://${img}">`;
 
+// 카톡·SNS 미리보기(og.png): 작게 보여도 읽히도록 아이콘 + 이름 + 금색 선 + 한 줄 문구만 가운데 정렬
+const ogCard = () => `<!doctype html><meta charset="utf-8">${fontTag}<style>
+:root{${TOKENS}} *{box-sizing:border-box} body{margin:0;width:1200px;height:630px;overflow:hidden;font-family:var(--body);
+background:radial-gradient(55% 75% at 50% 42%,#1f2a3e 0%,#141b2a 45%,#0c111b 100%);color:var(--ivory);display:grid;place-items:center;text-align:center}
+.frame{position:absolute;inset:26px;border:1px solid rgb(201 168 106 / .28);border-radius:18px}
+.frame:after{content:"";position:absolute;inset:8px;border:1px solid rgb(201 168 106 / .12);border-radius:12px}
+.wm{position:absolute;right:70px;bottom:-60px;font:600 360px/1 var(--disp);color:rgb(201 168 106 / .035)}
+main{position:relative;display:grid;justify-items:center}
+img{width:132px;height:132px;border-radius:30px;box-shadow:0 0 0 1px rgb(201 168 106 / .45),0 18px 50px rgb(0 0 0 / .55);margin-bottom:34px}
+h1{font:600 86px/1 var(--disp);letter-spacing:.14em;margin:0 0 0 .14em}
+.rule{display:flex;align-items:center;gap:16px;margin:30px 0 24px;color:var(--gold);font:500 20px var(--disp);letter-spacing:.5em}
+.rule:before,.rule:after{content:"";width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}.rule:after{transform:scaleX(-1)}
+p{margin:0;font:500 31px/1.4 var(--disp);color:#d9cfb8;letter-spacing:.06em}
+</style><div class="frame"></div><div class="wm">名</div>
+<main><img src="${ICON}"><h1>가치작명소</h1><div class="rule">價値作名</div><p>평생 부를 이름, 사주로 짓고 뜻으로 새기다</p></main>`;
+
 (async () => {
   const b = await chromium.launch();
   const shot = async (html, w, h, file) => {
@@ -43,7 +59,7 @@ img{width:860px;border-radius:48px 48px 0 0;box-shadow:0 0 0 2px rgb(201 168 106
     await p.goto('file://' + tmp, { waitUntil: 'load' }); await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(300);
     await p.screenshot({ path: file }); await p.close(); fs.unlinkSync(tmp);
   };
-  await shot(banner(1200, 630, true), 1200, 630, path.join(ROOT, 'docs', 'og.png'));
+  await shot(ogCard(), 1200, 630, path.join(ROOT, 'docs', 'og.png'));
   await shot(banner(1024, 500, false), 1024, 500, path.join(OUT, 'feature-graphic-1024x500.png'));
   fs.copyFileSync(path.join(ROOT, 'docs', 'icon-512.png'), path.join(OUT, 'icon-512.png'));
 

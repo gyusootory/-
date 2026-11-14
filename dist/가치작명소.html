@@ -6,10 +6,9 @@
 <meta name="description" content="아기 생년월일시 사주로 오행·음양·81수리를 계산해 이름과 한자를 추천하고 뜻을 풀어 주는 무료 작명 앱">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="가치작명소">
-<meta property="og:title" content="가치작명소 · 사주로 짓는 아기 이름">
-<meta property="og:description" content="아기 생년월일시 사주로 오행·음양·81수리를 계산해 이름과 한자를 추천하고 뜻을 풀어 주는 무료 작명 앱">
-<meta property="og:url" content="https://gyusootory.github.io/gachi-naming/">
-<meta property="og:image" content="https://gyusootory.github.io/gachi-naming/og.png">
+<meta property="og:title" content="가치작명소 — 평생 부를 이름을 사주로 짓다">
+<meta property="og:description" content="오행·음양·81수리로 아기 사주에 맞는 이름과 한자를 추천하고, 이름에 담긴 뜻까지 풀어 드립니다.">
+<meta property="og:image" content="https://gyusootory.github.io/gachi-naming/og.png?v=20261114b">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -1106,7 +1105,7 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
   // 웹사이트로 올린 경우 그 주소를, 그 밖(파일·미리보기)에서는 공개 링크를 공유
   function appUrl() {
     const h = location.hostname;
-    return location.protocol === 'https:' && h && !/claude|anthropic/.test(h) ? location.origin + location.pathname : PUBLIC_URL;
+    return (location.protocol === 'https:' && h && !/claude|anthropic/.test(h) ? location.origin + location.pathname : PUBLIC_URL) + '?utm_source=share'; // 공유 링크 표시(통계) + 카톡이 미리보기를 새로 읽게 함
   }
   function cardText(ko, hz, given, ev) {
     return `[가치작명소 추천 이름]\n${ko} (${hz}) · ${Math.round(ev.total)}점 ${ev.grade}\n“${nameMeaning(given)}”\n` +
