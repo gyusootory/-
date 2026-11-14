@@ -283,7 +283,7 @@
     }
     const fmt = t => new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(t));
     out.innerHTML = saved.slice().sort((a, b) => b.savedAt - a.savedAt).map(r => `<article class="card scard">
-      <header class="chead"><span class="sdate">${fmt(r.savedAt)} 저장 · ${r.from === 'find' ? '한자 찾기' : '이름 추천'}</span>
+      <header class="chead"><span class="sdate">${fmt(r.savedAt)} 저장 · ${({ find: '한자 찾기', mine: '내 이름 풀이' })[r.from] || '이름 추천'}</span>
         <div class="score" style="--p:${r.score}"><b>${r.score}</b><small>${esc(r.grade)}</small></div></header>
       <div class="chars">${[...r.sur.hanja].map((c, k) => `<div class="ch sur"><span class="hz">${c}</span><span class="hk">${r.sur.ko[k] || r.sur.ko}</span><span class="hs">성씨</span></div>`).join('')}
         ${r.given.map(g => `<div class="ch"><span class="hz">${g.ch}</span><span class="hk">${g.ko}</span><span class="hs">${esc(g.hun)} ${g.eum}</span></div>`).join('')}</div>
@@ -411,6 +411,95 @@
     $('#findMore').hidden = findShown >= findList.length;
   }
 
+
+  // ---------- 기능 3: 내 이름 풀이 · 개명 비교 (참고용) ----------
+  // 이름 글자마다 한자 고르는 칸 만들기
+  function renderMineHanja() {
+    const raw = $('#m-name').value.replace(/\s/g, '');
+    const box = $('#m-hz');
+    const prev = [...box.querySelectorAll('select')].map(s => s.value);
+    if (!/^[가-힣]{1,2}$/.test(raw)) { box.innerHTML = ''; return; }
+    box.innerHTML = raw.split('').map((s, i) => {
+      const c = N.candidates(s);
+      return `<div class="field" data-req><label for="m-hz${i}">‘${s}’ 한자 <em class="req-badge">필수</em></label>
+        <select id="m-hz${i}" required><option value="">한자 선택</option>
+        ${c.map(h => `<option value="${h.ch}">${h.ch} ${esc(h.hun)} ${h.eum} (${h.strokes}획)</option>`).join('')}
+        <option value="__none">목록에 없어요</option></select></div>`;
+    }).join('');
+    box.querySelectorAll('select').forEach((s, i) => { if (prev[i] && [...s.options].some(o => o.value === prev[i])) s.value = prev[i]; });
+    markNeed();
+  }
+  // 같은 사주·성씨에서 만들 수 있는 이름 후보 (개명 비교용)
+  function makePool(sur, gender, sj) {
+    const names = NAMES[gender || 'U'].filter(n => n.length === 2);
+    return names.map(n => { const r = N.rankHanja(sur, n.split(''), sj, null, true); return r.length ? { hangul: n, ...r[0] } : null; })
+      .filter(Boolean).sort((a, b) => b.ev.total - a.ev.total);
+  }
+  function showMine() {
+    const out = $('#mineOut');
+    const sur = surname('m-'), raw = $('#m-name').value.replace(/\s/g, '');
+    const sels = [...$('#m-hz').querySelectorAll('select')];
+    if (sels.some(s => s.value === '__none')) {
+      out.innerHTML = '<p class="err">선택하신 글자의 한자가 아직 데이터에 없어 점수를 계산할 수 없어요. 비슷한 뜻의 한자를 고르거나 다른 글자부터 확인해 보세요.</p>';
+      return;
+    }
+    const sj = readBirth('m-');
+    $('#m-sajuOut').hidden = false; renderSaju(sj, 'm-');
+    if (!sj || sj.error) { out.innerHTML = '<p class="err">생년월일을 확인해 주세요.</p>'; return; }
+    const given = raw.split('').map((s, i) => ({ ...N.byChar(sels[i].value), ko: s }));
+    const ev = N.evaluate(sur, given, sj);
+    const pool = makePool(sur, $('#m-gender').value, sj);
+    const scores = pool.map(x => x.ev.total);
+    const better = scores.filter(v => v > ev.total).length;
+    const top5 = scores.slice(0, 5), avg5 = top5.length ? top5.reduce((a, b) => a + b, 0) / top5.length : 0;
+    const best = pool[0];
+    const r1 = v => Math.round(v * 10) / 10;
+    // 장단점 요약
+    const goodG = ev.gyeok.filter(g => g.grade === 2).length, badG = ev.gyeok.filter(g => g.grade === 0);
+    const needHit = ev.gEls.filter(e => sj.need.includes(e)), avoidHit = ev.gEls.filter(e => sj.avoid.includes(e));
+    const S = (cls, mk, html) => `<li><span class="mk ${cls}">${mk}</span><span>${html}</span></li>`;
+    const sumry = [
+      badG.length ? S('no', '✕', `81수리 4격 중 <b>흉수 ${badG.length}개</b> (${badG.map(g => g.key + ' ' + g.num + '수').join(', ')})`) : S('ok', '✓', `81수리 4격이 <b>모두 길수·반길수</b>예요 (길 ${goodG}개)`),
+      needHit.length ? S('ok', '✓', `사주에 필요한 <b>${[...new Set(needHit)].map(e => e + '(' + N.EL_KO[e] + ')').join('·')}</b> 기운을 이름 한자가 채워 줘요`)
+        : S(avoidHit.length ? 'no' : 'mid', avoidHit.length ? '✕' : '△', `사주에 필요한 <b>${sj.need.slice(0, 2).map(e => e + '(' + N.EL_KO[e] + ')').join('·')}</b> 기운을 이름이 채우지 못해요${avoidHit.length ? ' · 많은 기운을 더 보태요' : ''}`),
+      S(ev.soundRel.includes('상극') ? 'mid' : 'ok', ev.soundRel.includes('상극') ? '△' : '✓', `발음오행 흐름: ${ev.soundRel.join(' → ')}`),
+      S(ev.mixed ? 'ok' : 'no', ev.mixed ? '✓' : '✕', ev.mixed ? '획수 음양이 고루 섞여 조화로워요' : '획수 음양이 한쪽으로 치우쳐 있어요'),
+    ].join('');
+    const total = scores.length + 1, pos = better + 1, topPct = Math.ceil(pos / total * 100);
+    const lead = better === 0 ? `같은 사주로 지을 수 있는 이름 후보 ${scores.length}개와 비교해도 <b>가장 높은 수준</b>이에요.`
+      : `같은 사주의 이름 후보까지 <b>${total}개 중 ${pos}번째</b>예요 (${topPct <= 50 ? '상위 ' + topPct : '하위 ' + Math.max(1, 100 - topPct + 1)}%).`;
+    const max = 100;
+    out.innerHTML = `<div class="mine">
+      ${nameCard({ given, ev }, 0, sur, 'mine')}
+      <div class="cmp">
+        <h4>개명 후보와 비교</h4>
+        <p class="lead">${lead}</p>
+        <ul class="cbars">
+          <li class="me"><span>지금 이름</span><span class="tr"><i class="fl" style="width:${ev.total / max * 100}%"></i></span><span class="v">${r1(ev.total)}</span></li>
+          <li><span>후보 상위 5개 평균</span><span class="tr"><i class="fl" style="width:${avg5 / max * 100}%"></i></span><span class="v">${r1(avg5)}</span></li>
+          ${best ? `<li class="top"><span>최고 후보 ${esc(sur.ko + best.hangul)}</span><span class="tr"><i class="fl" style="width:${best.ev.total / max * 100}%"></i></span><span class="v">${r1(best.ev.total)}</span></li>` : ''}
+        </ul>
+        <ul class="sumry">${sumry}</ul>
+        <button class="btn" type="button" id="toRename">이 사주에 맞는 개명 후보 보기 ›</button>
+        <p class="note">※ 참고용 점수예요. 이름에는 사주 외에도 가족의 바람과 살아온 시간이 담겨 있어요. 개명은 법원 허가 절차가 필요하니 충분히 고민한 뒤 결정하세요.</p>
+      </div></div>`;
+    $('#mineMeta').textContent = `${sur.ko}${raw} (${sur.hanja}${given.map(g => g.ch).join('')}) · 사주 반영`;
+    T('mine', { score: Math.round(ev.total), pos, total });   // 이름 자체는 보내지 않음
+  }
+  // 개명 후보 보기: 입력한 정보를 ① 이름 추천 탭으로 옮겨 바로 추천
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#toRename')) return;
+    $('#sur').value = $('#m-sur').value; $('#sur').dispatchEvent(new Event('change', { bubbles: true }));
+    $('#gender').value = $('#m-gender').value || 'U';
+    ['cal', 'bdate', 'btime'].forEach(id => ($('#' + id).value = $('#m-' + id).value));
+    ['leap', 'tunknown', 'correct'].forEach(id => ($('#' + id).checked = $('#m-' + id).checked));
+    $('#leapWrap').hidden = $('#cal').value !== 'lunar'; $('#btime').disabled = $('#tunknown').checked;
+    $('#hangEum').value = ''; fillHangSel();
+    setTab('rec'); markNeed(); updateSummary();
+    showRecs(true); $('#fsum').hidden = false; if (mobile.matches) setCollapsed(true);
+    window.scrollTo(0, 0); T('rename_go');
+  });
+
   // ---------- 모바일: 명식 입력 접기/펼치기 ----------
   const mobile = window.matchMedia('(max-width: 760px)');
   const panel = $('#recForm');
@@ -484,7 +573,7 @@
   document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('.card details') && e.target.open) T('detail_open'); }, true);
 
   // ---------- 이벤트 ----------
-  ['', 'f-'].forEach(p => {
+  ['', 'f-', 'm-'].forEach(p => {
     $('#' + p + 'cal').addEventListener('change', () => ($('#' + p + 'leapWrap').hidden = $('#' + p + 'cal').value !== 'lunar'));
     $('#' + p + 'tunknown').addEventListener('change', () => ($('#' + p + 'btime').disabled = $('#' + p + 'tunknown').checked));
   });
@@ -512,6 +601,13 @@
     if (mobile.matches) $('#findMeta').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
   $('#findMore').addEventListener('click', moreFind);
+  $('#m-name').addEventListener('input', renderMineHanja);
+  $('#mineForm').addEventListener('submit', e => {
+    e.preventDefault();
+    if (!validate($('#mineForm'))) return;
+    showMine();
+    if (mobile.matches) $('#mineMeta').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   ['', 'f-'].forEach(p => ['sur', 'bdate', 'btime', 'cal', 'leap', 'tunknown', 'correct'].forEach(id =>
     $('#' + p + id).addEventListener('change', () => { if (!p || $('#useSaju').checked) renderSaju(readBirth(p), p); })));
 
@@ -536,7 +632,7 @@
   markNeed();
   renderSaju(null);
   let tab = 'rec'; try { tab = localStorage.getItem('naming-tab') || 'rec'; } catch (e) {}
-  if (!['rec', 'find', 'saved'].includes(tab)) tab = 'rec';
+  if (!['rec', 'find', 'mine', 'saved'].includes(tab)) tab = 'rec';
   setTab(tab);
   renderSaved();
 })();

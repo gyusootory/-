@@ -252,6 +252,8 @@
   const AWKWARD = new Set('哉可那奈由唯汝如細勢歲兒阿斗島男南台認印授持枝宅鳴菜茶多栗汎'.split(''));
   // 전통 성명학의 불용문자(자연물·계절 등 기운이 약하거나 강하다고 보는 글자): 소폭 감점
   const BULYONG = new Set('雨雪花春夏石玉龍鶴光笑'.split(''));
+  // 어른 세대 이름 풀이용으로만 넣은 한자: 아기 이름 자동 추천에서는 제외(감점 없음)
+  const OLDSTYLE = new Set('子國萬吉虎梅菊心日月一達甲必錦仙貴三'.split(''));
 
   // ---------- 성명 평가 ----------
   // sur: {ko:'김', hanja:'金', strokes:[8], els:['金']}, given: [{ko, ch, strokes, el}], sj: saju 결과(없으면 null)
@@ -335,7 +337,7 @@
   // 한 한글 이름에 대해 가능한 모든 한자 조합을 평가해 점수순 정렬
   function rankHanja(sur, nameSyl, sj, fixed, strict) {
     const lists = nameSyl.map((s, i) => (fixed && fixed[i]) ? [fixed[i]]
-      : candidates(s).filter(h => !strict || !(AWKWARD.has(h.ch) || BULYONG.has(h.ch))));
+      : candidates(s).filter(h => !strict || !(AWKWARD.has(h.ch) || BULYONG.has(h.ch) || OLDSTYLE.has(h.ch))));
     if (lists.some(l => !l.length)) return [];
     const out = [];
     const rec = (i, acc) => {

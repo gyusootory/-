@@ -450,6 +450,27 @@ summary { color: var(--gold); font-weight: 600 }
 .scard .chars .ch { padding-bottom: 12px }
 @media (max-width: 760px) { .cact .act { padding: 10px 8px; font-size: 13.5px } .pager button { min-width: 38px; height: 40px; padding: 0 10px } }
 
+
+/* 내 이름 풀이 */
+.mhz { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 10px }
+.mhz:empty { display: none }
+.mine { display: grid; gap: 16px }
+.cmp { background: var(--surface); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); display: grid; gap: 14px }
+.cmp h4 { font: 600 17px var(--f-display); margin: 0 }
+.cmp .lead { margin: 0; font-size: 14px; line-height: 1.6 }
+.cmp .lead b { color: var(--gold) }
+.cbars { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px }
+.cbars li { display: grid; grid-template-columns: 7.5em minmax(0, 1fr) 3.4em; gap: 10px; align-items: center; font-size: 13.5px }
+.cbars .tr { height: 12px; background: var(--sunk); border-radius: 0 6px 6px 0; overflow: hidden }
+.cbars .fl { display: block; height: 100%; background: var(--line); border-radius: 0 6px 6px 0 }
+.cbars li.me .fl { background: var(--ink) } .cbars li.me { font-weight: 700 }
+.cbars li.top .fl { background: var(--gold-hi) }
+.cbars .v { text-align: right; font: 700 14px var(--f-display) }
+.sumry { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 13.5px }
+.sumry li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: start; line-height: 1.55 }
+.sumry .mk { font-weight: 700; text-align: center } .sumry .ok { color: var(--good) } .sumry .no { color: var(--bad) } .sumry .mid { color: var(--half) }
+.cmp .note { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.6 }
+
 /* 탭 상단 기능 소개: 한 줄 제목 + 3단계 칩 (작게, 화면 폭 전체) */
 .intro { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 16px;
   background: var(--surface); box-shadow: var(--shadow); border: 1px solid rgb(201 168 106 / .28) }
@@ -529,8 +550,9 @@ summary { color: var(--gold); font-weight: 600 }
       <span>앱 공유</span></button>
     <nav class="tabs" role="tablist">
       <button role="tab" data-tab="rec" id="t-rec" aria-selected="true" aria-controls="p-rec"><span class="ti" aria-hidden="true">名</span><span class="lf">① 이름 추천</span><span class="ls">이름 추천</span></button>
-      <button role="tab" data-tab="find" id="t-find" aria-selected="false" aria-controls="p-find"><span class="ti" aria-hidden="true">字</span><span class="lf">② 이름으로 한자 찾기</span><span class="ls">한자 찾기</span></button>
-      <button role="tab" data-tab="saved" id="t-saved" aria-selected="false" aria-controls="p-saved"><span class="ti" aria-hidden="true">藏</span><span class="lf">③ 저장한 이름 <em class="cnt" hidden></em></span><span class="ls">저장 <em class="cnt" hidden></em></span></button>
+      <button role="tab" data-tab="find" id="t-find" aria-selected="false" aria-controls="p-find"><span class="ti" aria-hidden="true">字</span><span class="lf">② 한자 찾기</span><span class="ls">한자 찾기</span></button>
+      <button role="tab" data-tab="mine" id="t-mine" aria-selected="false" aria-controls="p-mine"><span class="ti" aria-hidden="true">鑑</span><span class="lf">③ 내 이름 풀이</span><span class="ls">내 이름</span></button>
+      <button role="tab" data-tab="saved" id="t-saved" aria-selected="false" aria-controls="p-saved"><span class="ti" aria-hidden="true">藏</span><span class="lf">④ 저장 <em class="cnt" hidden></em></span><span class="ls">저장 <em class="cnt" hidden></em></span></button>
     </nav>
     </div>
   </header>
@@ -600,7 +622,57 @@ summary { color: var(--gold); font-weight: 600 }
     </section>
   </div>
 
-  <!-- 탭 ③: 저장한 이름 -->
+  <!-- 탭 ③: 내 이름 풀이 · 개명 비교 -->
+  <div class="grid" role="tabpanel" id="p-mine" aria-labelledby="t-mine" hidden>
+    <div class="intro">
+      <span class="intro-ic" aria-hidden="true">鑑</span>
+      <div class="intro-tx">
+        <h2 class="intro-t">지금 이름의 <b>성명학 점수</b>를 보고 개명 후보와 비교해요</h2>
+        <ol class="intro-s"><li>이름·한자·생일 입력</li><li>점수 확인</li><li>개명 후보 비교</li></ol>
+      </div>
+    </div>
+    <form class="panel" id="mineForm" autocomplete="off" novalidate>
+      <h2>③ 내 이름 풀이</h2>
+      <p class="reqnote"><em class="req-badge">필수</em> 표시 항목을 입력하면 점수를 볼 수 있어요</p>
+      <div class="row">
+        <div class="field" data-req><label for="m-sur">성씨 <em class="req-badge">필수</em></label><select id="m-sur" class="sursel" required></select></div>
+        <div class="field" data-req><label for="m-name">지금 이름 (성 제외) <em class="req-badge">필수</em></label><input type="text" id="m-name" maxlength="2" placeholder="예: 영수" required></div>
+      </div>
+      <div class="mhz" id="m-hz"></div>
+      <div class="row">
+        <div class="field"><label for="m-cal">달력</label><select id="m-cal"><option value="solar">양력</option><option value="lunar">음력</option></select></div>
+        <div class="field" data-req><label for="m-bdate">생년월일 <em class="req-badge">필수</em></label><input type="date" id="m-bdate" min="1900-01-01" max="2050-12-31" required></div>
+      </div>
+      <label class="check" id="m-leapWrap" hidden><input type="checkbox" id="m-leap"> 윤달</label>
+      <div class="row">
+        <div class="field"><label for="m-btime">태어난 시각 <span class="opt">선택</span></label><input type="time" id="m-btime"></div>
+        <div class="field" style="align-content:end"><label class="check"><input type="checkbox" id="m-tunknown"> 시간 모름</label></div>
+      </div>
+      <div class="info-row">
+        <label class="check"><input type="checkbox" id="m-correct" checked> 서울 경도 보정(−30분) 적용</label>
+        <button type="button" class="info-btn" aria-expanded="false" aria-controls="m-corrInfo" aria-label="서울 경도 보정이 무엇인지 보기">i</button>
+      </div>
+      <div class="info-pop" id="m-corrInfo" role="note" hidden>
+        <b>왜 30분을 빼나요?</b>
+        <p>우리나라 시계(표준시)는 일본 <b>도쿄(동경 135°)</b> 기준이라, <b>서울(동경 약 127°)</b>의 실제 해 위치보다 <b>약 30분 빠릅니다.</b>
+        사주의 태어난 시(時)는 <b>실제 해의 위치</b>로 정하기 때문에 30분을 빼서 계산해요.</p>
+        <p class="tip">✓ 대부분의 작명소·만세력이 쓰는 방식이라 <b>켜 두시는 걸 권해요.</b> 태어난 시각을 모르면 영향이 없어요.</p>
+      </div>
+      <div class="field"><label for="m-gender">성별 <span class="opt">개명 후보 볼 때 사용</span></label>
+        <select id="m-gender"><option value="">선택 안 함</option><option value="M">남자</option><option value="F">여자</option></select></div>
+      <button class="btn" type="submit">내 이름 점수 보기</button>
+      <div id="m-sajuOut" class="sajuout" hidden></div>
+    </form>
+    <section class="sec">
+      <div class="sechead"><div><h3>내 이름 감명</h3><p id="mineMeta"></p></div></div>
+      <div id="mineOut">
+        <div class="empty"><span class="empty-seal" aria-hidden="true">鑑</span>
+          <p><b>내 이름 점수 보기</b>를 누르면 점수와 개명 후보 비교가 나타나요 <small>(참고용)</small></p></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 탭 ④: 저장한 이름 -->
   <div class="grid one" role="tabpanel" id="p-saved" aria-labelledby="t-saved" hidden>
     <div class="intro">
       <span class="intro-ic" aria-hidden="true">藏</span>
