@@ -96,6 +96,7 @@
     inp.addEventListener('blur', () => {
       setTimeout(() => {
         // 입력만 하고 고르지 않았으면: 정확히 맞는 항목을 자동 선택
+        if (document.activeElement === inp) return;   // 그 사이에 다시 눌렀으면 목록을 닫지 않음
         if (!sel.value && inp.value.trim()) { const q = inp.value.trim(); const ex = cfg.exact(q, cfg.search(q)); if (ex) choose(ex); }
         close();
       }, 120);
