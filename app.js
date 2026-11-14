@@ -152,11 +152,49 @@
     return { ko, hanja, strokes: row[2], els: row[3] };
   }
 
+  // ---------- 생년월일 직접 입력: 숫자만 치면 2026.03.21 형태로 점이 자동으로 찍힘 ----------
+  function parseDate(v) {
+    const raw = String(v).trim(), parts = raw.split(/\D+/).filter(Boolean);
+    let y, m, d;
+    if (parts.length === 3 && parts[0].length === 4) [y, m, d] = parts.map(Number);          // 1995.7.4 / 1995-07-04
+    else { const g = raw.replace(/\D/g, ''); if (g.length !== 8) return null; y = +g.slice(0, 4); m = +g.slice(4, 6); d = +g.slice(6, 8); }
+    if (y < 1900 || y > 2050 || m < 1 || m > 12 || d < 1 || d > 31) return null;
+    return [y, m, d];
+  }
+  function fmtDate(v) {
+    const raw = String(v);
+    // 점·하이픈을 직접 찍는 경우: 1995.7.4 처럼 입력한 그대로 두되, 연도 뒤 월은 다음 칸으로 넘어갈 때 0을 채움
+    if (/\D/.test(raw.replace(/^\d{1,4}$/, ''))) {
+      const parts = raw.split(/\D+/), y = (parts[0] || '').slice(0, 4);
+      if (y.length === 4 && parts.length > 1 && parts.slice(1).every(x => x.length <= 2)) {   // 칸마다 2자리 이하일 때만 '직접 찍은 점'으로 봄
+        const m = (parts[1] || '').slice(0, 2), d = (parts[2] || '').slice(0, 2), more = parts.length > 2;
+        return y + '.' + (more && m.length === 1 ? '0' + m : m) + (more ? '.' + d : '');
+      }
+    }
+    const g = raw.replace(/\D/g, '').slice(0, 8);
+    return g.length > 6 ? `${g.slice(0, 4)}.${g.slice(4, 6)}.${g.slice(6)}` : g.length > 4 ? `${g.slice(0, 4)}.${g.slice(4)}` : g;
+  }
+  document.querySelectorAll('.dateinp').forEach(inp => {
+    inp.addEventListener('input', () => { const f = fmtDate(inp.value); if (f !== inp.value) inp.value = f; });
+    inp.addEventListener('blur', () => {
+      // 다 쓰고 나면 실제 있는 날짜인지 확인 (양력만: 2월 30일 같은 날짜 거르기)
+      const pd = parseDate(inp.value), f = inp.closest('.field');
+      let old = f.querySelector('.ferr.date'); if (old) old.remove();
+      if (!inp.value) return;
+      const cal = $('#' + inp.id.replace('bdate', 'cal'));
+      const real = pd && (cal && cal.value === 'lunar' ? pd[2] <= 30 : new Date(pd[0], pd[1] - 1, pd[2]).getDate() === pd[2]);
+      if (!real) f.insertAdjacentHTML('beforeend', '<small class="ferr date">날짜를 확인해 주세요 · 예: 20260321</small>');
+      else inp.value = `${pd[0]}.${String(pd[1]).padStart(2, '0')}.${String(pd[2]).padStart(2, '0')}`;   // 1995.7.4 → 1995.07.04
+    });
+  });
+
   // ---------- 사주 입력 ----------
   function readBirth(p = '') {
     const f = id => $('#' + p + id);
     const v = f('bdate').value; if (!v) return null;
-    let [y, m, d] = v.split('-').map(Number);
+    const pd = parseDate(v);
+    if (!pd) return { error: '생년월일을 숫자 8자리로 입력해 주세요 (예: 2026.03.21 → 20260321)' };
+    let [y, m, d] = pd;
     if (f('cal').value === 'lunar') {
       const c = new KoreanLunarCalendar();
       if (!c.setLunarDate(y, m, d, f('leap').checked)) return { error: '음력 날짜를 확인해 주세요 (1000~2050년, 해당 월의 일수).' };
@@ -650,7 +688,7 @@
   function updateSummary() {
     if (!surSel.value || !$('#gender').value || !$('#bdate').value) { $('#fsumText').textContent = '아기 정보를 입력해 주세요'; return; }
     const g = { M: '남', F: '여', U: '성별 무관' }[$('#gender').value];
-    const d = $('#bdate').value.replace(/-/g, '.');
+    const d = fmtDate($('#bdate').value);
     const t = $('#tunknown').checked ? '시간 모름' : ($('#btime').value || '시간 모름');
     const cal = $('#cal').value === 'lunar' ? ('음력' + ($('#leap').checked ? '(윤)' : '')) : '양력';
     const hs = $('#hangSel').value;
