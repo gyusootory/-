@@ -656,10 +656,6 @@ table.vs td:nth-child(2) { color: var(--ink) }
         <div class="field" data-req><label for="m-name">지금 이름 (성 제외) <em class="req-badge">필수</em></label><input type="text" id="m-name" maxlength="2" placeholder="예: 영수" required></div>
       </div>
       <div class="mhz" id="m-hz"></div>
-      <div class="candbox">
-        <div class="field"><label for="c-name">개명할 이름 (성 제외) <span class="opt">선택 · 비교용</span></label><input type="text" id="c-name" maxlength="2" placeholder="예: 서준"></div>
-        <div class="mhz" id="c-hz"></div>
-      </div>
       <div class="row">
         <div class="field"><label for="m-cal">달력</label><select id="m-cal"><option value="solar">양력</option><option value="lunar">음력</option></select></div>
         <div class="field" data-req><label for="m-bdate">생년월일 <em class="req-badge">필수</em></label><input type="date" id="m-bdate" min="1900-01-01" max="2050-12-31" required></div>
@@ -681,6 +677,10 @@ table.vs td:nth-child(2) { color: var(--ink) }
       </div>
       <div class="field"><label for="m-gender">성별 <span class="opt">개명 후보 볼 때 사용</span></label>
         <select id="m-gender"><option value="">선택 안 함</option><option value="M">남자</option><option value="F">여자</option></select></div>
+      <div class="candbox">
+        <div class="field"><label for="c-name">개명할 이름 (성 제외) <span class="opt">선택 · 비교용</span></label><input type="text" id="c-name" maxlength="2" placeholder="예: 서준"></div>
+        <div class="mhz" id="c-hz"></div>
+      </div>
       <button class="btn" type="submit">이름 풀이 · 비교하기</button>
       <div id="m-sajuOut" class="sajuout" hidden></div>
     </form>
