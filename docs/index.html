@@ -421,6 +421,25 @@ summary { color: var(--gold); font-weight: 600 }
 }
 
 
+/* 상세 감명: 눌러 보고 싶게 생긴 버튼형 */
+.card details.dt { border-top: 0; padding-top: 0 }
+.dt > summary { list-style: none; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; cursor: pointer;
+  background: var(--gold-soft); border: 1px solid rgb(201 168 106 / .55); color: var(--ink); min-height: 52px;
+  transition: background .2s, border-color .2s, transform .15s; -webkit-tap-highlight-color: transparent; user-select: none }
+.dt > summary::-webkit-details-marker { display: none }
+.dt > summary:hover { border-color: var(--gold-hi); background: color-mix(in srgb, var(--gold-soft) 70%, var(--gold-hi) 30%) }
+.dt > summary:active { transform: scale(.99) }
+.dt-ic { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 600 14px var(--f-display);
+  color: var(--accent-ink); background: var(--ink) }
+.dt-tx { flex: 1; min-width: 0; display: grid; gap: 1px; text-align: left }
+.dt-tx b { font: 700 14.5px var(--f-body); color: var(--ink); letter-spacing: -.005em }
+.dt-tx small { font-size: 11.5px; color: var(--muted) }
+.dt-close { display: none } .dt[open] .dt-open { display: none } .dt[open] .dt-close { display: inline }
+.dt-chev { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgb(201 168 106 / .6); position: relative; transition: transform .25s }
+.dt-chev::before { content: ""; position: absolute; left: 50%; top: 45%; width: 7px; height: 7px; border-right: 2px solid var(--gold); border-bottom: 2px solid var(--gold); transform: translate(-50%, -50%) rotate(45deg) }
+.dt[open] .dt-chev { transform: rotate(180deg) }
+.dt[open] > summary { margin-bottom: 4px }
+
 /* 탭 상단 기능 소개: 한 줄 제목 + 3단계 칩 (작게, 화면 폭 전체) */
 .intro { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 16px;
   background: var(--surface); box-shadow: var(--shadow); border: 1px solid rgb(201 168 106 / .28) }
@@ -1322,7 +1341,7 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
       </div>
       <ul class="parts">${parts.map(([k, v, m]) => `<li><span>${k}</span><span class="pt"><i style="width:${v / m * 100}%"></i></span><span class="num">${v}/${m}</span></li>`).join('')}</ul>
       ${ev.warn.length ? `<p class="warn">${ev.warn.map(esc).join(' · ')}</p>` : ''}
-      <details><summary>상세 감명 보기</summary>
+      <details class="dt"><summary><span class="dt-ic" aria-hidden="true">鑑</span><span class="dt-tx"><b class="dt-open">상세 감명 보기</b><b class="dt-close">상세 감명 접기</b><small>81수리 · 음양 · 오행 풀이</small></span><span class="dt-chev" aria-hidden="true"></span></summary>
         <h4>원형이정 4격 (81수리)</h4>
         <div class="tw"><table><tbody>${gy}</tbody></table></div>
         <h4>음양 · 발음오행 · 삼원오행</h4>

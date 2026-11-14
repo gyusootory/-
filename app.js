@@ -230,7 +230,7 @@
       </div>
       <ul class="parts">${parts.map(([k, v, m]) => `<li><span>${k}</span><span class="pt"><i style="width:${v / m * 100}%"></i></span><span class="num">${v}/${m}</span></li>`).join('')}</ul>
       ${ev.warn.length ? `<p class="warn">${ev.warn.map(esc).join(' · ')}</p>` : ''}
-      <details><summary>상세 감명 보기</summary>
+      <details class="dt"><summary><span class="dt-ic" aria-hidden="true">鑑</span><span class="dt-tx"><b class="dt-open">상세 감명 보기</b><b class="dt-close">상세 감명 접기</b><small>81수리 · 음양 · 오행 풀이</small></span><span class="dt-chev" aria-hidden="true"></span></summary>
         <h4>원형이정 4격 (81수리)</h4>
         <div class="tw"><table><tbody>${gy}</tbody></table></div>
         <h4>음양 · 발음오행 · 삼원오행</h4>
