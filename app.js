@@ -64,14 +64,29 @@
       if (!inp.value.trim() && cfg.hint) list.insertAdjacentHTML('afterbegin', `<li class="hint">${cfg.hint}</li>`);
       list.hidden = false; inp.setAttribute('aria-expanded', 'true');
       inp.setAttribute('aria-activedescendant', active >= 0 ? `${lid}-${active}` : '');
+      fitList();
     }
+    // 휴대폰 키보드가 올라와도 목록이 키보드 뒤로 숨지 않게, 보이는 화면(visualViewport) 안에 높이를 맞춤
+    function fitList() {
+      const vv = window.visualViewport; if (!vv || list.hidden) return;
+      const r = inp.getBoundingClientRect();
+      const avail = vv.height + vv.offsetTop - r.bottom - 14;
+      list.style.maxHeight = Math.max(140, Math.min(avail, 420)) + 'px';
+    }
+    if (window.visualViewport) { visualViewport.addEventListener('resize', fitList); visualViewport.addEventListener('scroll', fitList); }
     function close() { list.hidden = true; inp.setAttribute('aria-expanded', 'false'); active = -1; }
     function choose(it) {
       sel.value = it.value; inp.value = cfg.label(it); close();
       sel.dispatchEvent(new Event('change', { bubbles: true }));
       inp.blur();   // 고른 뒤 키보드를 닫아, 다시 누르면 처음부터 새로 검색되게 함
     }
-    inp.addEventListener('focus', () => { if (sel.value) inp.select(); active = -1; render(); });
+    inp.addEventListener('focus', () => {
+      if (sel.value) inp.select(); active = -1; render();
+      if (window.matchMedia('(max-width: 760px)').matches) {
+        // 키보드가 올라온 뒤 입력칸을 화면 위쪽으로 올려 목록이 보일 공간을 만듦
+        setTimeout(() => { const top = inp.getBoundingClientRect().top + window.scrollY - 12; window.scrollTo({ top, behavior: 'smooth' }); setTimeout(fitList, 350); }, 320);
+      }
+    });
     // 이미 커서가 있는 상태에서 다시 눌러도 목록을 열고, 고른 글자는 전체 선택해 새로 입력되게 함
     inp.addEventListener('click', () => { if (list.hidden) { if (sel.value) inp.select(); active = -1; render(); } });
     inp.addEventListener('input', () => {
@@ -92,15 +107,24 @@
     });
     function scrollActive() { const el = list.querySelector('.on'); if (el) el.scrollIntoView({ block: 'nearest' }); }
     // 마우스·터치 선택 (blur보다 먼저 처리되도록 pointerdown 사용)
-    list.addEventListener('pointerdown', e => { const li = e.target.closest('li[data-i]'); if (li) { e.preventDefault(); choose(items[+li.dataset.i]); } });
+    let pressing = false, pressTimer;
+    list.addEventListener('pointerdown', e => {
+      pressing = true; clearTimeout(pressTimer);
+      if (e.pointerType === 'mouse') e.preventDefault();   // 마우스는 입력칸 커서 유지, 터치는 스크롤 허용
+    });
+    const release = () => { clearTimeout(pressTimer); pressTimer = setTimeout(() => (pressing = false), 450); };
+    list.addEventListener('pointerup', release); list.addEventListener('pointercancel', release);
+    list.addEventListener('click', e => { const li = e.target.closest('li[data-i]'); if (li) { e.preventDefault(); choose(items[+li.dataset.i]); } });
     inp.addEventListener('blur', () => {
       setTimeout(() => {
         // 입력만 하고 고르지 않았으면: 정확히 맞는 항목을 자동 선택
         if (document.activeElement === inp) return;   // 그 사이에 다시 눌렀으면 목록을 닫지 않음
+        if (pressing) return;                          // 목록을 손가락으로 스크롤·선택하는 중이면 닫지 않음
         if (!sel.value && inp.value.trim()) { const q = inp.value.trim(); const ex = cfg.exact(q, cfg.search(q)); if (ex) choose(ex); }
         close();
       }, 120);
     });
+    document.addEventListener('pointerdown', e => { if (!list.hidden && !wrap.contains(e.target)) setTimeout(() => { if (document.activeElement !== inp) close(); }, 0); });
     // 다른 코드가 select 값을 바꾸면 입력칸 글자도 맞춤
     sel.addEventListener('change', () => { const it = cfg.byValue(sel.value); if (it && document.activeElement !== inp) inp.value = cfg.label(it); if (!sel.value && document.activeElement !== inp) inp.value = ''; });
     if (sel.value) { const it = cfg.byValue(sel.value); if (it) inp.value = cfg.label(it); }
