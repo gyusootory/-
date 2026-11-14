@@ -2,7 +2,7 @@
 #  ① dist/가치작명소.html : 파일 하나만 보내도 열리는 버전
 #  ② docs/               : GitHub Pages로 올리는 설치형 웹앱(PWA) + 관리자 화면 + 개인정보처리방침
 #  ③ dist/가치작명소-웹앱.zip : docs 폴더 압축본
-import os, re, json, hashlib, shutil, zipfile
+import os, re, json, hashlib, shutil, zipfile, base64
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 D = os.path.join(R, 'docs'); os.makedirs(D, exist_ok=True); os.makedirs(os.path.join(R, 'dist'), exist_ok=True)
 SITE = 'https://gyusootory.github.io/gachi-naming/'
@@ -30,15 +30,17 @@ head = ('<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n'
 
 # ① 단일 파일 (설정 파일 없이 동작: 통계 꺼짐)
 single = body.replace('<script src="config.js"></script>\n', '')
+logo64 = base64.b64encode(open(os.path.join(R, 'icon-96.png'), 'rb').read()).decode()
+single = single.replace('src="icon-96.png"', 'src="data:image/png;base64,' + logo64 + '"')  # 파일 하나로도 로고가 보이게
 for old in ['오행작명소.html', '오행작명소-웹앱.zip']:
     p = os.path.join(R, 'dist', old)
     if os.path.exists(p): os.remove(p)
 open(os.path.join(R, 'dist', '가치작명소.html'), 'w', encoding='utf-8').write(head + single + '\n</html>\n')
 
 # ② 설치형 웹앱
-pwa = (head + '<meta name="theme-color" content="#b23a2b">\n'
+pwa = (head + '<meta name="theme-color" content="#121826">\n'
        '<link rel="manifest" href="manifest.webmanifest">\n'
-       '<link rel="icon" href="icon-192.png" type="image/png">\n'
+       '<link rel="icon" href="favicon-48.png" type="image/png">\n'
        '<link rel="apple-touch-icon" href="apple-touch-icon.png">\n'
        '<meta name="apple-mobile-web-app-capable" content="yes">\n'
        '<meta name="mobile-web-app-capable" content="yes">\n'
@@ -47,14 +49,14 @@ pwa = (head + '<meta name="theme-color" content="#b23a2b">\n'
 pwa += body + ("\n<script>if ('serviceWorker' in navigator && location.protocol === 'https:') "
                "navigator.serviceWorker.register('sw.js').catch(function () {});</script>\n</html>\n")
 open(os.path.join(D, 'index.html'), 'w', encoding='utf-8').write(pwa)
-for f in ['admin.html', 'privacy.html']:
+for f in ['admin.html', 'privacy.html', 'icon-96.png']:
     shutil.copy(os.path.join(R, f), os.path.join(D, f))
 if not os.path.exists(os.path.join(D, 'config.js')):  # 이미 키를 넣어 둔 docs/config.js는 덮어쓰지 않음
     shutil.copy(os.path.join(R, 'config.js'), os.path.join(D, 'config.js'))
 json.dump({
     'id': './', 'name': '가치작명소', 'short_name': '가치작명소', 'description': DESC, 'lang': 'ko',
     'start_url': './', 'scope': './', 'display': 'standalone', 'orientation': 'portrait',
-    'background_color': '#eef1f4', 'theme_color': '#b23a2b', 'categories': ['lifestyle', 'utilities'],
+    'background_color': '#121826', 'theme_color': '#121826', 'categories': ['lifestyle', 'utilities'],
     'icons': [{'src': 'icon-192.png', 'sizes': '192x192', 'type': 'image/png'},
               {'src': 'icon-512.png', 'sizes': '512x512', 'type': 'image/png'},
               {'src': 'icon-maskable-512.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'maskable'}],
@@ -62,7 +64,7 @@ json.dump({
 ver = hashlib.sha1(pwa.encode()).hexdigest()[:8]  # 내용이 바뀌면 캐시 이름도 바뀌어 새 버전으로 갱신
 open(os.path.join(D, 'sw.js'), 'w', encoding='utf-8').write(f"""// 오프라인에서도 열리도록 앱 파일을 저장해 두는 서비스 워커
 const CACHE = 'gachi-{ver}';
-const FILES = ['./', './index.html', './config.js', './privacy.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const FILES = ['./', './index.html', './config.js', './privacy.html', './manifest.webmanifest', './icon-96.png', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => {{ e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); }});
 self.addEventListener('activate', e => {{
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))));

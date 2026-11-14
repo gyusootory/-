@@ -2,36 +2,46 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Noto+Serif+KR:wght@600&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* 레이아웃: 왼쪽 '사주 명식' 고정 패널 + 오른쪽 이름 카드 목록 (모바일은 한 줄) — 쪽빛(인디고) 먹색 위에 오방색을 오행 표시에만 사용 */
+/* 디자인: '먹과 금박' — 먹빛 남색 머리띠 + 백자빛 바탕 + 샴페인 골드 포인트. 장식은 덜고 여백·명조 글씨로 품격을 냄 */
 :root {
-  --bg: #eef1f4;          /* 옅은 청자빛 종이 */
+  --bg: #f3f2ee;          /* 백자빛 바탕 */
   --surface: #ffffff;
-  --sunk: #e3e8ee;
-  --ink: #18212e;         /* 먹색 */
-  --muted: #5b6676;
-  --line: #cfd6df;
-  --accent: #2d3f8f;      /* 쪽빛 */
-  --accent-ink: #ffffff;
-  --seal: #b23a2b;        /* 낙관 붉은색 */
-  --req-bg: #fbf0ee; --req-ring: rgb(178 58 43 / .22);
-  --wood: #2f7a55; --fire: #c0392b; --earth: #a57412; --metal: #6c7480; --water: #1f4f8a;
-  --good: #2f7a55; --half: #a57412; --bad: #b23a2b;
-  --f-display: "Song Myung", "Noto Serif KR", "Nanum Myeongjo", "Batang", serif;
+  --sunk: #eceae4;        /* 눌린 칸 */
+  --tile: #f7f6f2;        /* 한자 타일·입력칸 */
+  --ink: #141a26;         /* 먹빛 남색 (아이콘 바탕색) */
+  --muted: #6a7080;
+  --line: #e2dfd7;
+  --accent: #141a26;      /* 주 버튼 = 먹색 */
+  --accent-ink: #f4ecdc;  /* 먹색 위 글씨 = 상아색 */
+  --gold: #8a6a2f;        /* 글씨용 금색 (흰 바탕 대비 확보) */
+  --gold-hi: #c9a86a;     /* 장식용 밝은 금색 */
+  --gold-soft: #f8f3e7;   /* 금빛이 도는 옅은 바탕 */
+  --band: #121826; --band-ink: #efe8d8; --band-muted: #a39b8a;
+  --seal: #a8382c;        /* 낙관 붉은색: 필수 표시에만 */
+  --req-bg: #fbf2ef; --req-ring: rgb(168 56 44 / .18);
+  --shadow: 0 1px 2px rgb(20 26 38 / .04), 0 8px 28px rgb(20 26 38 / .06);
+  --wood: #3c7a5a; --fire: #b4473a; --earth: #9a7428; --metal: #737a87; --water: #2f5687;
+  --good: #3c7a5a; --half: #9a7428; --bad: #a8382c;
+  --f-display: "Noto Serif KR", "Nanum Myeongjo", "AppleMyungjo", "Batang", serif;
   --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #10151d; --surface: #182029; --sunk: #0c1117; --ink: #e6eaf0; --muted: #98a3b3; --line: #2b3542;
-  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563; --req-bg: #2b1c1b; --req-ring: rgb(224 117 99 / .3);
-  --wood: #6cc497; --fire: #ef7f70; --earth: #e2b75a; --metal: #b4bcc8; --water: #79aee8;
-  --good: #6cc497; --half: #e2b75a; --bad: #ef7f70; color-scheme: dark } }
+  --bg: #0d1118; --surface: #151b26; --sunk: #0a0e14; --tile: #1b2230; --ink: #ece6da; --muted: #9aa0ad; --line: #252d3a;
+  --accent: #d6b978; --accent-ink: #121826; --gold: #d6b978; --gold-hi: #e6cf98; --gold-soft: #1d2230;
+  --band: #0a0e15; --band-ink: #efe8d8; --band-muted: #8f8877; --seal: #d9705f; --req-bg: #2a1d1b; --req-ring: rgb(217 112 95 / .25);
+  --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 28px rgb(0 0 0 / .25);
+  --wood: #74c49b; --fire: #ec8a7c; --earth: #ddb86a; --metal: #b4bac6; --water: #86b2ea;
+  --good: #74c49b; --half: #ddb86a; --bad: #ec8a7c; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #10151d; --surface: #182029; --sunk: #0c1117; --ink: #e6eaf0; --muted: #98a3b3; --line: #2b3542;
-  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563; --req-bg: #2b1c1b; --req-ring: rgb(224 117 99 / .3);
-  --wood: #6cc497; --fire: #ef7f70; --earth: #e2b75a; --metal: #b4bcc8; --water: #79aee8;
-  --good: #6cc497; --half: #e2b75a; --bad: #ef7f70; color-scheme: dark }
+  --bg: #0d1118; --surface: #151b26; --sunk: #0a0e14; --tile: #1b2230; --ink: #ece6da; --muted: #9aa0ad; --line: #252d3a;
+  --accent: #d6b978; --accent-ink: #121826; --gold: #d6b978; --gold-hi: #e6cf98; --gold-soft: #1d2230;
+  --band: #0a0e15; --band-ink: #efe8d8; --band-muted: #8f8877; --seal: #d9705f; --req-bg: #2a1d1b; --req-ring: rgb(217 112 95 / .25);
+  --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 28px rgb(0 0 0 / .25);
+  --wood: #74c49b; --fire: #ec8a7c; --earth: #ddb86a; --metal: #b4bac6; --water: #86b2ea;
+  --good: #74c49b; --half: #ddb86a; --bad: #ec8a7c; color-scheme: dark }
 
 * { box-sizing: border-box }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55;
@@ -290,13 +300,110 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 .guidebox > summary { font-size: 15px; min-height: 44px; display: flex; align-items: center }
 .guidebox .guide { padding-top: 12px }
 
+
+/* ═════════ 고급 디자인 레이어 (위 기본 규칙을 덮어씀) ═════════ */
+body { letter-spacing: -.005em }
+/* 머리띠: 화면 끝까지 이어지는 먹색 띠 */
+.mast { background: var(--band); color: var(--band-ink); box-shadow: 0 0 0 100vmax var(--band); clip-path: inset(0 -100vmax); border: 0;
+  padding-block: 22px 22px; align-items: center }
+.logo { width: 52px; height: 52px; border-radius: 14px; display: block; box-shadow: 0 0 0 1px rgb(201 168 106 / .35), 0 6px 18px rgb(0 0 0 / .35) }
+.brand h1 { font-family: var(--f-display); font-weight: 600; font-size: clamp(24px, 3.4vw, 30px); letter-spacing: .06em; color: var(--band-ink) }
+.brand p { color: var(--band-muted); font-size: 12.5px; letter-spacing: .02em }
+.tabs { background: rgb(255 255 255 / .06); border-radius: 12px; padding: 4px; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .06) }
+.tabs button { color: var(--band-muted); border-radius: 9px; padding: 9px 16px; transition: color .2s, background .2s }
+.tabs button:hover { color: var(--band-ink) }
+.tabs button[aria-selected="true"] { background: rgb(201 168 106 / .14); color: var(--gold-hi); box-shadow: inset 0 0 0 1px rgb(201 168 106 / .35) }
+.appshare { background: transparent; color: var(--gold-hi); border: 1px solid rgb(201 168 106 / .5); font-weight: 500 }
+.appshare:hover { background: rgb(201 168 106 / .1) }
+
+/* 본문 */
+.grid { padding-top: 28px; gap: 32px }
+.panel { border: 0; border-radius: 20px; padding: 22px; box-shadow: var(--shadow); gap: 16px }
+.panel h2 { font: 600 12px var(--f-body); letter-spacing: .14em; color: var(--gold) }
+.field label, .lbl { font-weight: 500; color: var(--ink) }
+input[type=text], input[type=date], input[type=time], select {
+  background: var(--tile); border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px; min-height: 44px; transition: border-color .15s, box-shadow .15s }
+input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px }
+input[type=text]:focus, input[type=date]:focus, input[type=time]:focus, select:focus { border-color: var(--gold-hi); box-shadow: 0 0 0 3px rgb(201 168 106 / .18); outline: none }
+input[type=checkbox] { accent-color: var(--ink) }
+.req-badge { background: var(--seal); border-radius: 999px; padding: 3px 7px; font-size: 10px; letter-spacing: .04em }
+.opt { border-radius: 999px; padding: 1px 7px; border-color: var(--line) }
+.btn { border-radius: 12px; padding: 13px 18px; letter-spacing: .02em; font-weight: 600; transition: transform .15s, box-shadow .15s, background .2s;
+  box-shadow: 0 1px 0 rgb(255 255 255 / .06) inset, 0 6px 16px rgb(20 26 38 / .18) }
+.btn:hover { transform: translateY(-1px) }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); box-shadow: none }
+.sajuout { border-top: 1px solid var(--line) }
+.pillar { background: var(--tile); border-radius: 12px; padding: 10px 2px }
+.pillar.me { outline: 0; box-shadow: inset 0 0 0 1.5px var(--gold-hi); background: var(--gold-soft) }
+.gz { font-weight: 600 }
+.el { font-weight: 600; border-radius: 999px; padding: 0 7px; border-color: color-mix(in srgb, currentColor 45%, transparent) }
+
+/* 결과 */
+.sechead h3 { font-weight: 600; font-size: 26px; letter-spacing: .02em }
+.sechead p { letter-spacing: .01em }
+.cards { gap: 18px }
+.card { border: 0; border-radius: 20px; padding: 20px; box-shadow: var(--shadow); gap: 14px }
+.rank { font-family: var(--f-display); font-weight: 600; font-size: 13px; color: var(--gold); border: 1px solid rgb(201 168 106 / .55); width: 30px; height: 30px }
+.score { width: 64px; height: 64px; background: radial-gradient(closest-side, var(--surface) 82%, transparent 84% 100%), conic-gradient(var(--gold-hi) calc(var(--p) * 1%), var(--sunk) 0) }
+.score b { font-family: var(--f-display); font-weight: 700; font-size: 19px; color: var(--ink) }
+.score small { color: var(--gold); font-weight: 600; letter-spacing: .04em }
+.chars { gap: 8px }
+.ch { background: var(--tile); border-radius: 14px; padding: 12px 2px 10px; gap: 2px }
+.ch.sur { background: transparent; border: 1px solid var(--line) }
+.hz { font-weight: 600; font-size: 44px; color: var(--ink) }
+.hk { font-weight: 600; letter-spacing: .04em }
+.meaning { background: var(--gold-soft); border-radius: 14px; padding: 14px 16px; gap: 10px }
+.msent { font-weight: 500; font-size: 16px; line-height: 1.65; letter-spacing: -.01em }
+.mlist b { font-weight: 600; color: var(--gold) }
+.pt { height: 4px; background: var(--sunk) } .pt i { background: var(--gold-hi) }
+details { border-top: 1px solid var(--line); padding-top: 10px }
+summary { color: var(--gold); font-weight: 600 }
+.act { background: var(--ink); color: var(--accent-ink); border-color: var(--ink); border-radius: 11px; padding: 10px 14px; font-weight: 600 }
+.act.ghost { background: transparent; color: var(--ink); border-color: var(--line) }
+.empty { border: 0; border-radius: 20px; box-shadow: var(--shadow); padding: 28px 26px 24px; gap: 12px }
+.empty-seal { font-weight: 600; color: var(--gold); border: 1px solid var(--gold-hi); border-radius: 50%; width: 52px; height: 52px; transform: none; font-size: 24px; background: var(--gold-soft) }
+.empty h4 { font-weight: 600; font-size: 20px; letter-spacing: .01em }
+.cand { border: 0; border-radius: 16px; box-shadow: var(--shadow) }
+.cand li b { font-weight: 600 }
+.guide section { border: 0; border-radius: 18px; box-shadow: var(--shadow) }
+.guide h3 { font-weight: 600 }
+.guidebox > summary { color: var(--ink) }
+.foot a { color: var(--gold) }
+#shareBox .sb { border-radius: 20px }
+#toast { background: var(--band); color: var(--band-ink); box-shadow: 0 8px 24px rgb(0 0 0 / .25) }
+.fsum { border-radius: 14px }
+.fedit { color: var(--gold) }
+.panel.collapsed .reqnote { display: none }
+
+@media (max-width: 760px) {
+  body::before { background: var(--band) }
+  /* 휴대폰: clip-path는 고정 탭바까지 잘라 버리므로 음수 여백으로 띠를 화면 끝까지 늘임 */
+  .mast { padding-block: 14px 14px; clip-path: none; box-shadow: none;
+    margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))) calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+    padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)) }
+  .logo { width: 40px; height: 40px; border-radius: 11px }
+  .brand h1 { font-size: 21px }
+  .grid { padding-top: 16px; gap: 18px }
+  .panel, .card, .empty { border-radius: 18px }
+  .card { padding: 16px }
+  .hz { font-size: 38px }
+  /* 하단 탭바: 흰 바탕 + 금색 활성 */
+  .tabs { background: var(--surface); border-radius: 0; box-shadow: 0 -1px 0 var(--line), 0 -8px 24px rgb(20 26 38 / .06); border-top: 0 }
+  .tabs button { color: var(--muted) }
+  .tabs button[aria-selected="true"] { background: none; box-shadow: none; color: var(--ink) }
+  .tabs .ti { font-weight: 600 }
+  .tabs button[aria-selected="true"] .ti { color: var(--gold) }
+  .appshare { border-color: rgb(201 168 106 / .5) }
+  #moreBtn { background: var(--band); color: var(--gold-hi); box-shadow: 0 10px 26px rgb(10 14 21 / .35); border: 1px solid rgb(201 168 106 / .35) }
+}
+
 @media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease both } @keyframes rise { from { transform: translateY(6px); opacity: .4 } } }
 </style>
 
 <div class="wrap">
   <header class="mast">
     <div class="brand">
-      <div class="seal" aria-hidden="true"><span>價</span><span>値</span><span>作</span><span>名</span></div>
+      <img class="logo" src="icon-96.png" width="52" height="52" alt="">
       <div><h1>가치작명소</h1><p>사주 · 오행 · 음양 · 81수리 · 항렬자로 이름과 한자를 짓습니다</p></div>
     </div>
     <div class="mast-r">
@@ -444,7 +551,8 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
       <ul>
         <li><b>korean-lunar-calendar</b> 0.4.0 — 음력·양력 변환 (한국천문연구원 기준 데이터) · MIT License</li>
         <li><b>Unicode Unihan Database</b> — 한자 부수·획수 자료 · Unicode License v3</li>
-        <li><b>Song Myung · IBM Plex Sans KR · IBM Plex Mono</b> 글꼴 — SIL Open Font License 1.1</li>
+        <li><b>앱 아이콘</b> — Higgsfield(GPT Image)로 생성</li>
+        <li><b>Noto Serif KR · IBM Plex Sans KR · IBM Plex Mono</b> 글꼴 — SIL Open Font License 1.1</li>
       </ul>
     </section></div>
   </details>

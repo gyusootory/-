@@ -8,24 +8,24 @@
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Noto+Serif+KR:wght@600&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 /* 관리자 화면: 위에서부터 요약 숫자 → 추이 차트 → 세부 표 순서로 훑어보는 구조 */
 :root {
-  --bg: #eef1f4; --surface: #ffffff; --sunk: #e3e8ee; --ink: #18212e; --muted: #5b6676; --line: #cfd6df;
-  --accent: #2d3f8f; --accent-ink: #ffffff; --seal: #b23a2b; --grid: #e3e8ee;
-  --good: #2f7a55; --bad: #b23a2b;
-  --f-display: "Song Myung", "Noto Serif KR", "Nanum Myeongjo", serif;
+  --bg: #f3f2ee; --surface: #ffffff; --sunk: #eceae4; --ink: #141a26; --muted: #6a7080; --line: #e2dfd7;
+  --accent: #b8954f; --accent-ink: #ffffff; --seal: #a8382c; --grid: #eceae4; --gold: #8a6a2f; --band: #121826; --band-ink: #efe8d8;
+  --good: #3c7a5a; --bad: #a8382c;
+  --f-display: "Noto Serif KR", "Nanum Myeongjo", serif;
   --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, monospace;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #10151d; --surface: #182029; --sunk: #0c1117; --ink: #e6eaf0; --muted: #98a3b3; --line: #2b3542;
-  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563; --grid: #222b37; --good: #6cc497; --bad: #ef7f70; color-scheme: dark } }
+  --bg: #0d1118; --surface: #151b26; --sunk: #0a0e14; --ink: #ece6da; --muted: #9aa0ad; --line: #252d3a;
+  --accent: #d6b978; --accent-ink: #121826; --seal: #d9705f; --grid: #222a36; --gold: #d6b978; --band: #0a0e15; --good: #74c49b; --bad: #ec8a7c; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #10151d; --surface: #182029; --sunk: #0c1117; --ink: #e6eaf0; --muted: #98a3b3; --line: #2b3542;
-  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563; --grid: #222b37; --good: #6cc497; --bad: #ef7f70; color-scheme: dark }
+  --bg: #0d1118; --surface: #151b26; --sunk: #0a0e14; --ink: #ece6da; --muted: #9aa0ad; --line: #252d3a;
+  --accent: #d6b978; --accent-ink: #121826; --seal: #d9705f; --grid: #222a36; --gold: #d6b978; --band: #0a0e15; --good: #74c49b; --bad: #ec8a7c; color-scheme: dark }
 * { box-sizing: border-box }
 [hidden] { display: none !important }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body);
@@ -39,14 +39,15 @@ a { color: var(--accent) }
 
 .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-block: 8px 12px; border-bottom: 1px solid var(--line) }
 .brand { display: flex; align-items: center; gap: 12px }
+.logo { width: 44px; height: 44px; border-radius: 12px; box-shadow: 0 0 0 1px rgb(201 168 106 / .35) }
 .seal { width: 40px; height: 40px; border: 2px solid var(--seal); color: var(--seal); border-radius: 3px; display: grid; place-items: center; font: 22px var(--f-display); transform: rotate(-3deg) }
-.brand h1 { font: 400 24px var(--f-display) }
+.brand h1 { font: 600 22px var(--f-display); letter-spacing: .04em }
 .brand p { margin: 0; font-size: 12px; color: var(--muted) }
-.btn { font: 600 14px var(--f-body); border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; background: var(--accent); color: var(--accent-ink); min-height: 42px }
+.btn { font: 600 14px var(--f-body); border: 0; border-radius: 10px; padding: 10px 16px; cursor: pointer; background: var(--ink); color: var(--bg); min-height: 42px }
 .btn.ghost { background: none; color: var(--ink); border: 1px solid var(--line) }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 12px; min-width: 0; align-content: start }
+.card { background: var(--surface); border: 0; box-shadow: 0 1px 2px rgb(20 26 38 / .04), 0 8px 28px rgb(20 26 38 / .06); border-radius: 18px; padding: 18px; display: grid; gap: 12px; min-width: 0; align-content: start }
 .card h3 { font-size: 12.5px; font-weight: 600; color: var(--muted); margin-top: 4px }
 .card h2 { font-size: 15px; font-weight: 600 }
 .card .sub { margin: -6px 0 0; font-size: 12.5px; color: var(--muted) }
@@ -69,9 +70,9 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunk); p
 /* 요약 숫자 */
 .kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px }
 @media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)) } .kpis .kpi:first-child { grid-column: 1 / -1 } }
-.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 2px; min-width: 0 }
+.kpi { background: var(--surface); border: 0; box-shadow: 0 1px 2px rgb(20 26 38 / .04), 0 8px 28px rgb(20 26 38 / .06); border-radius: 16px; padding: 14px 16px; display: grid; gap: 2px; min-width: 0 }
 .kpi span { font-size: 12.5px; color: var(--muted) }
-.kpi b { font: 600 28px var(--f-mono); font-variant-numeric: tabular-nums; line-height: 1.2 }
+.kpi b { font: 700 30px var(--f-display); font-variant-numeric: tabular-nums; line-height: 1.2 }
 .kpi small { font-size: 12px; color: var(--muted) }
 
 .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px }
@@ -107,7 +108,7 @@ td.r, th.r { text-align: right }
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand"><div class="seal" aria-hidden="true">名</div>
+    <div class="brand"><img class="logo" src="icon-96.png" width="44" height="44" alt="">
       <div><h1>가치작명소 관리자</h1><p>방문자·기능 사용 통계 · 모든 시각은 한국 시간</p></div></div>
     <div class="filters">
       <a href="./" class="btn ghost" style="text-decoration:none">앱으로 가기</a>

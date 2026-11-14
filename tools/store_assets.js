@@ -6,32 +6,33 @@ const ROOT = path.join(__dirname, '..'), FONT = process.argv[2], OUT = path.join
 fs.mkdirSync(path.join(OUT, 'screenshots'), { recursive: true });
 
 // 로컬 글꼴(@fontsource)의 CSS를 절대 경로로 바꿔 페이지에 주입 → 인터넷 없이도 실제 글꼴로 렌더링
-const fontCss = [['package', 'index.css'], ['ns/package', '600.css'], ['ibm-plex-sans-kr/package', '400.css'], ['ibm-plex-sans-kr/package', '600.css'], ['ibm-plex-mono/package', '500.css']]
+const fontCss = [['package', 'index.css'], ['ns/package', '500.css'], ['ns/package', '600.css'], ['ns/package', '700.css'], ['ibm-plex-sans-kr/package', '400.css'], ['ibm-plex-sans-kr/package', '600.css'], ['ibm-plex-mono/package', '500.css']]
   .map(([d, f]) => fs.readFileSync(path.join(FONT, d, f), 'utf8').replace(/url\(\.\/files\//g, `url(file://${path.join(FONT, d, 'files')}/`)).join('\n');
 const fontTag = `<style>${fontCss}</style>`;
 
-const TOKENS = `--paper:#eef1f4;--ink:#18212e;--muted:#5b6676;--seal:#b23a2b;--accent:#2d3f8f;--disp:"Song Myung","Noto Serif KR",serif;--body:"IBM Plex Sans KR",sans-serif`;
+const TOKENS = `--band:#121826;--ivory:#efe8d8;--muted:#a39b8a;--gold:#c9a86a;--tile:#f7f6f2;--ink:#141a26;--disp:"Noto Serif KR",serif;--body:"IBM Plex Sans KR",sans-serif`;
+const ICON = 'file://' + path.join(ROOT, 'docs', 'icon-512.png');
 const banner = (w, h, big) => `<!doctype html><meta charset="utf-8">${fontTag}<style>
-:root{${TOKENS}} *{box-sizing:border-box} body{margin:0;width:${w}px;height:${h}px;background:var(--paper);font-family:var(--body);color:var(--ink);display:grid;grid-template-columns:1.1fr 1fr;align-items:center;gap:${big ? 40 : 30}px;padding:0 ${big ? 72 : 60}px;overflow:hidden}
-.seal{width:${big ? 92 : 78}px;height:${big ? 92 : 78}px;border:4px solid var(--seal);color:var(--seal);border-radius:6px;display:grid;grid-template-columns:1fr 1fr;place-items:center;font:${big ? 34 : 29}px/1 var(--disp);padding:6px;transform:rotate(-3deg);margin-bottom:${big ? 26 : 20}px}
-h1{font:400 ${big ? 78 : 66}px/1.1 var(--disp);margin:0 0 ${big ? 18 : 14}px}
-p{margin:0;font-size:${big ? 30 : 26}px;color:var(--muted);line-height:1.45}
-.card{background:#fff;border-radius:22px;padding:${big ? 30 : 24}px;box-shadow:0 18px 50px rgb(24 33 46 / .14);display:grid;gap:16px}
-.chars{display:flex;gap:10px}.c{flex:1;background:var(--paper);border-radius:12px;text-align:center;padding:10px 0}
-.c b{display:block;font:600 ${big ? 64 : 54}px/1.15 var(--disp)}.c span{font-size:${big ? 20 : 17}px;font-weight:600}
-.c.s{background:none;border:2px dashed #cfd6df}
-.m{font:${big ? 23 : 20}px/1.5 var(--disp);color:var(--ink)}.sc{justify-self:end;font:600 ${big ? 22 : 19}px var(--body);color:var(--seal)}
+:root{${TOKENS}} *{box-sizing:border-box} body{margin:0;width:${w}px;height:${h}px;background:radial-gradient(120% 140% at 15% 50%,#1b2333 0%,var(--band) 60%);font-family:var(--body);color:var(--ivory);display:grid;grid-template-columns:1.05fr 1fr;align-items:center;gap:${big ? 44 : 32}px;padding:0 ${big ? 76 : 60}px;overflow:hidden}
+.logo{width:${big ? 104 : 86}px;height:${big ? 104 : 86}px;border-radius:24px;box-shadow:0 0 0 1px rgb(201 168 106 / .4),0 14px 40px rgb(0 0 0 / .45);margin-bottom:${big ? 30 : 22}px;display:block}
+h1{font:600 ${big ? 74 : 62}px/1.1 var(--disp);letter-spacing:.06em;margin:0 0 ${big ? 18 : 14}px;color:var(--ivory)}
+.rule{width:56px;height:1px;background:var(--gold);margin:0 0 ${big ? 18 : 14}px}
+p{margin:0;font-size:${big ? 28 : 24}px;color:var(--muted);line-height:1.5;letter-spacing:.01em}
+.card{background:#fff;color:var(--ink);border-radius:26px;padding:${big ? 30 : 24}px;box-shadow:0 24px 60px rgb(0 0 0 / .45);display:grid;gap:16px}
+.chars{display:flex;gap:10px}.c{flex:1;background:var(--tile);border-radius:16px;text-align:center;padding:12px 0 10px}
+.c b{display:block;font:600 ${big ? 62 : 52}px/1.15 var(--disp)}.c span{font-size:${big ? 19 : 16}px;font-weight:600}
+.c.s{background:none;border:1px solid #e2dfd7}
+.m{background:#f8f3e7;border-radius:16px;padding:14px 16px;font:500 ${big ? 22 : 19}px/1.55 var(--disp)}.sc{justify-self:end;font:600 ${big ? 20 : 17}px var(--disp);color:#8a6a2f;letter-spacing:.04em}
 </style>
-<div><div class="seal"><span>價</span><span>値</span><span>作</span><span>名</span></div>
-<h1>가치작명소</h1><p>아기 사주에 맞춘 이름과 한자,<br>뜻 풀이까지 한 번에</p></div>
+<div><img class="logo" src="${ICON}"><h1>가치작명소</h1><div class="rule"></div><p>아기 사주에 맞춘 이름과 한자,<br>뜻 풀이까지 한 번에</p></div>
 <div class="card"><span class="sc">98점 · 최상</span><div class="chars"><div class="c s"><b>金</b><span>김</span></div><div class="c"><b>兌</b><span>태</span></div><div class="c"><b>璟</b><span>경</span></div></div>
 <div class="m">“기쁨을 나누는 밝은 마음과 옥빛처럼 맑은 광채를 함께 지닌 사람”</div></div>`;
 
 // 스크린샷 액자: 위에 한 줄 설명 + 아래 실제 화면
 const frame = (img, title, sub) => `<!doctype html><meta charset="utf-8">${fontTag}<style>
-:root{${TOKENS}} body{margin:0;width:1080px;height:1920px;background:var(--seal);display:grid;grid-template-rows:330px 1fr;justify-items:center;overflow:hidden;font-family:var(--body)}
-.t{align-self:center;text-align:center;color:#fff}.t h2{font:400 70px/1.2 var(--disp);margin:0 0 14px}.t p{margin:0;font-size:34px;opacity:.9}
-img{width:860px;border-radius:44px 44px 0 0;box-shadow:0 -10px 60px rgb(0 0 0 / .25);align-self:end}
+:root{${TOKENS}} body{margin:0;width:1080px;height:1920px;background:radial-gradient(90% 40% at 50% 0%,#1d2638 0%,var(--band) 70%);display:grid;grid-template-rows:340px 1fr;justify-items:center;overflow:hidden;font-family:var(--body)}
+.t{align-self:center;text-align:center;color:var(--ivory)}.t h2{font:600 68px/1.2 var(--disp);letter-spacing:.04em;margin:0 0 18px}.t p{margin:0;font-size:32px;color:var(--gold);letter-spacing:.02em}
+img{width:860px;border-radius:48px 48px 0 0;box-shadow:0 0 0 2px rgb(201 168 106 / .35),0 -10px 70px rgb(0 0 0 / .5);align-self:end}
 </style><div class="t"><h2>${title}</h2><p>${sub}</p></div><img src="file://${img}">`;
 
 (async () => {
