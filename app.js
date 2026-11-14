@@ -86,6 +86,39 @@
     return t[(given[0].ch.charCodeAt(0) + given[1].ch.charCodeAt(0)) % t.length]();
   }
 
+  // ---------- 공유 ----------
+  const ARTIFACT_URL = 'https://claude.ai/artifact/4FN2maJB5BLmt48P3fAiS2';
+  // 웹사이트로 올린 경우 그 주소를, 그 밖(파일·미리보기)에서는 공개 링크를 공유
+  function appUrl() {
+    const h = location.hostname;
+    return location.protocol === 'https:' && h && !/claude|anthropic/.test(h) ? location.origin + location.pathname : ARTIFACT_URL;
+  }
+  function cardText(ko, hz, given, ev) {
+    return `[오행 작명소 추천 이름]\n${ko} (${hz}) · ${Math.round(ev.total)}점 ${ev.grade}\n“${nameMeaning(given)}”\n` +
+      given.map(g => `${g.ch} ${g.hun} ${g.eum} — ${g.mean}`).join('\n');
+  }
+  let toastTimer;
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 2600);
+  }
+  function showShareBox(text) { // 공유·복사가 막힌 환경: 직접 선택해서 복사
+    $('#shareText').value = text; $('#shareBox').hidden = false;
+    $('#shareText').focus(); $('#shareText').select();
+  }
+  async function share(text) {
+    const url = appUrl(), full = (text ? text + '\n\n' : '') + '오행 작명소에서 직접 지어 보기 ▶ ' + url;
+    if (navigator.share) {
+      try { await navigator.share(text ? { title: '오행 작명소', text: full } : { title: '오행 작명소', text: '사주로 아기 이름 짓기 — 오행 작명소', url }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    try { await navigator.clipboard.writeText(full); toast('복사했어요! 카톡에 붙여넣기 하세요'); }
+    catch (e) { showShareBox(full); }
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-share]'); if (b) share(b.dataset.share);
+  });
+
   // ---------- 이름 카드 ----------
   function nameCard(item, rank, sur) {
     const { given, ev } = item;
@@ -127,7 +160,10 @@
         </ul>
         ${alts ? `<h4>같은 소리의 다른 한자 조합</h4><ul class="alts">${alts}</ul>` : ''}
       </details>
-      <button class="copy" type="button" data-copy="${esc(fullKo + ' ' + fullH)}">${esc(fullKo)} ${esc(fullH)} 복사</button>
+      <div class="cact">
+        <button class="act" type="button" data-share="${esc(cardText(fullKo, fullH, given, ev))}">이 이름 공유하기</button>
+        <button class="act ghost" type="button" data-copy="${esc(fullKo + ' ' + fullH)}">이름만 복사</button>
+      </div>
     </article>`;
   }
 
@@ -245,6 +281,10 @@
   $('#fsum').addEventListener('click', () => setCollapsed(!panel.classList.contains('collapsed')));
   panel.addEventListener('change', updateSummary);
   panel.addEventListener('input', updateSummary);
+
+  $('#appShare').addEventListener('click', () => share(''));
+  $('#shareClose').addEventListener('click', () => ($('#shareBox').hidden = true));
+  $('#shareBox').addEventListener('click', e => { if (e.target.id === 'shareBox') $('#shareBox').hidden = true; });
 
   // ---------- 탭 ----------
   function setTab(t) {
