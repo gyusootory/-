@@ -31,3 +31,10 @@ create policy "admin can read" on public.events
 
 grant insert on public.events to anon, authenticated;
 grant select on public.events to authenticated;
+
+-- 3) (선택) Supabase 표 화면에서 한국 시간으로 보기: Table Editor에서 events_kst를 열면 됨
+create or replace view public.events_kst with (security_invoker = true) as
+select id, (created_at at time zone 'Asia/Seoul') as kst_time, event, device, app_mode, referrer, meta, visitor, session, created_at
+from public.events
+order by id desc;
+grant select on public.events_kst to authenticated;

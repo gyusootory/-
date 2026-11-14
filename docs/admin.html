@@ -108,7 +108,7 @@ td.r, th.r { text-align: right }
 <div class="wrap">
   <header class="top">
     <div class="brand"><div class="seal" aria-hidden="true">名</div>
-      <div><h1>가치작명소 관리자</h1><p>방문자·기능 사용 통계</p></div></div>
+      <div><h1>가치작명소 관리자</h1><p>방문자·기능 사용 통계 · 모든 시각은 한국 시간</p></div></div>
     <div class="filters">
       <a href="./" class="btn ghost" style="text-decoration:none">앱으로 가기</a>
       <button class="btn ghost" type="button" id="logout" hidden>로그아웃</button>
@@ -161,6 +161,12 @@ td.r, th.r { text-align: right }
       <p class="sub">하루에 한 번 이상 들어온 서로 다른 사람 수 (한국 시간 기준)</p>
       <div class="chart" id="dailyChart"></div>
       <details class="tbl"><summary>표로 보기</summary><div class="tw" id="dailyTable"></div></details>
+    </section>
+
+    <section class="card">
+      <h2>시간대별 방문</h2>
+      <p class="sub">한국 시간 기준, 몇 시에 많이 들어오는지 · <span id="hourNote"></span></p>
+      <div class="chart" id="hourChart"></div>
     </section>
 
     <div class="grid2">
@@ -271,32 +277,33 @@ td.r, th.r { text-align: right }
       <span class="track"><span class="fill" style="width:${(v / max * 100).toFixed(1)}%"></span></span>
       <span class="val">${opts.pct ? (total ? Math.round(v / total * 100) : 0) + '%' : fmt(v)}</span></li>`).join('');
   }
-  function dailyChart(series) {
-    const W = Math.max(300, Math.round($('#dailyChart').clientWidth || 760)), H = 230, L = 34, R = 8, T = 12, B = 26; // 실제 폭으로 그려 글자 크기 유지
+  // 세로 막대 차트 (opt.label: 축 글자, opt.tip: 말풍선 글자, opt.aria: 화면낭독기 설명)
+  function barChart(id, series, opt) {
+    const el = $('#' + id);
+    const W = Math.max(300, Math.round(el.clientWidth || 760)), H = 230, L = 34, R = 8, T = 12, B = 26; // 실제 폭으로 그려 글자 크기 유지
     const max = Math.max(...series.map(x => x[1]), 1);
-    const step = Math.pow(10, Math.floor(Math.log10(max))); const top = Math.ceil(max / step) * step || 1;
+    const step = Math.pow(10, Math.floor(Math.log10(max))); let top = Math.max(2, Math.ceil(max / step) * step); if (top % 2) top++;
     const ticks = [0, top / 2, top];
     const bw = (W - L - R) / series.length, gap = Math.max(2, bw * .25), r = Math.min(4, (bw - gap) / 2);
     const y = v => T + (H - T - B) * (1 - v / top);
-    const every = Math.ceil(series.length / 8);
-    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="일별 순 방문자 막대 차트">`;
+    const every = opt.every || Math.ceil(series.length / 8);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opt.aria}">`;
     ticks.forEach(t => { s += `<line class="gridline" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${fmt(Math.round(t))}</text>`; });
     series.forEach(([d, v], i) => {
       const x = L + i * bw + gap / 2, w = bw - gap, yy = y(v), h = H - B - yy;
       const path = h > r ? `M${x},${H - B}V${yy + r}Q${x},${yy} ${x + r},${yy}H${x + w - r}Q${x + w},${yy} ${x + w},${yy + r}V${H - B}Z` : `M${x},${H - B}V${yy}H${x + w}V${H - B}Z`;
       s += `<rect class="hit" x="${L + i * bw}" y="${T}" width="${bw}" height="${H - T - B}" data-i="${i}"/><path class="bar" d="${path}"/>`;
-      if (i % every === 0 || (i === series.length - 1 && i % every >= every / 2)) s += `<text x="${x + w / 2}" y="${H - 8}" text-anchor="middle">${d.slice(5).replace('-', '.')}</text>`;
+      if (i % every === 0 || (i === series.length - 1 && i % every >= every / 2)) s += `<text x="${x + w / 2}" y="${H - 8}" text-anchor="middle">${opt.label(d)}</text>`;
     });
     s += '</svg><div class="tip" hidden></div>';
-    const el = $('#dailyChart'); el.innerHTML = s;
+    el.innerHTML = s;
     const tip = el.querySelector('.tip'), svg = el.querySelector('svg');
     el.querySelectorAll('.hit').forEach(h => {
       const on = () => { const i = +h.dataset.i, [d, v] = series[i], sc = svg.getBoundingClientRect().width / W;
-        tip.textContent = `${d} · ${fmt(v)}명`; tip.hidden = false;
+        tip.textContent = opt.tip(d, v); tip.hidden = false;
         tip.style.left = ((L + (i + .5) * bw) * sc) + 'px'; tip.style.top = (y(v) * sc) + 'px'; };
       h.addEventListener('mouseenter', on); h.addEventListener('click', on); h.addEventListener('mouseleave', () => (tip.hidden = true));
     });
-    $('#dailyTable').innerHTML = `<table><thead><tr><th>날짜</th><th class="r">순 방문자</th></tr></thead><tbody>${series.slice().reverse().map(([d, v]) => `<tr><td>${d}</td><td class="r num">${fmt(v)}</td></tr>`).join('')}</tbody></table>`;
   }
 
   function render(rows, since) {
@@ -319,7 +326,16 @@ td.r, th.r { text-align: right }
     const byDay = {};
     for (let d = new Date(since); d <= new Date(); d = new Date(d.getTime() + 86400000)) byDay[dayKey(d)] = new Set();
     visits.forEach(r => { const k = dayKey(new Date(r.created_at)); (byDay[k] = byDay[k] || new Set()).add(r.visitor); });
-    dailyChart(Object.keys(byDay).sort().map(k => [k, byDay[k].size]));
+    const daily = Object.keys(byDay).sort().map(k => [k, byDay[k].size]);
+    barChart('dailyChart', daily, { aria: '일별 순 방문자 막대 차트', label: d => d.slice(5).replace('-', '.'), tip: (d, v) => `${d} · ${fmt(v)}명` });
+    $('#dailyTable').innerHTML = `<table><thead><tr><th>날짜</th><th class="r">순 방문자</th></tr></thead><tbody>${daily.slice().reverse().map(([d, v]) => `<tr><td>${d}</td><td class="r num">${fmt(v)}</td></tr>`).join('')}</tbody></table>`;
+    // 시간대별 방문 (한국 시간 0~23시)
+    const hourOf = d => +new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', hourCycle: 'h23' }).format(d);
+    const hours = Array.from({ length: 24 }, (_, h) => [h, 0]);
+    visits.forEach(r => hours[hourOf(new Date(r.created_at))][1]++);
+    barChart('hourChart', hours, { aria: '시간대별 방문 막대 차트', every: 3, label: h => h + '시', tip: (h, v) => `${h}시~${h + 1}시 · ${fmt(v)}회` });
+    const peak = hours.reduce((a, b) => (b[1] > a[1] ? b : a));
+    $('#hourNote').textContent = peak[1] ? `가장 붐비는 시간: ${peak[0]}시~${peak[0] + 1}시 (${fmt(peak[1])}회)` : '';
 
     const used = sessOf(['recommend', 'find']), shared = sessOf(['share_app', 'share_name', 'copy_name']);
     hbars($('#funnel'), [['방문', sessions], ['추천·찾기 사용', [...used].length], ['공유·복사', [...shared].length]], sessions, { pct: true, max: sessions });
