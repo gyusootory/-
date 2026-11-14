@@ -24,7 +24,7 @@ p{margin:0;font-size:${big ? 28 : 24}px;color:var(--muted);line-height:1.5;lette
 .c.s{background:none;border:1px solid #e2dfd7}
 .m{background:#f8f3e7;border-radius:16px;padding:14px 16px;font:500 ${big ? 22 : 19}px/1.55 var(--disp)}.sc{justify-self:end;font:600 ${big ? 20 : 17}px var(--disp);color:#8a6a2f;letter-spacing:.04em}
 </style>
-<div><img class="logo" src="${ICON}"><h1>가치작명소</h1><div class="rule"></div><p>아기 사주에 맞춘 이름과 한자,<br>뜻 풀이까지 한 번에</p></div>
+<div><img class="logo" src="${ICON}"><h1>가치작명소</h1><div class="rule"></div><p>성명학 기반 무료 작명 앱<br>아이 생일로 이름 추천 · 원하는 이름의 한자 찾기</p></div>
 <div class="card"><span class="sc">98점 · 최상</span><div class="chars"><div class="c s"><b>金</b><span>김</span></div><div class="c"><b>兌</b><span>태</span></div><div class="c"><b>璟</b><span>경</span></div></div>
 <div class="m">“기쁨을 나누는 밝은 마음과 옥빛처럼 맑은 광채를 함께 지닌 사람”</div></div>`;
 
@@ -43,13 +43,14 @@ background:radial-gradient(55% 75% at 50% 42%,#1f2a3e 0%,#141b2a 45%,#0c111b 100
 .frame:after{content:"";position:absolute;inset:8px;border:1px solid rgb(201 168 106 / .12);border-radius:12px}
 .wm{position:absolute;right:70px;bottom:-60px;font:600 360px/1 var(--disp);color:rgb(201 168 106 / .035)}
 main{position:relative;display:grid;justify-items:center}
-img{width:132px;height:132px;border-radius:30px;box-shadow:0 0 0 1px rgb(201 168 106 / .45),0 18px 50px rgb(0 0 0 / .55);margin-bottom:34px}
+img{width:120px;height:120px;border-radius:28px;box-shadow:0 0 0 1px rgb(201 168 106 / .45),0 18px 50px rgb(0 0 0 / .55);margin-bottom:28px}
 h1{font:600 86px/1 var(--disp);letter-spacing:.14em;margin:0 0 0 .14em}
 .rule{display:flex;align-items:center;gap:16px;margin:30px 0 24px;color:var(--gold);font:500 20px var(--disp);letter-spacing:.5em}
 .rule:before,.rule:after{content:"";width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}.rule:after{transform:scaleX(-1)}
 p{margin:0;font:500 30px/1.4 var(--disp);color:#d9cfb8;letter-spacing:.04em}
+.free{margin-top:22px;padding:8px 22px;border:1px solid rgb(201 168 106 / .55);border-radius:999px;color:var(--gold);font:600 20px var(--body);letter-spacing:.12em}
 </style><div class="frame"></div><div class="wm">名</div>
-<main><img src="${ICON}"><h1>가치작명소</h1><div class="rule">價値作名</div><p>평생 부를 이름, 성명학 기반으로 가치 있게 지어 드립니다</p></main>`;
+<main><img src="${ICON}"><h1>가치작명소</h1><div class="rule">價値作名</div><p>평생 부를 이름, 성명학 기반으로 가치 있게 지어 드립니다</p><div class="free">무료 · 회원가입 없이 바로</div></main>`;
 
 (async () => {
   const b = await chromium.launch();
@@ -81,7 +82,7 @@ p{margin:0;font:500 30px/1.4 var(--disp);color:#d9cfb8;letter-spacing:.04em}
   await p.click('#t-find'); await p.selectOption('#f-sur', '이|李'); await p.fill('#wantName', '서윤'); await p.click('#findForm button[type=submit]'); await p.waitForTimeout(400);
   await p.evaluate(() => document.querySelector('#findOut .card').scrollIntoView({ block: 'center' })); await p.waitForTimeout(200);
   await p.screenshot({ path: raw(5) });                                   // 한자 찾기
-  const caps = [['정보 세 가지면 끝', '성씨 · 성별 · 생년월일만 입력하세요'], ['사주에 맞춘 이름 추천', '부족한 오행을 채우는 이름 5개씩'],
+  const caps = [['무료로 짓는 우리 아이 이름', '회원가입 없이 성명학 기반으로'], ['아이 생일을 넣으면', '사주에 맞는 이름을 5개씩 추천해요'],
     ['이름에 담긴 뜻까지', '한자 한 글자씩 의미를 풀어 드려요'], ['성명학 감명 그대로', '81수리 · 음양 · 발음오행 · 삼원오행'], ['원하는 이름의 한자 찾기', '한글 이름만 넣으면 좋은 한자 조합을']];
   for (let i = 1; i <= 5; i++) await shot(frame(raw(i), ...caps[i - 1]), 1080, 1920, path.join(OUT, 'screenshots', `0${i}.png`));
   for (let i = 1; i <= 5; i++) fs.unlinkSync(raw(i));

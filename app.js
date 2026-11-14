@@ -113,9 +113,9 @@
   }
   async function share(text) {
     T(text ? 'share_name' : 'share_app');
-    const url = appUrl(), full = (text ? text + '\n\n' : '') + '가치작명소에서 직접 지어 보기 ▶ ' + url;
+    const url = appUrl(), full = (text ? text + '\n\n' : '') + '무료 작명 앱 가치작명소에서 직접 지어 보세요 ▶ ' + url;
     if (navigator.share) {
-      try { await navigator.share(text ? { title: '가치작명소', text: full } : { title: '가치작명소', text: '사주로 아기 이름 짓기 — 가치작명소', url }); return; }
+      try { await navigator.share(text ? { title: '가치작명소', text: full } : { title: '가치작명소', text: '성명학 기반 무료 작명 앱 — 아이 생일로 이름 추천, 원하는 이름의 한자 찾기', url }); return; }
       catch (e) { if (e && e.name === 'AbortError') return; }
     }
     try { await navigator.clipboard.writeText(full); toast('복사했어요! 카톡에 붙여넣기 하세요'); }
