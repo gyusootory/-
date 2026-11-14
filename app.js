@@ -404,6 +404,14 @@
   document.addEventListener('input', markNeed);
   document.addEventListener('change', markNeed);
 
+  // 정보(ⓘ) 버튼: 누르면 설명 펼치기/접기
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.info-btn'); if (!b) return;
+    const pop = document.getElementById(b.getAttribute('aria-controls'));
+    const open = pop.hidden; pop.hidden = !open; b.setAttribute('aria-expanded', String(open));
+    if (open) T('info_open', { topic: 'longitude' });
+  });
+
   // ---------- 탭 ----------
   function setTab(t) {
     document.querySelectorAll('[role=tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));

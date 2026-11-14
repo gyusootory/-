@@ -432,6 +432,21 @@ summary { color: var(--gold); font-weight: 600 }
 .dt[open] .dt-chev { transform: rotate(180deg) }
 .dt[open] > summary { margin-bottom: 4px }
 
+
+/* 정보(ⓘ) 버튼 + 펼쳐지는 설명 */
+.info-row { display: flex; align-items: center; gap: 8px }
+.info-btn { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--gold-hi); background: var(--gold-soft); color: var(--gold);
+  font: italic 700 12px/1 Georgia, "Times New Roman", serif; display: grid; place-items: center; cursor: pointer; padding: 0; position: relative }
+.info-btn::after { content: ""; position: absolute; inset: -11px }  /* 손가락으로 누르기 쉽게 터치 영역 확대 */
+.info-btn[aria-expanded="true"] { background: var(--ink); color: var(--accent-ink); border-color: var(--ink) }
+.info-pop { background: var(--gold-soft); border: 1px solid rgb(201 168 106 / .45); border-radius: 14px; padding: 13px 15px; font-size: 13px; line-height: 1.6; color: var(--ink); display: grid; gap: 6px }
+.info-pop > b { font: 700 13.5px var(--f-body) }
+.info-pop p { margin: 0 }
+.info-pop .ex { background: var(--surface); border-radius: 10px; padding: 8px 10px; font-size: 12.5px }
+.info-pop .ex span { color: var(--muted); font-size: 12px }
+.info-pop .tip { color: var(--muted); font-size: 12.5px }
+@media (prefers-reduced-motion: no-preference) { .info-pop:not([hidden]) { animation: pop-in .2s ease } @keyframes pop-in { from { opacity: 0; transform: translateY(-4px) } } }
+
 /* 탭 상단 기능 소개: 한 줄 제목 + 3단계 칩 (작게, 화면 폭 전체) */
 .intro { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 16px;
   background: var(--surface); box-shadow: var(--shadow); border: 1px solid rgb(201 168 106 / .28) }
@@ -545,7 +560,17 @@ summary { color: var(--gold); font-weight: 600 }
         <div class="field"><label for="btime">태어난 시각 <span class="opt">선택</span></label><input type="time" id="btime"></div>
         <div class="field" style="align-content:end"><label class="check"><input type="checkbox" id="tunknown"> 시간 모름</label></div>
       </div>
-      <label class="check"><input type="checkbox" id="correct" checked> 서울 경도 보정(−30분) 적용</label>
+      <div class="info-row">
+        <label class="check"><input type="checkbox" id="correct" checked> 서울 경도 보정(−30분) 적용</label>
+        <button type="button" class="info-btn" aria-expanded="false" aria-controls="corrInfo" aria-label="서울 경도 보정이 무엇인지 보기">i</button>
+      </div>
+      <div class="info-pop" id="corrInfo" role="note" hidden>
+        <b>왜 30분을 빼나요?</b>
+        <p>우리나라 시계(표준시)는 일본 <b>도쿄(동경 135°)</b> 기준이라, <b>서울(동경 약 127°)</b>의 실제 해 위치보다 <b>약 30분 빠릅니다.</b>
+        사주의 태어난 시(時)는 <b>실제 해의 위치</b>로 정하기 때문에 30분을 빼서 계산해요.</p>
+        <p class="ex">예) 오전 <b>7:20</b> 출생 → 실제 해 시각 <b>6:50</b> → <b>묘시(卯時)</b><br><span>보정하지 않으면 진시(辰時)로 계산돼 시주가 달라져요.</span></p>
+        <p class="tip">✓ 대부분의 작명소·만세력이 쓰는 방식이라 <b>켜 두시는 걸 권해요.</b> 태어난 시각을 모르면 영향이 없어요.</p>
+      </div>
       <div class="row">
         <div class="field"><label for="hangEum">항렬자 음 <span class="opt">선택</span></label><input type="text" id="hangEum" placeholder="예: 준, 영, 수" maxlength="1"></div>
         <div class="field"><label for="hangPos">위치</label><select id="hangPos"><option value="0">이름 첫 글자</option><option value="1">이름 끝 글자</option></select></div>
@@ -597,7 +622,17 @@ summary { color: var(--gold); font-weight: 600 }
         <div class="field"><label for="f-btime">태어난 시각 <span class="opt">선택</span></label><input type="time" id="f-btime"></div>
         <div class="field" style="align-content:end"><label class="check"><input type="checkbox" id="f-tunknown"> 시간 모름</label></div>
       </div>
-      <label class="check"><input type="checkbox" id="f-correct" checked> 서울 경도 보정(−30분) 적용</label>
+      <div class="info-row">
+        <label class="check"><input type="checkbox" id="f-correct" checked> 서울 경도 보정(−30분) 적용</label>
+        <button type="button" class="info-btn" aria-expanded="false" aria-controls="f-corrInfo" aria-label="서울 경도 보정이 무엇인지 보기">i</button>
+      </div>
+      <div class="info-pop" id="f-corrInfo" role="note" hidden>
+        <b>왜 30분을 빼나요?</b>
+        <p>우리나라 시계(표준시)는 일본 <b>도쿄(동경 135°)</b> 기준이라, <b>서울(동경 약 127°)</b>의 실제 해 위치보다 <b>약 30분 빠릅니다.</b>
+        사주의 태어난 시(時)는 <b>실제 해의 위치</b>로 정하기 때문에 30분을 빼서 계산해요.</p>
+        <p class="ex">예) 오전 <b>7:20</b> 출생 → 실제 해 시각 <b>6:50</b> → <b>묘시(卯時)</b><br><span>보정하지 않으면 진시(辰時)로 계산돼 시주가 달라져요.</span></p>
+        <p class="tip">✓ 대부분의 작명소·만세력이 쓰는 방식이라 <b>켜 두시는 걸 권해요.</b> 태어난 시각을 모르면 영향이 없어요.</p>
+      </div>
       </div>
       <button class="btn" type="submit">한자 추천 받기</button>
       <div id="f-sajuOut" class="sajuout" hidden></div>
@@ -1505,6 +1540,14 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
   }
   document.addEventListener('input', markNeed);
   document.addEventListener('change', markNeed);
+
+  // 정보(ⓘ) 버튼: 누르면 설명 펼치기/접기
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.info-btn'); if (!b) return;
+    const pop = document.getElementById(b.getAttribute('aria-controls'));
+    const open = pop.hidden; pop.hidden = !open; b.setAttribute('aria-expanded', String(open));
+    if (open) T('info_open', { topic: 'longitude' });
+  });
 
   // ---------- 탭 ----------
   function setTab(t) {
