@@ -1,0 +1,40 @@
+name: Firebase Hosting 배포
+
+# docs/ 가 바뀌면 Firebase Hosting(gachi-naming)에 자동 배포합니다.
+# 인증은 저장소 시크릿 없이 GitHub OIDC → Google Cloud 워크로드 아이덴티티 제휴로 하고,
+# 배포 권한만 가진 서비스 계정(github-hosting-deploy)을 짧게 가장합니다.
+# GitHub Pages(https://gyusootory.github.io/gachi-naming/)는 이 워크플로와 무관하게 그대로 동작합니다.
+
+on:
+  push:
+      branches:
+            - claude/blissful-meitner-p9vir1
+                paths:
+                      - "docs/**"
+                            - "firebase.json"
+                                  - ".firebaserc"
+                                        - ".github/workflows/firebase-hosting.yml"
+                                          workflow_dispatch:
+                                          permissions:
+                                            contents: read
+                                              id-token: write
+
+                                              concurrency:
+                                                group: firebase-hosting-live
+                                                  cancel-in-progress: true
+
+                                                  jobs:
+                                                    deploy:
+                                                        runs-on: ubuntu-latest
+                                                            steps:
+                                                                  - uses: actions/checkout@v4
+
+                                                                        - uses: google-github-actions/auth@v2
+                                                                                with:
+                                                                                          workload_identity_provider: projects/506139562688/locations/global/workloadIdentityPools/github/providers/github-actions
+                                                                                                    service_account: github-hosting-deploy@gachi-naming.iam.gserviceaccount.com
+                                                                                                    
+                                                                                                          - name: Deploy to Firebase Hosting
+                                                                                                                  run: npx --yes firebase-tools@latest deploy --only hosting --project gachi-naming --non-interactive
+                                                                                                                  
+                                          
