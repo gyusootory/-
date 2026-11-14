@@ -69,10 +69,18 @@
     function choose(it) {
       sel.value = it.value; inp.value = cfg.label(it); close();
       sel.dispatchEvent(new Event('change', { bubbles: true }));
+      inp.blur();   // 고른 뒤 키보드를 닫아, 다시 누르면 처음부터 새로 검색되게 함
     }
     inp.addEventListener('focus', () => { if (sel.value) inp.select(); active = -1; render(); });
+    // 이미 커서가 있는 상태에서 다시 눌러도 목록을 열고, 고른 글자는 전체 선택해 새로 입력되게 함
+    inp.addEventListener('click', () => { if (list.hidden) { if (sel.value) inp.select(); active = -1; render(); } });
     inp.addEventListener('input', () => {
-      if (sel.value) { sel.value = ''; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+      if (sel.value) {
+        // 선택된 글자 '이 (李)' 뒤에 이어 쓴 경우: 새로 친 글자만 남김
+        const lab = cfg.label(cfg.byValue(sel.value) || {});
+        if (lab && inp.value.startsWith(lab) && inp.value.length > lab.length) inp.value = inp.value.slice(lab.length).trim();
+        sel.value = ''; sel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
       active = cfg.search(inp.value).length ? 0 : -1; render();
     });
     inp.addEventListener('keydown', e => {
