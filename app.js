@@ -36,37 +36,44 @@
     // 정확히 같은 성씨를 맨 앞으로
     return hit.sort((a, b) => ((b.ko === q) - (a.ko === q)) || a.rank - b.rank).slice(0, 30);
   }
-  function makeCombo(sel) {
+  // 검색 선택칸(공용): 원래 <select>는 그대로 두고 그 위에 검색 입력칸 + 목록을 얹음
+  // cfg: search(q)→목록, html(항목), label(항목), byValue(값), exact(q, 목록), placeholder, hint(빈칸일 때 제목), none(결과 없음 문구)
+  const SUR_CFG = {
+    search: searchSur, html: it => `<b>${it.ko}</b><span>${it.hz}</span>`, label: it => `${it.ko} (${it.hz})`,
+    byValue: v => SUR_ITEMS.find(x => x.value === v),
+    exact: (q, hit) => hit.find(it => it.ko === q || it.hz === q || `${it.ko} (${it.hz})` === q),
+    placeholder: '성씨 검색 (예: 김, 金, ㄱ)', hint: '많이 쓰는 성씨', none: '찾는 성씨가 없어요',
+  };
+  function makeCombo(sel, cfg = SUR_CFG) {
     const field = sel.closest('.field');
     field.classList.add('combo');
     sel.classList.add('combo-native'); sel.tabIndex = -1; sel.setAttribute('aria-hidden', 'true');
     const lid = sel.id + '-list';
     const wrap = document.createElement('div'); wrap.className = 'combo-box';
     wrap.innerHTML = `<input type="text" class="combo-in" id="${sel.id}-q" role="combobox" aria-expanded="false" aria-controls="${lid}" aria-autocomplete="list"
-        autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="성씨 검색 (예: 김, 金, ㄱ)">
+        autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${esc(cfg.placeholder)}">
       <ul class="combo-list" id="${lid}" role="listbox" hidden></ul>`;
     sel.after(wrap);
     const lbl = field.querySelector('label'); if (lbl) lbl.htmlFor = sel.id + '-q';
     const inp = wrap.querySelector('input'), list = wrap.querySelector('ul');
     let items = [], active = -1;
-    const label = it => `${it.ko} (${it.hz})`;
     function render() {
-      items = searchSur(inp.value);
-      list.innerHTML = items.length ? items.map((it, i) => `<li role="option" id="${lid}-${i}" data-i="${i}" aria-selected="${i === active}"${i === active ? ' class="on"' : ''}>
-          <b>${it.ko}</b><span>${it.hz}</span></li>`).join('') : '<li class="none">찾는 성씨가 없어요</li>';
-      if (!inp.value.trim()) list.insertAdjacentHTML('afterbegin', '<li class="hint">많이 쓰는 성씨</li>');
+      items = cfg.search(inp.value);
+      list.innerHTML = items.length ? items.map((it, i) => `<li role="option" id="${lid}-${i}" data-i="${i}" aria-selected="${i === active}"${i === active ? ' class="on"' : ''}>${cfg.html(it)}</li>`).join('')
+        : `<li class="none">${cfg.none}</li>`;
+      if (!inp.value.trim() && cfg.hint) list.insertAdjacentHTML('afterbegin', `<li class="hint">${cfg.hint}</li>`);
       list.hidden = false; inp.setAttribute('aria-expanded', 'true');
       inp.setAttribute('aria-activedescendant', active >= 0 ? `${lid}-${active}` : '');
     }
     function close() { list.hidden = true; inp.setAttribute('aria-expanded', 'false'); active = -1; }
     function choose(it) {
-      sel.value = it.value; inp.value = label(it); close();
+      sel.value = it.value; inp.value = cfg.label(it); close();
       sel.dispatchEvent(new Event('change', { bubbles: true }));
     }
     inp.addEventListener('focus', () => { if (sel.value) inp.select(); active = -1; render(); });
     inp.addEventListener('input', () => {
       if (sel.value) { sel.value = ''; sel.dispatchEvent(new Event('change', { bubbles: true })); }
-      active = searchSur(inp.value).length ? 0 : -1; render();
+      active = cfg.search(inp.value).length ? 0 : -1; render();
     });
     inp.addEventListener('keydown', e => {
       if (list.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { render(); }
@@ -80,15 +87,29 @@
     list.addEventListener('pointerdown', e => { const li = e.target.closest('li[data-i]'); if (li) { e.preventDefault(); choose(items[+li.dataset.i]); } });
     inp.addEventListener('blur', () => {
       setTimeout(() => {
-        // 입력만 하고 고르지 않았으면: 정확히 맞는 성씨(가장 흔한 한자)를 자동 선택
-        if (!sel.value && inp.value.trim()) { const hit = searchSur(inp.value); const q = inp.value.trim(); const exact = hit.find(it => it.ko === q || it.hz === q || label(it) === q); if (exact) choose(exact); }
+        // 입력만 하고 고르지 않았으면: 정확히 맞는 항목을 자동 선택
+        if (!sel.value && inp.value.trim()) { const q = inp.value.trim(); const ex = cfg.exact(q, cfg.search(q)); if (ex) choose(ex); }
         close();
       }, 120);
     });
     // 다른 코드가 select 값을 바꾸면 입력칸 글자도 맞춤
-    sel.addEventListener('change', () => { const it = SUR_ITEMS.find(x => x.value === sel.value); if (it && document.activeElement !== inp) inp.value = label(it); if (!sel.value && document.activeElement !== inp) inp.value = ''; });
+    sel.addEventListener('change', () => { const it = cfg.byValue(sel.value); if (it && document.activeElement !== inp) inp.value = cfg.label(it); if (!sel.value && document.activeElement !== inp) inp.value = ''; });
+    if (sel.value) { const it = cfg.byValue(sel.value); if (it) inp.value = cfg.label(it); }
   }
-  document.querySelectorAll('.sursel').forEach(makeCombo);
+  // 한자 검색 선택칸: 그 소리로 읽는 한자 중에서 뜻·한자로 검색
+  function hanjaCfg(syl) {
+    const items = N.candidates(syl).map(h => ({ value: h.ch, ch: h.ch, hun: h.hun, eum: h.eum, strokes: h.strokes, mean: h.mean }));
+    const none = { value: '__none', none: true };
+    return {
+      search: q => { q = q.trim().replace(/\(.*$/, '').trim(); const hit = q ? items.filter(h => h.ch === q || h.hun.includes(q) || h.mean.includes(q) || (h.hun + ' ' + h.eum).includes(q)) : items; return [...hit, none]; },
+      html: it => it.none ? '<em class="hnone">목록에 없어요</em>' : `<b class="hzc">${it.ch}</b><span class="hd">${esc(it.hun)} ${it.eum} · ${it.strokes}획</span>`,
+      label: it => it.none ? '목록에 없어요' : `${it.ch} (${it.hun} ${it.eum})`,
+      byValue: v => v === '__none' ? none : items.find(h => h.value === v),
+      exact: (q, hit) => hit.find(h => !h.none && h.ch === q),
+      placeholder: `‘${syl}’ 한자 검색 (뜻·한자)`, hint: `‘${syl}’(으)로 읽는 한자 ${items.length}자 · 뜻으로 검색해 보세요`, none: '찾는 한자가 없어요',
+    };
+  }
+  document.querySelectorAll('.sursel').forEach(sel => makeCombo(sel));
 
   // p: 입력칸 아이디 앞머리 ('' = ① 이름 추천 탭, 'f-' = ② 한자 찾기 탭)
   function surname(p = '') {
@@ -283,7 +304,7 @@
     }
     const fmt = t => new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(t));
     out.innerHTML = saved.slice().sort((a, b) => b.savedAt - a.savedAt).map(r => `<article class="card scard">
-      <header class="chead"><span class="sdate">${fmt(r.savedAt)} 저장 · ${({ find: '한자 찾기', mine: '내 이름 풀이' })[r.from] || '이름 추천'}</span>
+      <header class="chead"><span class="sdate">${fmt(r.savedAt)} 저장 · ${({ find: '한자 찾기', mine: '이름 비교' })[r.from] || '이름 추천'}</span>
         <div class="score" style="--p:${r.score}"><b>${r.score}</b><small>${esc(r.grade)}</small></div></header>
       <div class="chars">${[...r.sur.hanja].map((c, k) => `<div class="ch sur"><span class="hz">${c}</span><span class="hk">${r.sur.ko[k] || r.sur.ko}</span><span class="hs">성씨</span></div>`).join('')}
         ${r.given.map(g => `<div class="ch"><span class="hz">${g.ch}</span><span class="hk">${g.ko}</span><span class="hs">${esc(g.hun)} ${g.eum}</span></div>`).join('')}</div>
@@ -414,19 +435,21 @@
 
   // ---------- 기능 3: 내 이름 풀이 · 개명 비교 (참고용) ----------
   // 이름 글자마다 한자 고르는 칸 만들기
-  function renderMineHanja() {
-    const raw = $('#m-name').value.replace(/\s/g, '');
-    const box = $('#m-hz');
+  function renderHanjaFields(p) {
+    const raw = $('#' + p + 'name').value.replace(/\s/g, '');
+    const box = $('#' + p + 'hz');
     const prev = [...box.querySelectorAll('select')].map(s => s.value);
-    if (!/^[가-힣]{1,2}$/.test(raw)) { box.innerHTML = ''; return; }
-    box.innerHTML = raw.split('').map((s, i) => {
-      const c = N.candidates(s);
-      return `<div class="field" data-req><label for="m-hz${i}">‘${s}’ 한자 <em class="req-badge">필수</em></label>
-        <select id="m-hz${i}" required><option value="">한자 선택</option>
-        ${c.map(h => `<option value="${h.ch}">${h.ch} ${esc(h.hun)} ${h.eum} (${h.strokes}획)</option>`).join('')}
-        <option value="__none">목록에 없어요</option></select></div>`;
-    }).join('');
-    box.querySelectorAll('select').forEach((s, i) => { if (prev[i] && [...s.options].some(o => o.value === prev[i])) s.value = prev[i]; });
+    const prevRaw = box.dataset.raw || '';
+    if (!/^[가-힣]{1,2}$/.test(raw)) { box.innerHTML = ''; box.dataset.raw = ''; markNeed(); return; }
+    if (raw === prevRaw) return;                       // 같은 이름이면 다시 만들지 않음
+    box.dataset.raw = raw;
+    const req = p === 'c-' ? 'cand' : '';
+    box.innerHTML = raw.split('').map((s, i) => `<div class="field" data-req="${req}"><label for="${p}hz${i}">‘${s}’ 한자 <em class="req-badge">필수</em></label>
+        <select id="${p}hz${i}"><option value="">한자 선택</option>${N.candidates(s).map(h => `<option value="${h.ch}">${h.ch}</option>`).join('')}<option value="__none">목록에 없어요</option></select></div>`).join('');
+    box.querySelectorAll('select').forEach((sel, i) => {
+      if (raw[i] === prevRaw[i] && prev[i]) sel.value = prev[i];
+      makeCombo(sel, hanjaCfg(raw[i]));
+    });
     markNeed();
   }
   // 같은 사주·성씨에서 만들 수 있는 이름 후보 (개명 비교용)
@@ -435,56 +458,83 @@
     return names.map(n => { const r = N.rankHanja(sur, n.split(''), sj, null, true); return r.length ? { hangul: n, ...r[0] } : null; })
       .filter(Boolean).sort((a, b) => b.ev.total - a.ev.total);
   }
+  function readGiven(p) {
+    const raw = $('#' + p + 'name').value.replace(/\s/g, '');
+    const sels = [...$('#' + p + 'hz').querySelectorAll('select')];
+    if (!raw) return null;
+    if (sels.some(x => x.value === '__none')) return { none: true, raw };
+    return { raw, given: raw.split('').map((s, k) => ({ ...N.byChar(sels[k].value), ko: s })) };
+  }
   function showMine() {
     const out = $('#mineOut');
-    const sur = surname('m-'), raw = $('#m-name').value.replace(/\s/g, '');
-    const sels = [...$('#m-hz').querySelectorAll('select')];
-    if (sels.some(s => s.value === '__none')) {
-      out.innerHTML = '<p class="err">선택하신 글자의 한자가 아직 데이터에 없어 점수를 계산할 수 없어요. 비슷한 뜻의 한자를 고르거나 다른 글자부터 확인해 보세요.</p>';
-      return;
-    }
+    const sur = surname('m-');
+    const me = readGiven('m-'), cand = readGiven('c-');
+    const noneMsg = who => `<p class="err">${who}의 한자 중 아직 데이터에 없는 글자가 있어 점수를 계산할 수 없어요. 비슷한 뜻의 한자를 고르거나 다른 글자로 확인해 보세요.</p>`;
+    if (me.none) { out.innerHTML = noneMsg('지금 이름'); return; }
+    if (cand && cand.none) { out.innerHTML = noneMsg('비교할 이름'); return; }
     const sj = readBirth('m-');
     $('#m-sajuOut').hidden = false; renderSaju(sj, 'm-');
     if (!sj || sj.error) { out.innerHTML = '<p class="err">생년월일을 확인해 주세요.</p>'; return; }
-    const given = raw.split('').map((s, i) => ({ ...N.byChar(sels[i].value), ko: s }));
-    const ev = N.evaluate(sur, given, sj);
+    const ev = N.evaluate(sur, me.given, sj);
+    const cev = cand ? N.evaluate(sur, cand.given, sj) : null;
     const pool = makePool(sur, $('#m-gender').value, sj);
     const scores = pool.map(x => x.ev.total);
-    const better = scores.filter(v => v > ev.total).length;
-    const top5 = scores.slice(0, 5), avg5 = top5.length ? top5.reduce((a, b) => a + b, 0) / top5.length : 0;
-    const best = pool[0];
     const r1 = v => Math.round(v * 10) / 10;
+    const rankOf = v => { const better = scores.filter(x => x > v).length, total = scores.length + 1, pos = better + 1, top = Math.ceil(pos / total * 100);
+      return { pos, total, txt: better === 0 ? '가장 높은 수준' : `${total}개 중 ${pos}번째 (${top <= 50 ? '상위 ' + top : '하위 ' + Math.max(1, 100 - top + 1)}%)` }; };
+    const top5 = scores.slice(0, 5), avg5 = top5.length ? top5.reduce((a, b) => a + b, 0) / top5.length : 0, best = pool[0];
+    const meName = sur.ko + me.raw, cName = cand ? sur.ko + cand.raw : '';
     // 장단점 요약
-    const goodG = ev.gyeok.filter(g => g.grade === 2).length, badG = ev.gyeok.filter(g => g.grade === 0);
-    const needHit = ev.gEls.filter(e => sj.need.includes(e)), avoidHit = ev.gEls.filter(e => sj.avoid.includes(e));
     const S = (cls, mk, html) => `<li><span class="mk ${cls}">${mk}</span><span>${html}</span></li>`;
-    const sumry = [
-      badG.length ? S('no', '✕', `81수리 4격 중 <b>흉수 ${badG.length}개</b> (${badG.map(g => g.key + ' ' + g.num + '수').join(', ')})`) : S('ok', '✓', `81수리 4격이 <b>모두 길수·반길수</b>예요 (길 ${goodG}개)`),
-      needHit.length ? S('ok', '✓', `사주에 필요한 <b>${[...new Set(needHit)].map(e => e + '(' + N.EL_KO[e] + ')').join('·')}</b> 기운을 이름 한자가 채워 줘요`)
-        : S(avoidHit.length ? 'no' : 'mid', avoidHit.length ? '✕' : '△', `사주에 필요한 <b>${sj.need.slice(0, 2).map(e => e + '(' + N.EL_KO[e] + ')').join('·')}</b> 기운을 이름이 채우지 못해요${avoidHit.length ? ' · 많은 기운을 더 보태요' : ''}`),
-      S(ev.soundRel.includes('상극') ? 'mid' : 'ok', ev.soundRel.includes('상극') ? '△' : '✓', `발음오행 흐름: ${ev.soundRel.join(' → ')}`),
-      S(ev.mixed ? 'ok' : 'no', ev.mixed ? '✓' : '✕', ev.mixed ? '획수 음양이 고루 섞여 조화로워요' : '획수 음양이 한쪽으로 치우쳐 있어요'),
-    ].join('');
-    const total = scores.length + 1, pos = better + 1, topPct = Math.ceil(pos / total * 100);
-    const lead = better === 0 ? `같은 사주로 지을 수 있는 이름 후보 ${scores.length}개와 비교해도 <b>가장 높은 수준</b>이에요.`
-      : `같은 사주의 이름 후보까지 <b>${total}개 중 ${pos}번째</b>예요 (${topPct <= 50 ? '상위 ' + topPct : '하위 ' + Math.max(1, 100 - topPct + 1)}%).`;
-    const max = 100;
-    out.innerHTML = `<div class="mine">
-      ${nameCard({ given, ev }, 0, sur, 'mine')}
-      <div class="cmp">
-        <h4>개명 후보와 비교</h4>
-        <p class="lead">${lead}</p>
+    const summary = e => {
+      const badG = e.gyeok.filter(g => g.grade === 0), goodG = e.gyeok.filter(g => g.grade === 2).length;
+      const needHit = e.gEls.filter(x => sj.need.includes(x)), avoidHit = e.gEls.filter(x => sj.avoid.includes(x));
+      return [
+        badG.length ? S('no', '✕', `81수리 4격 중 <b>흉수 ${badG.length}개</b> (${badG.map(g => g.key + ' ' + g.num + '수').join(', ')})`) : S('ok', '✓', `81수리 4격이 <b>모두 길수·반길수</b>예요 (길 ${goodG}개)`),
+        needHit.length ? S('ok', '✓', `사주에 필요한 <b>${[...new Set(needHit)].map(x => x + '(' + N.EL_KO[x] + ')').join('·')}</b> 기운을 이름 한자가 채워 줘요`)
+          : S(avoidHit.length ? 'no' : 'mid', avoidHit.length ? '✕' : '△', `사주에 필요한 <b>${sj.need.slice(0, 2).map(x => x + '(' + N.EL_KO[x] + ')').join('·')}</b> 기운을 이름이 채우지 못해요${avoidHit.length ? ' · 많은 기운을 더 보태요' : ''}`),
+        S(e.soundRel.includes('상극') ? 'mid' : 'ok', e.soundRel.includes('상극') ? '△' : '✓', `발음오행 흐름: ${e.soundRel.join(' → ')}`),
+        S(e.mixed ? 'ok' : 'no', e.mixed ? '✓' : '✕', e.mixed ? '획수 음양이 고루 섞여 조화로워요' : '획수 음양이 한쪽으로 치우쳐 있어요'),
+      ].join('');
+    };
+    // 나란히 비교 표
+    let vs = '';
+    if (cev) {
+      const diff = r1(cev.total - ev.total);
+      const W = (a, b) => (a > b ? ' class="win"' : '');
+      const row = (k, a, b, na, nb) => `<tr><th>${k}</th><td${W(na, nb)}>${a}</td><td${W(nb, na)}>${b}</td></tr>`;
+      const g = (e, k) => { const x = e.gyeok[k]; return `${x.num}수 <span class="pill g${x.grade}">${N.GRADE_KO[x.grade]}</span>`; };
+      const P = ['suri', 'ja', 'sound', 'yinyang', 'sam'], PK = ['81수리', '자원오행', '발음오행', '음양', '삼원오행'], PM = [40, 25, 15, 10, 10];
+      vs = `<div class="cmp vsbox">
+        <h4>지금 이름 vs 개명할 이름</h4>
+        <p class="lead">${diff > 0 ? `개명할 이름 <b>${esc(josa(cName, '이', '가'))}</b> <b>${diff}점 더 높아요.</b>` : diff < 0 ? `지금 이름 <b>${esc(josa(meName, '이', '가'))}</b> <b>${-diff}점 더 높아요.</b>` : '두 이름의 점수가 <b>같아요.</b>'}</p>
+        <div class="tw"><table class="vs"><thead><tr><th></th><th>지금<br><b>${esc(meName)}</b><br><span class="hzs">${sur.hanja}${me.given.map(x => x.ch).join('')}</span></th>
+          <th>개명 후보<br><b>${esc(cName)}</b><br><span class="hzs">${sur.hanja}${cand.given.map(x => x.ch).join('')}</span></th></tr></thead><tbody>
+          ${row('총점', `<b class="big">${r1(ev.total)}</b> ${ev.grade}`, `<b class="big">${r1(cev.total)}</b> ${cev.grade}`, ev.total, cev.total)}
+          ${P.map((k, n) => row(PK[n], `${ev.parts[k]}/${PM[n]}`, `${cev.parts[k]}/${PM[n]}`, ev.parts[k], cev.parts[k])).join('')}
+          ${['원격', '형격', '이격', '정격'].map((k, n) => row(k, g(ev, n), g(cev, n), ev.gyeok[n].grade, cev.gyeok[n].grade)).join('')}
+          ${row('같은 사주 후보 중', rankOf(ev.total).txt, rankOf(cev.total).txt, -rankOf(ev.total).pos, -rankOf(cev.total).pos)}
+        </tbody></table></div>
+        <div class="vs2"><div><h5>지금 이름</h5><ul class="sumry">${summary(ev)}</ul></div><div><h5>개명할 이름</h5><ul class="sumry">${summary(cev)}</ul></div></div>
+      </div>`;
+    }
+    const bars = `<div class="cmp">
+        <h4>같은 사주의 이름 후보와 비교</h4>
+        <p class="lead">지금 이름은 같은 사주의 이름 후보까지 <b>${rankOf(ev.total).txt}</b>예요.</p>
         <ul class="cbars">
-          <li class="me"><span>지금 이름</span><span class="tr"><i class="fl" style="width:${ev.total / max * 100}%"></i></span><span class="v">${r1(ev.total)}</span></li>
-          <li><span>후보 상위 5개 평균</span><span class="tr"><i class="fl" style="width:${avg5 / max * 100}%"></i></span><span class="v">${r1(avg5)}</span></li>
-          ${best ? `<li class="top"><span>최고 후보 ${esc(sur.ko + best.hangul)}</span><span class="tr"><i class="fl" style="width:${best.ev.total / max * 100}%"></i></span><span class="v">${r1(best.ev.total)}</span></li>` : ''}
+          <li class="me"><span>지금 이름</span><span class="tr"><i class="fl" style="width:${ev.total}%"></i></span><span class="v">${r1(ev.total)}</span></li>
+          ${cev ? `<li class="cand"><span>개명할 이름</span><span class="tr"><i class="fl" style="width:${cev.total}%"></i></span><span class="v">${r1(cev.total)}</span></li>` : ''}
+          <li><span>후보 상위 5개 평균</span><span class="tr"><i class="fl" style="width:${avg5}%"></i></span><span class="v">${r1(avg5)}</span></li>
+          ${best ? `<li class="top"><span>최고 후보 ${esc(sur.ko + best.hangul)}</span><span class="tr"><i class="fl" style="width:${best.ev.total}%"></i></span><span class="v">${r1(best.ev.total)}</span></li>` : ''}
         </ul>
-        <ul class="sumry">${sumry}</ul>
-        <button class="btn" type="button" id="toRename">이 사주에 맞는 개명 후보 보기 ›</button>
+        ${cev ? '' : `<ul class="sumry">${summary(ev)}</ul>`}
+        <button class="btn" type="button" id="toRename">이 사주에 맞는 개명 후보 더 보기 ›</button>
         <p class="note">※ 참고용 점수예요. 이름에는 사주 외에도 가족의 바람과 살아온 시간이 담겨 있어요. 개명은 법원 허가 절차가 필요하니 충분히 고민한 뒤 결정하세요.</p>
-      </div></div>`;
-    $('#mineMeta').textContent = `${sur.ko}${raw} (${sur.hanja}${given.map(g => g.ch).join('')}) · 사주 반영`;
-    T('mine', { score: Math.round(ev.total), pos, total });   // 이름 자체는 보내지 않음
+      </div>`;
+    out.innerHTML = `<div class="mine">${vs}<h5 class="sub-h">지금 이름 풀이</h5>${nameCard({ given: me.given, ev }, 0, sur, 'mine')}
+      ${cev ? `<h5 class="sub-h">개명할 이름 풀이</h5>${nameCard({ given: cand.given, ev: cev }, 0, sur, 'mine')}` : ''}${bars}</div>`;
+    $('#mineMeta').textContent = `${meName}${cev ? ' vs ' + cName : ''} · 사주 반영 · 참고용`;
+    T('mine', { score: Math.round(ev.total), cand: !!cev });   // 이름 자체는 보내지 않음
   }
   // 개명 후보 보기: 입력한 정보를 ① 이름 추천 탭으로 옮겨 바로 추천
   document.addEventListener('click', e => {
@@ -527,7 +577,8 @@
 
   // ---------- 필수 입력 표시·검사 ----------
   const reqFields = form => [...form.querySelectorAll('.field[data-req]')]
-    .filter(f => f.dataset.req !== 'saju' || $('#useSaju').checked);
+    .filter(f => f.dataset.req !== 'saju' || $('#useSaju').checked)
+    .filter(f => f.dataset.req !== 'cand' || $('#c-name').value.trim());   // 비교할 이름은 입력했을 때만 필수
   const ctl = f => f.querySelector('select.sursel') || f.querySelector('input, select');   // 성씨는 숨은 select 값으로 검사
   function markNeed() {
     document.querySelectorAll('.field[data-req]').forEach(f => {
@@ -601,7 +652,7 @@
     if (mobile.matches) $('#findMeta').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
   $('#findMore').addEventListener('click', moreFind);
-  $('#m-name').addEventListener('input', renderMineHanja);
+  ['m-', 'c-'].forEach(p => $('#' + p + 'name').addEventListener('input', () => renderHanjaFields(p)));
   $('#mineForm').addEventListener('submit', e => {
     e.preventDefault();
     if (!validate($('#mineForm'))) return;

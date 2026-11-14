@@ -302,7 +302,7 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 
 
 /* ═════════ 고급 디자인 레이어 (위 기본 규칙을 덮어씀) ═════════ */
-body { letter-spacing: -.005em; margin: 0 }  /* 웹사이트 단독 실행 시 브라우저 기본 여백 제거 */
+body { letter-spacing: -.005em; margin: 0; word-break: keep-all; overflow-wrap: anywhere }  /* 한국어는 단어 단위로 줄바꿈 */  /* 웹사이트 단독 실행 시 브라우저 기본 여백 제거 */
 /* 머리띠: 화면 끝까지 이어지는 먹색 띠 */
 .mast { background: var(--band); color: var(--band-ink); box-shadow: 0 0 0 100vmax var(--band); clip-path: inset(0 -100vmax); border: 0;
   padding-block: 22px 22px; align-items: center }
@@ -451,6 +451,23 @@ summary { color: var(--gold); font-weight: 600 }
 @media (max-width: 760px) { .cact .act { padding: 10px 8px; font-size: 13.5px } .pager button { min-width: 38px; height: 40px; padding: 0 10px } }
 
 
+/* 이름 비교 */
+.candbox { display: grid; gap: 12px; padding: 14px; border-radius: 14px; background: var(--tile); border: 1px dashed var(--line) }
+.hzc { font: 600 22px var(--f-display) !important; color: var(--ink) !important; min-width: 1.2em }
+.combo-list li .hd { font: 400 13.5px var(--f-body); color: var(--muted) }
+.hnone { font-style: normal; color: var(--muted); font-size: 13px }
+.sub-h { font: 600 13px var(--f-body); color: var(--gold); letter-spacing: .06em; margin: 4px 0 -6px }
+.cbars li.cand .fl { background: var(--gold) } .cbars li.cand { font-weight: 700 }
+table.vs { font-size: 13px; min-width: 300px }
+table.vs th, table.vs td { text-align: center; padding: 8px 6px; white-space: normal }
+table.vs th:first-child { text-align: left; color: var(--muted); font-weight: 500; white-space: nowrap }
+table.vs thead th { font-weight: 500; color: var(--muted); font-size: 12px; line-height: 1.5 }
+table.vs thead b { color: var(--ink); font-size: 14px } .hzs { font: 600 15px var(--f-display); color: var(--gold) }
+table.vs td.win { background: var(--gold-soft); font-weight: 700 }
+table.vs .big { font: 700 18px var(--f-display) }
+table.vs td:nth-child(2) { color: var(--ink) }
+.vs2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 14px }
+.vs2 h5 { margin: 0 0 6px; font: 600 13px var(--f-body); color: var(--gold) }
 /* 내 이름 풀이 */
 .mhz { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 10px }
 .mhz:empty { display: none }
@@ -551,7 +568,7 @@ summary { color: var(--gold); font-weight: 600 }
     <nav class="tabs" role="tablist">
       <button role="tab" data-tab="rec" id="t-rec" aria-selected="true" aria-controls="p-rec"><span class="ti" aria-hidden="true">名</span><span class="lf">① 이름 추천</span><span class="ls">이름 추천</span></button>
       <button role="tab" data-tab="find" id="t-find" aria-selected="false" aria-controls="p-find"><span class="ti" aria-hidden="true">字</span><span class="lf">② 한자 찾기</span><span class="ls">한자 찾기</span></button>
-      <button role="tab" data-tab="mine" id="t-mine" aria-selected="false" aria-controls="p-mine"><span class="ti" aria-hidden="true">鑑</span><span class="lf">③ 내 이름 풀이</span><span class="ls">내 이름</span></button>
+      <button role="tab" data-tab="mine" id="t-mine" aria-selected="false" aria-controls="p-mine"><span class="ti" aria-hidden="true">比</span><span class="lf">③ 이름 비교</span><span class="ls">이름 비교</span></button>
       <button role="tab" data-tab="saved" id="t-saved" aria-selected="false" aria-controls="p-saved"><span class="ti" aria-hidden="true">藏</span><span class="lf">④ 저장 <em class="cnt" hidden></em></span><span class="ls">저장 <em class="cnt" hidden></em></span></button>
     </nav>
     </div>
@@ -622,23 +639,27 @@ summary { color: var(--gold); font-weight: 600 }
     </section>
   </div>
 
-  <!-- 탭 ③: 내 이름 풀이 · 개명 비교 -->
+  <!-- 탭 ③: 이름 비교 (내 이름 풀이 + 개명할 이름과 비교) -->
   <div class="grid" role="tabpanel" id="p-mine" aria-labelledby="t-mine" hidden>
     <div class="intro">
-      <span class="intro-ic" aria-hidden="true">鑑</span>
+      <span class="intro-ic" aria-hidden="true">比</span>
       <div class="intro-tx">
-        <h2 class="intro-t">지금 이름의 <b>성명학 점수</b>를 보고 개명 후보와 비교해요</h2>
-        <ol class="intro-s"><li>이름·한자·생일 입력</li><li>점수 확인</li><li>개명 후보 비교</li></ol>
+        <h2 class="intro-t">내 이름을 풀어 보고 <b>개명할 이름과 비교</b>해요</h2>
+        <ol class="intro-s"><li>내 이름 입력</li><li>점수 확인</li><li>개명할 이름 비교</li></ol>
       </div>
     </div>
     <form class="panel" id="mineForm" autocomplete="off" novalidate>
-      <h2>③ 내 이름 풀이</h2>
+      <h2>③ 이름 비교</h2>
       <p class="reqnote"><em class="req-badge">필수</em> 표시 항목을 입력하면 점수를 볼 수 있어요</p>
       <div class="row">
         <div class="field" data-req><label for="m-sur">성씨 <em class="req-badge">필수</em></label><select id="m-sur" class="sursel" required></select></div>
         <div class="field" data-req><label for="m-name">지금 이름 (성 제외) <em class="req-badge">필수</em></label><input type="text" id="m-name" maxlength="2" placeholder="예: 영수" required></div>
       </div>
       <div class="mhz" id="m-hz"></div>
+      <div class="candbox">
+        <div class="field"><label for="c-name">개명할 이름 (성 제외) <span class="opt">선택 · 비교용</span></label><input type="text" id="c-name" maxlength="2" placeholder="예: 서준"></div>
+        <div class="mhz" id="c-hz"></div>
+      </div>
       <div class="row">
         <div class="field"><label for="m-cal">달력</label><select id="m-cal"><option value="solar">양력</option><option value="lunar">음력</option></select></div>
         <div class="field" data-req><label for="m-bdate">생년월일 <em class="req-badge">필수</em></label><input type="date" id="m-bdate" min="1900-01-01" max="2050-12-31" required></div>
@@ -660,14 +681,14 @@ summary { color: var(--gold); font-weight: 600 }
       </div>
       <div class="field"><label for="m-gender">성별 <span class="opt">개명 후보 볼 때 사용</span></label>
         <select id="m-gender"><option value="">선택 안 함</option><option value="M">남자</option><option value="F">여자</option></select></div>
-      <button class="btn" type="submit">내 이름 점수 보기</button>
+      <button class="btn" type="submit">이름 풀이 · 비교하기</button>
       <div id="m-sajuOut" class="sajuout" hidden></div>
     </form>
     <section class="sec">
-      <div class="sechead"><div><h3>내 이름 감명</h3><p id="mineMeta"></p></div></div>
+      <div class="sechead"><div><h3>이름 풀이 · 비교</h3><p id="mineMeta"></p></div></div>
       <div id="mineOut">
-        <div class="empty"><span class="empty-seal" aria-hidden="true">鑑</span>
-          <p><b>내 이름 점수 보기</b>를 누르면 점수와 개명 후보 비교가 나타나요 <small>(참고용)</small></p></div>
+        <div class="empty"><span class="empty-seal" aria-hidden="true">比</span>
+          <p><b>이름 풀이 · 비교하기</b>를 누르면 점수와 비교 결과가 나타나요 <small>(개명할 이름을 넣으면 나란히 비교 · 참고용)</small></p></div>
       </div>
     </section>
   </div>
