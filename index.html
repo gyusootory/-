@@ -494,6 +494,9 @@ summary { color: var(--gold); font-weight: 600 }
 @media (max-width: 760px) { #updNote { left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); width: auto; bottom: calc(84px + env(safe-area-inset-bottom, 0px)) } }
 @media (prefers-reduced-motion: no-preference) { #updNote { animation: un-in .4s cubic-bezier(.2,.7,.2,1) both } @keyframes un-in { from { opacity: 0; transform: translateY(12px) } } }
 
+/* 결과가 나오기 전에는 결과 영역을 숨김 (탭 위 소개와 중복되지 않게) */
+.sec.pre { display: none }
+
 /* 이름 비교 */
 .candbox { display: grid; gap: 12px; padding: 14px; border-radius: 14px; background: var(--tile); border: 1px dashed var(--line) }
 .hzc { font: 600 22px var(--f-display) !important; color: var(--ink) !important; min-width: 1.2em }
@@ -667,17 +670,13 @@ table.vs td:nth-child(2) { color: var(--ink) }
       </div>
       <div id="sajuOut" class="sajuout"></div>
     </form>
-    <section class="sec">
+    <section class="sec pre">
       <div class="sechead">
         <div><h3>사주 맞춤 추천 이름</h3><p id="recMeta"></p></div>
         <button class="btn ghost" type="button" id="moreBtn" hidden>다음 5개 보기 <span aria-hidden="true">›</span></button>
       </div>
       <p class="savehint" id="saveHint" hidden><span class="sh-ic" aria-hidden="true">♡</span><span>마음에 드는 이름은 <b>저장</b>해 두세요 · 저장 탭에서 모아 비교할 수 있어요</span><button type="button" id="saveHintClose" aria-label="안내 닫기">✕</button></p>
       <div class="cards" id="recOut">
-        <div class="empty">
-          <span class="empty-seal" aria-hidden="true">名</span>
-          <p><b>이름 추천 받기</b>를 누르면 점수 높은 순으로 이름이 나타나요 <small>(태어난 시각을 알면 더 정확해요)</small></p>
-        </div>
       </div>
       <nav class="pager" id="recPager" aria-label="추천 이름 페이지" hidden></nav>
     </section>
@@ -728,11 +727,9 @@ table.vs td:nth-child(2) { color: var(--ink) }
       <button class="btn" type="submit">이름 풀이 · 비교하기</button>
       <div id="m-sajuOut" class="sajuout" hidden></div>
     </form>
-    <section class="sec">
+    <section class="sec pre">
       <div class="sechead"><div><h3>이름 풀이 · 비교</h3><p id="mineMeta"></p></div></div>
       <div id="mineOut">
-        <div class="empty"><span class="empty-seal" aria-hidden="true">比</span>
-          <p><b>이름 풀이 · 비교하기</b>를 누르면 점수와 비교 결과가 나타나요 <small>(개명할 이름을 넣으면 나란히 비교 · 참고용)</small></p></div>
       </div>
     </section>
   </div>
@@ -794,13 +791,9 @@ table.vs td:nth-child(2) { color: var(--ink) }
       <button class="btn" type="submit">한자 추천 받기</button>
       <div id="f-sajuOut" class="sajuout" hidden></div>
     </form>
-    <section class="sec">
+    <section class="sec pre">
       <div class="sechead"><div><h3>추천 한자 조합</h3><p id="findMeta"></p></div></div>
       <div class="cards" id="findOut">
-        <div class="empty">
-          <span class="empty-seal" aria-hidden="true">字</span>
-          <p><b>한자 추천 받기</b>를 누르면 점수 높은 조합부터 나타나요 <small>(사주까지 맞추려면 생년월일시 반영 체크)</small></p>
-        </div>
       </div>
       <button class="btn ghost more" type="button" id="findMore" hidden>조합 6개 더 보기</button>
       <div class="candwrap" id="candOut"></div>

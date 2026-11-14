@@ -207,7 +207,8 @@
 
   function renderSaju(sj, p = '') {
     const box = $('#' + p + 'sajuOut');
-    if (!sj) { box.innerHTML = '<p class="muted">생년월일을 입력하면 사주 오행 분석이 표시됩니다.</p>'; return; }
+    if (!sj) { box.innerHTML = ''; box.hidden = true; return; }   // 생일 입력 전에는 아무것도 보이지 않게
+    box.hidden = false;
     if (sj.error) { box.innerHTML = `<p class="err">${esc(sj.error)}</p>`; return; }
     const ps = [...sj.pillars].reverse(); // 시·일·월·연 순(전통 표기)
     const cols = ps.map(p => `<div class="pillar${p.label === '일주' ? ' me' : ''}">
@@ -494,7 +495,9 @@
     el.innerHTML = html; el.hidden = false;
     el.onclick = e => { const b = e.target.closest('button[data-p]'); if (b && !b.disabled) go(+b.dataset.p); };
   }
+  const reveal = id => $(id).closest('.sec').classList.remove('pre');   // 결과 영역 보이기
   function showRecs(rebuild) {
+    reveal('#recOut');
     const sj = readBirth();
     renderSaju(sj);
     if (!sj || sj.error) { $('#recOut').innerHTML = '<p class="muted">생년월일을 먼저 입력해 주세요.</p>'; return; }
@@ -506,6 +509,7 @@
   // ---------- 기능 2: 한자 찾기 ----------
   let findList = [], findShown = 0;
   function showFind() {
+    reveal('#findOut');
     const raw = $('#wantName').value.replace(/\s/g, '');
     const out = $('#findOut');
     const stop = msg => { out.innerHTML = `<p class="err">${msg}</p>`; $('#findMore').hidden = true; $('#findMeta').textContent = ''; $('#candOut').innerHTML = ''; };
@@ -569,6 +573,7 @@
     return { raw, given: raw.split('').map((s, k) => ({ ...N.byChar(sels[k].value), ko: s })) };
   }
   function showMine() {
+    reveal('#mineOut');
     const out = $('#mineOut');
     const sur = surname('m-');
     const me = readGiven('m-'), cand = readGiven('c-');
