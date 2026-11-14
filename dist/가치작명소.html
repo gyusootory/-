@@ -441,6 +441,26 @@ summary { color: var(--gold); font-weight: 600 }
   .intro-s { font-size: 11.5px }
 }
 
+
+/* 성씨 검색 선택칸 */
+.combo { position: relative }
+.combo-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden }
+.combo-box { position: relative }
+.combo-in { padding-right: 34px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a8f9c' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important; background-position: right 11px center !important }
+.field.need .combo-in { background-color: var(--req-bg) }
+.combo-list { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 6px); min-width: 180px; max-height: 260px; overflow-y: auto;
+  margin: 0; padding: 6px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 14px 36px rgb(20 26 38 / .16); overscroll-behavior: contain }
+.combo-list li { display: flex; align-items: baseline; gap: 8px; padding: 9px 10px; border-radius: 9px; cursor: pointer; font-size: 15px }
+.combo-list li b { font-weight: 600 }
+.combo-list li span { font: 600 16px var(--f-display); color: var(--gold) }
+.combo-list li.on, .combo-list li[data-i]:hover { background: var(--gold-soft) }
+.combo-list li.hint { cursor: default; font-size: 11.5px; color: var(--muted); padding: 4px 10px 6px; letter-spacing: .04em }
+.combo-list li.none { cursor: default; color: var(--muted); font-size: 13px }
+@media (max-width: 760px) { .combo-list { max-height: 44vh } .combo-list li { padding: 11px 10px; font-size: 16px } }
+
 /* 홈 화면 앱으로 실행할 때만 보이는 시작 인트로 */
 #splash { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; align-content: center; gap: 22px; text-align: center;
   background: radial-gradient(60% 45% at 50% 42%, #1f2a3e 0%, #121826 55%, #0c111b 100%); color: #efe8d8; transition: opacity .5s ease }
@@ -1084,6 +1104,75 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
   const surSel = $('#sur');
   const surOpts = SURNAMES.map(s => `<option value="${s[0]}|${s[1]}">${s[0]} (${s[1]})</option>`).join('');
   document.querySelectorAll('.sursel').forEach(el => (el.innerHTML = '<option value="">성씨 선택</option>' + surOpts));
+
+  // ---------- 성씨 검색 선택칸 ----------
+  // 원래 <select>는 그대로 두고(값·검사·통계 로직 공유), 그 위에 검색 입력칸 + 목록을 얹음
+  // 찾는 방법: 한글(김), 한자(金), 초성(ㄱ, ㄴㄱ), 복성(남궁)
+  const CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+  const choOf = w => [...w].map(c => { const d = N.decompose(c); return d ? CHO[d.cho] : c; }).join('');
+  const SUR_ITEMS = SURNAMES.map((r, i) => ({ value: r[0] + '|' + r[1], ko: r[0], hz: r[1], cho: choOf(r[0]), rank: i }));
+  function searchSur(q) {
+    q = q.replace(/\s|\(|\)/g, '');
+    if (!q) return SUR_ITEMS.slice(0, 12);                      // 빈칸: 많이 쓰는 성씨 12개
+    const isCho = /^[ㄱ-ㅎ]+$/.test(q);
+    const hit = SUR_ITEMS.filter(it => isCho ? it.cho.startsWith(q) : (it.ko.startsWith(q) || it.hz.includes(q) || (it.ko + it.hz).startsWith(q)));
+    // 정확히 같은 성씨를 맨 앞으로
+    return hit.sort((a, b) => ((b.ko === q) - (a.ko === q)) || a.rank - b.rank).slice(0, 30);
+  }
+  function makeCombo(sel) {
+    const field = sel.closest('.field');
+    field.classList.add('combo');
+    sel.classList.add('combo-native'); sel.tabIndex = -1; sel.setAttribute('aria-hidden', 'true');
+    const lid = sel.id + '-list';
+    const wrap = document.createElement('div'); wrap.className = 'combo-box';
+    wrap.innerHTML = `<input type="text" class="combo-in" id="${sel.id}-q" role="combobox" aria-expanded="false" aria-controls="${lid}" aria-autocomplete="list"
+        autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="성씨 검색 (예: 김, 金, ㄱ)">
+      <ul class="combo-list" id="${lid}" role="listbox" hidden></ul>`;
+    sel.after(wrap);
+    const lbl = field.querySelector('label'); if (lbl) lbl.htmlFor = sel.id + '-q';
+    const inp = wrap.querySelector('input'), list = wrap.querySelector('ul');
+    let items = [], active = -1;
+    const label = it => `${it.ko} (${it.hz})`;
+    function render() {
+      items = searchSur(inp.value);
+      list.innerHTML = items.length ? items.map((it, i) => `<li role="option" id="${lid}-${i}" data-i="${i}" aria-selected="${i === active}"${i === active ? ' class="on"' : ''}>
+          <b>${it.ko}</b><span>${it.hz}</span></li>`).join('') : '<li class="none">찾는 성씨가 없어요</li>';
+      if (!inp.value.trim()) list.insertAdjacentHTML('afterbegin', '<li class="hint">많이 쓰는 성씨</li>');
+      list.hidden = false; inp.setAttribute('aria-expanded', 'true');
+      inp.setAttribute('aria-activedescendant', active >= 0 ? `${lid}-${active}` : '');
+    }
+    function close() { list.hidden = true; inp.setAttribute('aria-expanded', 'false'); active = -1; }
+    function choose(it) {
+      sel.value = it.value; inp.value = label(it); close();
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    inp.addEventListener('focus', () => { if (sel.value) inp.select(); active = -1; render(); });
+    inp.addEventListener('input', () => {
+      if (sel.value) { sel.value = ''; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+      active = searchSur(inp.value).length ? 0 : -1; render();
+    });
+    inp.addEventListener('keydown', e => {
+      if (list.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { render(); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(active + 1, items.length - 1); render(); scrollActive(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(active - 1, 0); render(); scrollActive(); }
+      else if (e.key === 'Enter') { if (!list.hidden && items[active]) { e.preventDefault(); choose(items[active]); } }
+      else if (e.key === 'Escape') { close(); }
+    });
+    function scrollActive() { const el = list.querySelector('.on'); if (el) el.scrollIntoView({ block: 'nearest' }); }
+    // 마우스·터치 선택 (blur보다 먼저 처리되도록 pointerdown 사용)
+    list.addEventListener('pointerdown', e => { const li = e.target.closest('li[data-i]'); if (li) { e.preventDefault(); choose(items[+li.dataset.i]); } });
+    inp.addEventListener('blur', () => {
+      setTimeout(() => {
+        // 입력만 하고 고르지 않았으면: 정확히 맞는 성씨(가장 흔한 한자)를 자동 선택
+        if (!sel.value && inp.value.trim()) { const hit = searchSur(inp.value); const q = inp.value.trim(); const exact = hit.find(it => it.ko === q || it.hz === q || label(it) === q); if (exact) choose(exact); }
+        close();
+      }, 120);
+    });
+    // 다른 코드가 select 값을 바꾸면 입력칸 글자도 맞춤
+    sel.addEventListener('change', () => { const it = SUR_ITEMS.find(x => x.value === sel.value); if (it && document.activeElement !== inp) inp.value = label(it); if (!sel.value && document.activeElement !== inp) inp.value = ''; });
+  }
+  document.querySelectorAll('.sursel').forEach(makeCombo);
+
   // p: 입력칸 아이디 앞머리 ('' = ① 이름 추천 탭, 'f-' = ② 한자 찾기 탭)
   function surname(p = '') {
     if (!$('#' + p + 'sur').value) return null;
@@ -1371,7 +1460,7 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
   // ---------- 필수 입력 표시·검사 ----------
   const reqFields = form => [...form.querySelectorAll('.field[data-req]')]
     .filter(f => f.dataset.req !== 'saju' || $('#useSaju').checked);
-  const ctl = f => f.querySelector('input, select');
+  const ctl = f => f.querySelector('select.sursel') || f.querySelector('input, select');   // 성씨는 숨은 select 값으로 검사
   function markNeed() {
     document.querySelectorAll('.field[data-req]').forEach(f => {
       const empty = !ctl(f).value.trim();
@@ -1388,7 +1477,7 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
     });
     if (missing.length) {
       if (mobile.matches) setCollapsed(false);
-      ctl(missing[0]).focus({ preventScroll: true });
+      (missing[0].querySelector('.combo-in') || ctl(missing[0])).focus({ preventScroll: true });
       missing[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
       toast(`필수 항목 ${missing.length}개를 입력해 주세요`);
     }

@@ -427,6 +427,26 @@ summary { color: var(--gold); font-weight: 600 }
   .intro-s { font-size: 11.5px }
 }
 
+
+/* 성씨 검색 선택칸 */
+.combo { position: relative }
+.combo-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden }
+.combo-box { position: relative }
+.combo-in { padding-right: 34px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a8f9c' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important; background-position: right 11px center !important }
+.field.need .combo-in { background-color: var(--req-bg) }
+.combo-list { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 6px); min-width: 180px; max-height: 260px; overflow-y: auto;
+  margin: 0; padding: 6px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 14px 36px rgb(20 26 38 / .16); overscroll-behavior: contain }
+.combo-list li { display: flex; align-items: baseline; gap: 8px; padding: 9px 10px; border-radius: 9px; cursor: pointer; font-size: 15px }
+.combo-list li b { font-weight: 600 }
+.combo-list li span { font: 600 16px var(--f-display); color: var(--gold) }
+.combo-list li.on, .combo-list li[data-i]:hover { background: var(--gold-soft) }
+.combo-list li.hint { cursor: default; font-size: 11.5px; color: var(--muted); padding: 4px 10px 6px; letter-spacing: .04em }
+.combo-list li.none { cursor: default; color: var(--muted); font-size: 13px }
+@media (max-width: 760px) { .combo-list { max-height: 44vh } .combo-list li { padding: 11px 10px; font-size: 16px } }
+
 /* 홈 화면 앱으로 실행할 때만 보이는 시작 인트로 */
 #splash { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; align-content: center; gap: 22px; text-align: center;
   background: radial-gradient(60% 45% at 50% 42%, #1f2a3e 0%, #121826 55%, #0c111b 100%); color: #efe8d8; transition: opacity .5s ease }
