@@ -20,9 +20,10 @@
   // ---------- 성씨 선택 ----------
   const surSel = $('#sur');
   const surOpts = SURNAMES.map(s => `<option value="${s[0]}|${s[1]}">${s[0]} (${s[1]})</option>`).join('');
-  document.querySelectorAll('.sursel').forEach(el => (el.innerHTML = surOpts));
+  document.querySelectorAll('.sursel').forEach(el => (el.innerHTML = '<option value="">성씨 선택</option>' + surOpts));
   // p: 입력칸 아이디 앞머리 ('' = ① 이름 추천 탭, 'f-' = ② 한자 찾기 탭)
   function surname(p = '') {
+    if (!$('#' + p + 'sur').value) return null;
     const [ko, hanja] = $('#' + p + 'sur').value.split('|');
     const row = SURNAMES.find(s => s[0] === ko && s[1] === hanja);
     return { ko, hanja, strokes: row[2], els: row[3] };
@@ -244,6 +245,7 @@
     const out = $('#findOut');
     const stop = msg => { out.innerHTML = `<p class="err">${msg}</p>`; $('#findMore').hidden = true; $('#findMeta').textContent = ''; $('#candOut').innerHTML = ''; };
     if (!/^[가-힣]{1,2}$/.test(raw)) return stop('이름(성 제외)을 한글 1~2자로 입력해 주세요. 예: 서윤');
+    if (!surname('f-')) return stop('성씨를 선택해 주세요.');
     const sko = surname('f-').ko;
     if (raw.length === 2 && raw[0] === sko && !N.candidates(raw[0]).length) return stop(`성씨 ‘${sko}’${josa(sko, '은', '는').slice(sko.length)} 빼고 이름만 입력해 주세요. 예: ${sko}서윤 → 서윤`);
     const use = $('#useSaju').checked;
@@ -272,6 +274,7 @@
   const mobile = window.matchMedia('(max-width: 760px)');
   const panel = $('#recForm');
   function updateSummary() {
+    if (!surSel.value || !$('#gender').value || !$('#bdate').value) { $('#fsumText').textContent = '아기 정보를 입력해 주세요'; return; }
     const g = { M: '남', F: '여', U: '성별 무관' }[$('#gender').value];
     const d = $('#bdate').value.replace(/-/g, '.');
     const t = $('#tunknown').checked ? '시간 모름' : ($('#btime').value || '시간 모름');
@@ -292,6 +295,35 @@
   $('#shareClose').addEventListener('click', () => ($('#shareBox').hidden = true));
   $('#shareBox').addEventListener('click', e => { if (e.target.id === 'shareBox') $('#shareBox').hidden = true; });
 
+  // ---------- 필수 입력 표시·검사 ----------
+  const reqFields = form => [...form.querySelectorAll('.field[data-req]')]
+    .filter(f => f.dataset.req !== 'saju' || $('#useSaju').checked);
+  const ctl = f => f.querySelector('input, select');
+  function markNeed() {
+    document.querySelectorAll('.field[data-req]').forEach(f => {
+      const empty = !ctl(f).value.trim();
+      f.classList.toggle('need', empty);
+      if (!empty) { f.classList.remove('miss'); const e = f.querySelector('.ferr'); if (e) e.remove(); }
+    });
+  }
+  function validate(form) {
+    markNeed();
+    const missing = reqFields(form).filter(f => !ctl(f).value.trim());
+    missing.forEach(f => {
+      f.classList.remove('miss'); void f.offsetWidth; f.classList.add('miss'); // 흔들림 다시 재생
+      if (!f.querySelector('.ferr')) f.insertAdjacentHTML('beforeend', '<small class="ferr">꼭 입력해 주세요</small>');
+    });
+    if (missing.length) {
+      if (mobile.matches) setCollapsed(false);
+      ctl(missing[0]).focus({ preventScroll: true });
+      missing[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      toast(`필수 항목 ${missing.length}개를 입력해 주세요`);
+    }
+    return !missing.length;
+  }
+  document.addEventListener('input', markNeed);
+  document.addEventListener('change', markNeed);
+
   // ---------- 탭 ----------
   function setTab(t) {
     document.querySelectorAll('[role=tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
@@ -305,28 +337,36 @@
     $('#' + p + 'cal').addEventListener('change', () => ($('#' + p + 'leapWrap').hidden = $('#' + p + 'cal').value !== 'lunar'));
     $('#' + p + 'tunknown').addEventListener('change', () => ($('#' + p + 'btime').disabled = $('#' + p + 'tunknown').checked));
   });
-  $('#useSaju').addEventListener('change', () => { $('#f-birth').hidden = !$('#useSaju').checked; showFind(); });
+  $('#useSaju').addEventListener('change', () => {
+    $('#f-birth').hidden = !$('#useSaju').checked;
+    if (!$('#useSaju').checked) $('#f-sajuOut').hidden = true;
+    if (findList.length && $('#wantName').value && surname('f-')) showFind(); // 이미 결과가 있으면 다시 계산
+  });
   $('#hangEum').addEventListener('input', fillHangSel);
   $('#recForm').addEventListener('submit', e => {
-    e.preventDefault(); showRecs(true);
+    e.preventDefault();
+    if (!validate($('#recForm'))) return;
+    showRecs(true); $('#moreBtn').hidden = false; $('#fsum').hidden = false;
     if (mobile.matches) { setCollapsed(true); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
   $('#moreBtn').addEventListener('click', () => { showRecs(false); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   $('#findForm').addEventListener('submit', e => {
-    e.preventDefault(); showFind();
+    e.preventDefault();
+    if (!validate($('#findForm'))) return;
+    showFind();
     if (mobile.matches) $('#findMeta').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
   $('#findMore').addEventListener('click', moreFind);
   ['', 'f-'].forEach(p => ['sur', 'bdate', 'btime', 'cal', 'leap', 'tunknown', 'correct'].forEach(id =>
     $('#' + p + id).addEventListener('change', () => { if (!p || $('#useSaju').checked) renderSaju(readBirth(p), p); })));
 
-  // ---------- 첫 화면: 예시 값으로 바로 결과 표시 ----------
+  // ---------- 첫 화면: 모든 칸 비움 + 필수 칸 강조 ----------
   fillHangSel();
   updateSummary();
-  if (mobile.matches) setCollapsed(true);
+  setCollapsed(false);
+  markNeed();
+  renderSaju(null);
   let tab = 'rec'; try { tab = localStorage.getItem('naming-tab') || 'rec'; } catch (e) {}
   if (tab !== 'rec' && tab !== 'find') tab = 'rec';
   setTab(tab);
-  showRecs(true);
-  showFind();
 })();

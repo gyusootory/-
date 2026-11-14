@@ -15,6 +15,7 @@
   --accent: #2d3f8f;      /* 쪽빛 */
   --accent-ink: #ffffff;
   --seal: #b23a2b;        /* 낙관 붉은색 */
+  --req-bg: #fbf0ee; --req-ring: rgb(178 58 43 / .22);
   --wood: #2f7a55; --fire: #c0392b; --earth: #a57412; --metal: #6c7480; --water: #1f4f8a;
   --good: #2f7a55; --half: #a57412; --bad: #b23a2b;
   --f-display: "Song Myung", "Nanum Myeongjo", "Batang", serif;
@@ -23,12 +24,12 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #10151d; --surface: #182029; --sunk: #0c1117; --ink: #e6eaf0; --muted: #98a3b3; --line: #2b3542;
-  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563;
+  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563; --req-bg: #2b1c1b; --req-ring: rgb(224 117 99 / .3);
   --wood: #6cc497; --fire: #ef7f70; --earth: #e2b75a; --metal: #b4bcc8; --water: #79aee8;
   --good: #6cc497; --half: #e2b75a; --bad: #ef7f70; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #10151d; --surface: #182029; --sunk: #0c1117; --ink: #e6eaf0; --muted: #98a3b3; --line: #2b3542;
-  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563;
+  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563; --req-bg: #2b1c1b; --req-ring: rgb(224 117 99 / .3);
   --wood: #6cc497; --fire: #ef7f70; --earth: #e2b75a; --metal: #b4bcc8; --water: #79aee8;
   --good: #6cc497; --half: #e2b75a; --bad: #ef7f70; color-scheme: dark }
 
@@ -59,7 +60,24 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0 }
 @media (max-width: 860px) { .panel { position: static } }
 .panel h2, .sec h2 { font: 600 12px var(--f-body); letter-spacing: .12em; color: var(--muted) }
 .field { display: grid; gap: 5px }
-.field label, .lbl { font-size: 13px; font-weight: 500 }
+.field label, .lbl { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 5px; flex-wrap: wrap }
+.req-badge { font-style: normal; font-size: 10.5px; font-weight: 700; line-height: 1; color: #fff; background: var(--seal); border-radius: 4px; padding: 3px 5px; letter-spacing: .02em }
+.opt { font-size: 11px; font-weight: 500; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; line-height: 1.3 }
+.reqnote { margin: 0; font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
+/* 아직 비어 있는 필수 칸: 붉은 테두리 + 옅은 붉은 바탕 */
+.field.need input, .field.need select { border: 1.5px solid var(--seal); background: var(--req-bg) }
+/* 입력을 마친 필수 칸: 초록 체크 */
+.field[data-req]:not(.need) > label::after { content: "✓"; color: var(--good); font-weight: 700; font-size: 13px }
+/* 빠뜨린 채 제출: 흔들림 + 안내 문구 */
+.ferr { color: var(--seal); font-size: 12px; font-weight: 600 }
+.field.miss input, .field.miss select { box-shadow: 0 0 0 3px var(--req-ring) }
+@media (prefers-reduced-motion: no-preference) { .field.miss { animation: shake .35s ease } @keyframes shake { 25% { transform: translateX(-4px) } 75% { transform: translateX(4px) } } }
+/* 처음 화면(결과 전) 안내 */
+.empty { grid-column: 1 / -1; display: grid; justify-items: start; gap: 10px; background: var(--surface); border: 1.5px dashed var(--line); border-radius: 12px; padding: 22px 22px 18px }
+.empty-seal { font-family: var(--f-display); font-size: 26px; color: var(--seal); border: 2px solid var(--seal); border-radius: 4px; width: 44px; height: 44px; display: grid; place-items: center; transform: rotate(-3deg) }
+.empty h4 { font-family: var(--f-display); font-weight: 400; font-size: 19px }
+.empty ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; color: var(--ink) }
+.empty small { color: var(--muted) }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
 input[type=text], input[type=date], input[type=time], select {
   width: 100%; font: 15px var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-width: 0 }
@@ -286,28 +304,29 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 
   <!-- 탭 ①: 생년월일시로 이름 추천 -->
   <div class="grid" role="tabpanel" id="p-rec" aria-labelledby="t-rec">
-    <form class="panel" id="recForm" autocomplete="off">
+    <form class="panel" id="recForm" autocomplete="off" novalidate>
       <h2>① 이름 추천 · 아기 정보</h2>
-      <button type="button" class="fsum" id="fsum" aria-expanded="false" aria-controls="fbody">
+      <p class="reqnote"><em class="req-badge">필수</em> 표시 항목만 입력하면 추천받을 수 있어요</p>
+      <button type="button" class="fsum" id="fsum" aria-expanded="false" aria-controls="fbody" hidden>
         <span class="fsum-t" id="fsumText"></span><span class="fedit" id="feditLbl">정보 수정</span></button>
       <div class="fbody" id="fbody">
       <div class="row">
-        <div class="field"><label for="sur">성씨</label><select id="sur" class="sursel"></select></div>
-        <div class="field"><label for="gender">성별</label>
-          <select id="gender"><option value="M">남자</option><option value="F">여자</option><option value="U">무관</option></select></div>
+        <div class="field" data-req><label for="sur">성씨 <em class="req-badge">필수</em></label><select id="sur" class="sursel" required></select></div>
+        <div class="field" data-req><label for="gender">성별 <em class="req-badge">필수</em></label>
+          <select id="gender" required><option value="">선택</option><option value="M">남자</option><option value="F">여자</option><option value="U">무관</option></select></div>
       </div>
       <div class="row">
         <div class="field"><label for="cal">달력</label><select id="cal"><option value="solar">양력</option><option value="lunar">음력</option></select></div>
-        <div class="field"><label for="bdate">생년월일</label><input type="date" id="bdate" value="2025-03-15" min="1900-01-01" max="2050-12-31"></div>
+        <div class="field" data-req><label for="bdate">생년월일 <em class="req-badge">필수</em></label><input type="date" id="bdate" min="1900-01-01" max="2050-12-31" required></div>
       </div>
       <label class="check" id="leapWrap" hidden><input type="checkbox" id="leap"> 윤달</label>
       <div class="row">
-        <div class="field"><label for="btime">태어난 시각</label><input type="time" id="btime" value="08:30"></div>
+        <div class="field"><label for="btime">태어난 시각 <span class="opt">선택</span></label><input type="time" id="btime"></div>
         <div class="field" style="align-content:end"><label class="check"><input type="checkbox" id="tunknown"> 시간 모름</label></div>
       </div>
       <label class="check"><input type="checkbox" id="correct" checked> 서울 경도 보정(−30분) 적용</label>
       <div class="row">
-        <div class="field"><label for="hangEum">항렬자 음</label><input type="text" id="hangEum" placeholder="예: 준, 영, 수" maxlength="1"></div>
+        <div class="field"><label for="hangEum">항렬자 음 <span class="opt">선택</span></label><input type="text" id="hangEum" placeholder="예: 준, 영, 수" maxlength="1"></div>
         <div class="field"><label for="hangPos">위치</label><select id="hangPos"><option value="0">이름 첫 글자</option><option value="1">이름 끝 글자</option></select></div>
       </div>
       <div class="field"><label for="hangSel">항렬자 한자</label><select id="hangSel"></select><small class="muted" id="hangHint"></small></div>
@@ -319,29 +338,38 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
     <section class="sec">
       <div class="sechead">
         <div><h3>사주 맞춤 추천 이름</h3><p id="recMeta"></p></div>
-        <button class="btn ghost" type="button" id="moreBtn"><span aria-hidden="true">↻</span> 다른 이름 5개 보기</button>
+        <button class="btn ghost" type="button" id="moreBtn" hidden><span aria-hidden="true">↻</span> 다른 이름 5개 보기</button>
       </div>
-      <div class="cards" id="recOut"></div>
+      <div class="cards" id="recOut">
+        <div class="empty">
+          <span class="empty-seal" aria-hidden="true">名</span>
+          <h4>아기 정보를 입력하면 이름 5개를 추천해 드려요</h4>
+          <ol><li><b>성씨 · 성별 · 생년월일</b>을 입력하세요 <small>(태어난 시각을 알면 더 정확해요)</small></li>
+            <li><b>이름 추천 받기</b>를 누르세요</li>
+            <li>마음에 들 때까지 <b>다른 이름 5개 보기</b>로 새 이름을 받으세요</li></ol>
+        </div>
+      </div>
     </section>
   </div>
 
   <!-- 탭 ②: 원하는 이름 → 한자 추천 -->
   <div class="grid" role="tabpanel" id="p-find" aria-labelledby="t-find" hidden>
-    <form class="panel" id="findForm" autocomplete="off">
+    <form class="panel" id="findForm" autocomplete="off" novalidate>
       <h2>② 원하는 이름 입력</h2>
+      <p class="reqnote"><em class="req-badge">필수</em> 표시 항목만 입력하면 한자를 찾아 드려요</p>
       <div class="row">
-        <div class="field"><label for="f-sur">성씨</label><select id="f-sur" class="sursel"></select></div>
-        <div class="field"><label for="wantName">이름 (성 제외)</label><input type="text" id="wantName" value="서윤" maxlength="2" placeholder="예: 서윤"></div>
+        <div class="field" data-req><label for="f-sur">성씨 <em class="req-badge">필수</em></label><select id="f-sur" class="sursel" required></select></div>
+        <div class="field" data-req><label for="wantName">이름 (성 제외) <em class="req-badge">필수</em></label><input type="text" id="wantName" maxlength="2" placeholder="예: 서윤" required></div>
       </div>
-      <label class="check"><input type="checkbox" id="useSaju"> 생년월일시(사주)도 반영하기</label>
+      <label class="check"><input type="checkbox" id="useSaju"> 생년월일시(사주)도 반영하기 <span class="opt">선택</span></label>
       <div class="fbody" id="f-birth" hidden>
       <div class="row">
         <div class="field"><label for="f-cal">달력</label><select id="f-cal"><option value="solar">양력</option><option value="lunar">음력</option></select></div>
-        <div class="field"><label for="f-bdate">생년월일</label><input type="date" id="f-bdate" value="2025-03-15" min="1900-01-01" max="2050-12-31"></div>
+        <div class="field" data-req="saju"><label for="f-bdate">생년월일 <em class="req-badge">필수</em></label><input type="date" id="f-bdate" min="1900-01-01" max="2050-12-31"></div>
       </div>
       <label class="check" id="f-leapWrap" hidden><input type="checkbox" id="f-leap"> 윤달</label>
       <div class="row">
-        <div class="field"><label for="f-btime">태어난 시각</label><input type="time" id="f-btime" value="08:30"></div>
+        <div class="field"><label for="f-btime">태어난 시각 <span class="opt">선택</span></label><input type="time" id="f-btime"></div>
         <div class="field" style="align-content:end"><label class="check"><input type="checkbox" id="f-tunknown"> 시간 모름</label></div>
       </div>
       <label class="check"><input type="checkbox" id="f-correct" checked> 서울 경도 보정(−30분) 적용</label>
@@ -351,7 +379,15 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
     </form>
     <section class="sec">
       <div class="sechead"><div><h3>추천 한자 조합</h3><p id="findMeta"></p></div></div>
-      <div class="cards" id="findOut"></div>
+      <div class="cards" id="findOut">
+        <div class="empty">
+          <span class="empty-seal" aria-hidden="true">字</span>
+          <h4>원하는 이름에 어울리는 한자를 찾아 드려요</h4>
+          <ol><li><b>성씨</b>를 고르고 <b>이름</b>을 한글로 입력하세요 <small>(예: 서윤)</small></li>
+            <li>사주까지 맞추려면 <b>생년월일시 반영</b>을 체크하세요</li>
+            <li><b>한자 추천 받기</b>를 누르면 점수 높은 조합부터 보여 드려요</li></ol>
+        </div>
+      </div>
       <button class="btn ghost more" type="button" id="findMore" hidden>조합 6개 더 보기</button>
       <div class="candwrap" id="candOut"></div>
     </section>
