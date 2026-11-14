@@ -60,7 +60,8 @@
     const i = sj.input;
     box.innerHTML = `
       <div class="pillars">${cols}${sj.hourKnown ? '' : '<div class="pillar ghost"><span class="plabel">시주</span><span class="gz">?</span><span class="gz">?</span><span class="pko">시간 모름</span></div>'}</div>
-      <p class="sajumeta">양력 ${i.y}.${i.m}.${i.d} · ${sj.animal}띠 · ${sj.jieqi} 절기 구간</p>
+      <p class="sajumeta">양력 ${i.y}.${i.m}.${i.d} · ${sj.animal}띠 · ${sj.jieqi} 절기 구간${sj.tzNote ? ' · ' + sj.tzNote : ''}</p>
+      ${sj.jieqiDay ? '<p class="err" style="margin:0;font-size:12px">이날은 절기가 바뀌는 날이라 태어난 시각을 모르면 월주가 달라질 수 있어요. 시각을 입력하면 정확해집니다.</p>' : ''}
       <div class="bars">${bars}</div>
       <dl class="yong">
         <div><dt>일간</dt><dd>${sj.dayMaster.stem}(${sj.dayMaster.ko}) ${elTag(sj.dayMaster.el)} · ${sj.strong ? '신강' : '신약'}</dd></div>
@@ -197,7 +198,9 @@
     if (hs) {
       const other = new Set();
       NAMES[gender].forEach(n => { if (n.length === 2) other.add(n[1 - hs.pos]); });
-      names = [...other].filter(o => o !== hs.h.eum).map(o => hs.pos === 0 ? hs.h.eum + o : o + hs.h.eum);
+      // 입력한 소리(예: 律 → '율')를 그대로 이름에 사용
+      const say = $('#hangEum').value.trim() || hs.h.eum;
+      names = [...other].filter(o => o !== say).map(o => hs.pos === 0 ? say + o : o + say);
       fixed = hs.pos === 0 ? [hs.h, null] : [null, hs.h];
     }
     pool = names.map(n => {
@@ -216,7 +219,7 @@
     while (pick.length < 5 && bag.length) {
       const w = bag.map(x => Math.pow(Math.max(x.ev.total - 50, 1), 3));
       let r = Math.random() * w.reduce((a, b) => a + b, 0), i = 0;
-      while ((r -= w[i]) > 0) i++;
+      while ((r -= w[i]) > 0 && i < bag.length - 1) i++; // 소수점 오차로 범위를 넘지 않게
       pick.push(bag.splice(i, 1)[0]);
     }
     pick.sort((a, b) => b.ev.total - a.ev.total).forEach(x => shown.add(x.hangul));
@@ -239,7 +242,10 @@
   function showFind() {
     const raw = $('#wantName').value.replace(/\s/g, '');
     const out = $('#findOut');
-    if (!/^[가-힣]{1,2}$/.test(raw)) { out.innerHTML = '<p class="err">이름(성 제외)을 한글 1~2자로 입력해 주세요. 예: 서윤</p>'; $('#findMore').hidden = true; return; }
+    const stop = msg => { out.innerHTML = `<p class="err">${msg}</p>`; $('#findMore').hidden = true; $('#findMeta').textContent = ''; $('#candOut').innerHTML = ''; };
+    if (!/^[가-힣]{1,2}$/.test(raw)) return stop('이름(성 제외)을 한글 1~2자로 입력해 주세요. 예: 서윤');
+    const sko = surname('f-').ko;
+    if (raw.length === 2 && raw[0] === sko && !N.candidates(raw[0]).length) return stop(`성씨 ‘${sko}’${josa(sko, '은', '는').slice(sko.length)} 빼고 이름만 입력해 주세요. 예: ${sko}서윤 → 서윤`);
     const use = $('#useSaju').checked;
     const sj = use ? readBirth('f-') : null;
     $('#f-sajuOut').hidden = !use;
@@ -249,7 +255,7 @@
     const cand = syl.map(s => `<div class="cand"><h4>‘${s}’ 후보 한자 <span class="muted">${N.candidates(s).length}자</span></h4>
         <ul>${N.candidates(s).map(h => `<li>${elTag(h.el)}<b>${h.ch}</b> ${esc(h.hun)} ${h.eum} <span class="num">${h.strokes}획</span><small class="ck">${esc(h.mean)}</small></li>`).join('') || '<li class="muted">데이터에 없는 음입니다</li>'}</ul></div>`).join('');
     $('#candOut').innerHTML = cand;
-    if (missing.length) { out.innerHTML = `<p class="err">‘${missing.join(', ')}’ 음의 이름용 한자가 데이터에 없어 한자 조합을 만들 수 없습니다.</p>`; $('#findMore').hidden = true; return; }
+    if (missing.length) { out.innerHTML = `<p class="err">‘${missing.join(', ')}’ 음의 이름용 한자가 데이터에 없어 한자 조합을 만들 수 없습니다.</p>`; $('#findMore').hidden = true; $('#findMeta').textContent = ''; return; }
     findList = N.rankHanja(surname('f-'), syl, sj && !sj.error ? sj : null, null);
     findShown = 0; out.innerHTML = '';
     $('#findMeta').textContent = `${surname('f-').ko}${raw} · 가능한 한자 조합 ${findList.length}개를 점수순으로 정렬했습니다${sj && !sj.error ? ' (사주 반영)' : ' (사주 미반영)'}.`;

@@ -10,6 +10,7 @@ def rad_strokes(r):  # 강희 부수 번호 → 부수 본래 획수
     for hi, s in [(6,1),(29,2),(60,3),(94,4),(117,5),(146,6),(166,7),(175,8),(186,9),(194,10),(200,11),(204,12),(208,13),(210,14),(211,15),(213,16),(214,17)]:
         if r <= hi: return s
 
+FIX = {'熙': 13, '翼': 17, '泰': 10, '求': 7, '露': 21, '斌': 12, '政': 9, '致': 10}  # 검증으로 찾은 개별 보정값
 NUM = {'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10}
 # 부수 → 자원오행 (부수가 오행을 직접 나타내는 경우 기준)
 ELEM = {}
@@ -40,7 +41,8 @@ def info(ch):
     r, res = row[0].split()[0].split('.')
     r, res = int(r.rstrip("'")), int(res)
     tot = int(row[1].split()[0])
-    won = NUM.get(ch) or (rad_strokes(r) + res if res > 0 else tot)
+    # 원획 = 부수 본래 획수 + 나머지 획수 (FIX: Unihan 잔획 오류·氺 모양 부수 등 개별 보정)
+    won = NUM.get(ch) or FIX.get(ch) or (rad_strokes(r) + res if res > 0 else tot)
     return r, won, tot
 
 MEAN = {}

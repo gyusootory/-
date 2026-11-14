@@ -158,6 +158,14 @@
   }
   const JIEQI = ['입춘','경칩','청명','입하','망종','소서','입추','백로','한로','입동','대설','소한'];
 
+  // 한국 시계 기준(표준시·서머타임)의 UTC 시차(시간). 1954.3.21~1961.8.9는 UTC+8:30, 1987·1988년 여름은 서머타임(+1)
+  function koreaOffset(y, m, d, hh) {
+    const v = y * 1e6 + m * 1e4 + d * 100 + hh;
+    if (v >= 1954032100 && v < 1961081000) return { off: 8.5, note: '1954~1961년 표준시(UTC+8:30) 적용' };
+    if ((v >= 1987051002 && v < 1987101103) || (v >= 1988050802 && v < 1988100903)) return { off: 10, note: '서머타임(−1시간) 적용' };
+    return { off: 9, note: '' };
+  }
+
   // ---------- 사주팔자 ----------
   // opts: {y,m,d, hour, minute (null=시간 모름), correct: true면 동경135°→서울 경도 보정(-30분)}
   function saju(opts) {
@@ -165,7 +173,11 @@
     const known = opts.hour !== null && opts.hour !== undefined && opts.hour !== '';
     const hh = known ? +opts.hour : 12, mi = known ? +(opts.minute || 0) : 0;
     // 절기 판정용 시각(UTC 기준 JD): 한국 표준시 UTC+9
-    const jd = jdn(y, m, d) - 0.5 + (hh - 9) / 24 + mi / 1440;
+    const tz = koreaOffset(y, m, d, hh);
+    const jd = jdn(y, m, d) - 0.5 + (hh - tz.off) / 24 + mi / 1440;
+    // 시간을 모르면 하루 안에서 절기(월주·연주)가 바뀌는지 확인
+    const mAt = h => Math.floor(mod(sunLongitude(jdn(y, m, d) - 0.5 + (h - tz.off) / 24) - 315, 360) / 30);
+    const jieqiDay = !known && mAt(0) !== mAt(24);
     const lon = sunLongitude(jd);
     const monthIdx = Math.floor(mod(lon - 315, 360) / 30);   // 0 = 寅월(입춘~경칩)
     let yy = y;
@@ -174,7 +186,8 @@
     const yS = yearGZ % 10, yB = yearGZ % 12;
     const mS = mod((yS % 5) * 2 + 2 + monthIdx, 10), mB = (monthIdx + 2) % 12;
     // 시간: 경도 보정 후 23시 이후면 다음 날 子시로 봄(조자시 기준)
-    let tmin = hh * 60 + mi - (opts.correct === false ? 0 : 30);
+    // 경도 보정: 서울(127.5°E) 태양시 = UTC+8:30 → 시계 시차에 맞춰 보정 분을 계산
+    let tmin = hh * 60 + mi - (opts.correct === false ? (tz.off - 9) * 60 : Math.round(tz.off * 60 - 510));
     let dayShift = 0;
     if (tmin < 0) { tmin += 1440; dayShift = -1; }
     if (known && tmin >= 23 * 60) dayShift += 1;
@@ -218,7 +231,7 @@
         ko: STEMS_KO[p.s] + BRANCHES_KO[p.b], sEl: STEM_EL[p.s], bEl: BRANCH_EL[p.b] })),
       animal: ANIMALS[yB], dayMaster: { stem: STEMS[dS], ko: STEMS_KO[dS], el: me },
       count, raw, strong, need, avoid, missing,
-      jieqi: JIEQI[monthIdx],
+      jieqi: JIEQI[monthIdx], tzNote: known ? tz.note : '', jieqiDay,
     };
   }
 
