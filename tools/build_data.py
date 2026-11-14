@@ -77,5 +77,13 @@ js += '// HANJA: [한자, 음, 훈, 원획수, 자원오행, 강희부수번호]
 js += 'const HANJA = ' + json.dumps(out, ensure_ascii=False, separators=(',',':')) + ';\n'
 js += '// SURNAMES: [한글, 한자, [글자별 원획], [글자별 자원오행]]\n'
 js += 'const SURNAMES = ' + json.dumps(sur, ensure_ascii=False, separators=(',',':')) + ';\n'
+# 한자 추가 내역(사용자 안내용): tools/hanja_updates.json → 날짜별로 추가한 글자와 훈·음
+byc = {h[0]: h for h in out}
+ups = json.load(open(os.path.join(ROOT, 'tools/hanja_updates.json'), encoding='utf-8'))
+for u in ups:
+    for c in u['chars']:
+        if c not in byc: raise SystemExit('hanja_updates.json의 글자가 데이터에 없음: ' + c)
+js += '// HANJA_UPDATES: 한자 추가 안내 [{date, chars:[[한자, 음, 훈]]}] (마지막 항목이 최신)\n'
+js += 'const HANJA_UPDATES = ' + json.dumps([{'date': u['date'], 'chars': [[c, byc[c][1], byc[c][2]] for c in u['chars']]} for u in ups], ensure_ascii=False, separators=(',',':')) + ';\n'
 open(os.path.join(ROOT,'hanja-data.js'),'w',encoding='utf-8').write(js)
 print(len(out), 'hanja,', len(sur), 'surnames')

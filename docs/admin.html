@@ -70,7 +70,11 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunk); p
 /* 요약 숫자 */
 .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px }
 .kpi.alert { box-shadow: inset 0 0 0 1.5px var(--seal), 0 8px 28px rgb(20 26 38 / .06) } .kpi.alert b { color: var(--seal) }
-.rep td.h { font: 600 20px var(--f-display) } .rep td.c { font-weight: 700 } .badge-new { font: 700 10px var(--f-body); color: #fff; background: var(--seal); border-radius: 999px; padding: 1px 6px; margin-left: 4px }
+.rep td.h { font: 600 20px var(--f-display) }
+.rep tr.added td, .rep tr.done td { opacity: .62 } .rep tr.added td:first-child, .rep tr.done td:first-child { opacity: 1 }
+.st { font-size: 12px; font-weight: 700; white-space: nowrap } .st.ok { color: var(--good) } .st.wait { color: var(--seal) }
+.mini { font: 500 11.5px var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 3px 8px; cursor: pointer; white-space: nowrap }
+#repSummary { display: block; margin-top: 4px; color: var(--ink); font-weight: 600 } .rep td.c { font-weight: 700 } .badge-new { font: 700 10px var(--f-body); color: #fff; background: var(--seal); border-radius: 999px; padding: 1px 6px; margin-left: 4px }
 .statrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px } .statrow div { background: var(--bg); border-radius: 12px; padding: 10px 12px } .statrow b { display: block; font: 700 22px var(--f-display) } .statrow span { font-size: 12px; color: var(--muted) }
 @media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
 .kpi { background: var(--surface); border: 0; box-shadow: 0 1px 2px rgb(20 26 38 / .04), 0 8px 28px rgb(20 26 38 / .06); border-radius: 16px; padding: 14px 16px; display: grid; gap: 2px; min-width: 0 }
@@ -163,7 +167,7 @@ td.r, th.r { text-align: right }
 
     <section class="card" id="repCard">
       <h2>없는 한자 제보</h2>
-      <p class="sub">사용자가 ‘목록에 없어요’로 알려 준 글자 · 많이 들어온 순 · 데이터 추가는 <code>tools/hanja_source.txt</code>에 한 줄 추가</p>
+      <p class="sub">사용자가 알려 준 글자 · <b>대기</b>가 위로 · 앱 데이터에 들어간 한자는 <b>자동으로 ‘추가됨’</b> · 한자를 모르는 제보는 직접 ‘처리 완료’로 표시 <span id="repSummary"></span></p>
       <div class="tw" id="reports"></div>
     </section>
 
@@ -228,6 +232,7 @@ td.r, th.r { text-align: right }
 </div>
 
 <script src="config.js"></script>
+<script src="hanja-data.js"></script>
 <script>
 (function () {
   'use strict';
@@ -237,9 +242,16 @@ td.r, th.r { text-align: right }
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = n => n.toLocaleString('ko-KR');
   const LABEL = { visit: '방문', recommend: '이름 추천 받기', more: '다음 페이지 보기', find: '한자 찾기', share_app: '앱 공유', share_name: '이름 공유',
-    copy_name: '이름 복사', detail_open: '상세 감명 열기', info_open: '도움말(ⓘ) 열기', save_name: '이름 저장', mine: '이름 비교', rename_go: '개명 후보 보기', hanja_report: '없는 한자 제보', show_all: '21위 이하 더 보기', tab: '탭 이동', install: '홈 화면 설치' };
+    copy_name: '이름 복사', detail_open: '상세 감명 열기', info_open: '도움말(ⓘ) 열기', save_name: '이름 저장', mine: '이름 비교', rename_go: '개명 후보 보기', hanja_report: '없는 한자 제보', show_all: '21위 이하 더 보기', upd_seen: '새 한자 안내 확인', tab: '탭 이동', install: '홈 화면 설치' };
   const dayKey = d => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(d); // YYYY-MM-DD (한국 시간)
-  let days = 7, demo = false, lastRows = [];
+  let days = 7, demo = false, lastRows = [], lastSince = new Date();
+  // 앱의 한자 데이터(hanja-data.js)로 제보된 한자가 이미 추가됐는지 자동 확인
+  const HSET = new Set(typeof HANJA !== 'undefined' ? HANJA.map(h => h[0]) : []);
+  const EUMN = {}; if (typeof HANJA !== 'undefined') HANJA.forEach(h => (EUMN[h[1]] = (EUMN[h[1]] || 0) + 1));
+  const ADDED_AT = {}; if (typeof HANJA_UPDATES !== 'undefined') HANJA_UPDATES.forEach(u => u.chars.forEach(c => (ADDED_AT[c[0]] = u.date)));
+  // 한자를 모르는 제보 등은 관리자가 직접 '처리 완료'로 표시 (이 브라우저에 보관)
+  const doneGet = () => { try { return new Set(JSON.parse(localStorage.getItem('gachi-admin-done') || '[]')); } catch (e) { return new Set(); } };
+  const doneSet = s => { try { localStorage.setItem('gachi-admin-done', JSON.stringify([...s])); } catch (e) {} };
 
   function show(v) { ['vSetup', 'vLogin', 'vDash'].forEach(id => ($('#' + id).hidden = id !== v)); $('#logout').hidden = v !== 'vDash' || demo; }
 
@@ -291,7 +303,7 @@ td.r, th.r { text-align: right }
         if (rnd() < .3) out.push({ ...base, created_at: t.toISOString(), event: 'tab', meta: { tab: ['find', 'mine', 'saved', 'rec'][Math.floor(rnd() * 4)] } });
         if (rnd() < .15) { out.push({ ...base, created_at: t.toISOString(), event: 'mine', meta: { score: Math.round(50 + rnd() * 45), cand: rnd() < .4 } }); if (rnd() < .3) out.push({ ...base, created_at: t.toISOString(), event: 'rename_go', meta: {} }); }
         if (rnd() < .18) out.push({ ...base, created_at: t.toISOString(), event: 'save_name', meta: {} });
-        if (rnd() < .03) { const R = [['규', '珪', '홀 규'], ['자', '', ''], ['순', '舜', '순임금 순'], ['희', '嬉', '아름다울 희']][Math.floor(rnd() * 4)]; out.push({ ...base, created_at: t.toISOString(), event: 'hanja_report', meta: { eum: R[0], hanja: R[1], hun: R[2], where: rnd() < .5 ? 'compare' : 'find' } }); }
+        if (rnd() < .03) { const R = [['규', '珪', '홀 규'], ['자', '', ''], ['현', '玹', '옥돌 현'], ['총', '聰', '총명할']][Math.floor(rnd() * 4)]; out.push({ ...base, created_at: t.toISOString(), event: 'hanja_report', meta: { eum: R[0], hanja: R[1], hun: R[2], where: rnd() < .5 ? 'compare' : 'find' } }); }
         if (rnd() < .35) out.push({ ...base, created_at: t.toISOString(), event: 'find', meta: { name: names[Math.floor(rnd() * rnd() * names.length)] } });
         if (rnd() < .12) out.push({ ...base, created_at: t.toISOString(), event: rnd() < .5 ? 'share_name' : 'share_app', meta: {} });
         if (rnd() < .2) out.push({ ...base, created_at: t.toISOString(), event: 'detail_open', meta: {} });
@@ -363,12 +375,24 @@ td.r, th.r { text-align: right }
     reps.forEach(r => { const m = r.meta || {}, k = (m.eum || '?') + '|' + (m.hanja || ''); const g = rg[k] || (rg[k] = { eum: m.eum || '', hanja: m.hanja || '', hun: new Set(), where: new Set(), n: 0, last: r.created_at });
       g.n++; if (m.hun) g.hun.add(m.hun); if (m.where) g.where.add(m.where); if (r.created_at > g.last) g.last = r.created_at; });
     const W = { find: '한자 찾기', compare: '이름 비교' };
-    const recent3 = Date.now() - 3 * 86400000;
-    $('#reports').innerHTML = reps.length ? `<table class="rep"><thead><tr><th>소리</th><th>한자</th><th>뜻(사용자 입력)</th><th class="r">횟수</th><th>어디서</th><th>마지막 제보</th></tr></thead><tbody>${
-      Object.values(rg).sort((a, b) => b.n - a.n || (b.last > a.last ? 1 : -1)).map(g => `<tr><td>${esc(g.eum)}</td><td class="h">${esc(g.hanja) || '<span class="muted">모름</span>'}</td>
+    const recent3 = Date.now() - 3 * 86400000, done = doneGet();
+    const status = g => {
+      const k = g.eum + '|' + g.hanja;
+      if (g.hanja && HSET.has(g.hanja)) return { st: 'added', html: `<span class="st ok">✅ 추가됨${ADDED_AT[g.hanja] ? ' · ' + ADDED_AT[g.hanja].slice(5).replace('-', '.') : ''}</span>` };
+      if (done.has(k)) return { st: 'done', html: `<span class="st ok">✔ 처리 완료</span> <button type="button" class="mini" data-undone="${esc(k)}">되돌리기</button>` };
+      return { st: 'wait', html: `<span class="st wait">대기</span> <button type="button" class="mini" data-done="${esc(k)}">처리 완료로 표시</button>` };
+    };
+    const groups = Object.values(rg).map(g => ({ ...g, s: status(g) }));
+    const order = { wait: 0, done: 1, added: 2 };
+    groups.sort((a, b) => order[a.s.st] - order[b.s.st] || b.n - a.n || (b.last > a.last ? 1 : -1));
+    const waitN = groups.filter(g => g.s.st === 'wait').length;
+    $('#repSummary').textContent = reps.length ? `대기 ${waitN}종 · 추가됨 ${groups.filter(g => g.s.st === 'added').length}종 · 처리 완료 ${groups.filter(g => g.s.st === 'done').length}종` : '';
+    $('#reports').innerHTML = reps.length ? `<table class="rep"><thead><tr><th>상태</th><th>소리</th><th>한자</th><th>뜻(사용자 입력)</th><th class="r">횟수</th><th>어디서</th><th>마지막 제보</th></tr></thead><tbody>${
+      groups.map(g => `<tr class="${g.s.st}"><td>${g.s.html}</td><td>${esc(g.eum)}${g.hanja ? '' : `<br><small class="muted">현재 ${EUMN[g.eum] || 0}자</small>`}</td><td class="h">${esc(g.hanja) || '<span class="muted">모름</span>'}</td>
         <td>${esc([...g.hun].join(', ')) || '—'}</td><td class="r c">${fmt(g.n)}</td><td>${[...g.where].map(w => W[w] || w).join(', ') || '—'}</td>
         <td class="num">${new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric' }).format(new Date(g.last))}${new Date(g.last).getTime() > recent3 ? '<span class="badge-new">NEW</span>' : ''}</td></tr>`).join('')}</tbody></table>`
       : '<p class="empty-note">이 기간에 들어온 제보가 없습니다.</p>';
+    const kp = [...document.querySelectorAll('.kpi')].pop(); if (kp && reps.length) { kp.querySelector('small').textContent = `대기 ${waitN}종 · 아래에서 확인`; kp.classList.toggle('alert', waitN > 0); }
 
     // 탭별 이용
     const TL = { rec: '① 이름 추천', find: '② 한자 찾기', mine: '③ 이름 비교', saved: '④ 저장' };
@@ -428,7 +452,7 @@ td.r, th.r { text-align: right }
     $('#dashErr').hidden = true; $('#updated').textContent = '불러오는 중…';
     try {
       const rows = demo ? demoEvents(since) : await fetchEvents(since);
-      render(rows, since); lastRows = rows;
+      render(rows, since); lastRows = rows; lastSince = since;
       $('#updated').textContent = '갱신 ' + new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(new Date()) + ` · 기록 ${fmt(rows.length)}건`;
       if (!demo && !rows.length) { $('#dashErr').textContent = '이 기간에 기록이 없습니다. 관리자 이메일이 setup.sql의 이메일과 같은지도 확인해 주세요.'; $('#dashErr').hidden = false; }
     } catch (e) {
@@ -442,6 +466,12 @@ td.r, th.r { text-align: right }
     days = +b.dataset.days; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); load();
   }));
   $('#reload').addEventListener('click', load);
+  // 제보 처리 완료 표시/되돌리기
+  document.addEventListener('click', e => {
+    const d = e.target.closest('[data-done]'), u = e.target.closest('[data-undone]');
+    if (!d && !u) return;
+    const s = doneGet(); d ? s.add(d.dataset.done) : s.delete(u.dataset.undone); doneSet(s); render(lastRows, lastSince);
+  });
   // 지금 기간의 기록을 엑셀에서 열 수 있는 CSV로 내려받기 (한국 시간)
   $('#csv').addEventListener('click', () => {
     const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';

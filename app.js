@@ -814,6 +814,27 @@
   setCollapsed(false);
   markNeed();
   renderSaju(null);
+  (function hanjaUpdateNote() {
+    if (typeof HANJA_UPDATES === 'undefined' || !HANJA_UPDATES.length) return;
+    const KEY = 'gachi-upd-seen', latest = HANJA_UPDATES[HANJA_UPDATES.length - 1].date;
+    let seen = null, firstTime = false;
+    try { seen = localStorage.getItem(KEY);
+      // 예전에 앱을 연 흔적(마지막 탭·저장 목록·이전 방문 ID)이 하나라도 있으면 기존 사용자
+      firstTime = window.gachiNewVisitor !== false && !localStorage.getItem('naming-tab') && !localStorage.getItem('gachi-saved'); } catch (e) { return; }
+    const mark = () => { try { localStorage.setItem(KEY, latest); } catch (e) {} };
+    if (seen === latest) return;
+    if (firstTime) { mark(); return; }   // 처음 온 사람에게는 '새로 추가' 안내가 의미 없으므로 조용히 넘김
+    const news = HANJA_UPDATES.filter(u => !seen || u.date > seen);
+    const chars = news.flatMap(u => u.chars);
+    const d = latest.split('-');
+    const el = document.createElement('div'); el.id = 'updNote'; el.setAttribute('role', 'status');
+    el.innerHTML = `<div class="un-head"><span class="un-ic" aria-hidden="true">新</span><div><b>새로 추가된 한자 ${chars.length}자</b><small>${+d[1]}월 ${+d[2]}일 업데이트 · 제보해 주셔서 고마워요</small></div></div>
+      <ul class="un-list">${chars.map(c => `<li><b>${c[0]}</b><span>${esc(c[2])} ${c[1]}</span></li>`).join('')}</ul>
+      <p>한자 찾기 · 이름 비교에서 바로 고를 수 있어요.</p>
+      <button type="button" class="act" id="updOk">확인</button>`;
+    document.body.appendChild(el);
+    $('#updOk').addEventListener('click', () => { mark(); el.remove(); T('upd_seen', { date: latest }); });
+  })();
   let tab = 'rec'; try { tab = localStorage.getItem('naming-tab') || 'rec'; } catch (e) {}
   if (!['rec', 'find', 'mine', 'saved'].includes(tab)) tab = 'rec';
   setTab(tab);

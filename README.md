@@ -33,6 +33,13 @@
 - 다시 만들기: `node tools/store_assets.js <@fontsource 글꼴 폴더>`
 - 개인정보처리방침: `privacy.html`
 
+## 한자 추가하는 법 (업데이트 절차)
+1. `tools/hanja_source.txt`의 해당 소리 줄에 `한자훈` 추가 (예: `현 … 玹옥돌`)
+2. `tools/meaning_source.txt`에 `玹:옥돌처럼 은은한 광채` 처럼 뜻 풀이 한 줄 추가
+3. `tools/hanja_updates.json`에 날짜와 글자 추가 → 기존 사용자에게 **'새로 추가된 한자' 안내가 1번** 표시됨 (처음 온 사람에게는 안 보임)
+4. `python3 tools/build_data.py <unihan.db>` → `python3 tools/bundle.py`
+5. 관리자 화면 '없는 한자 제보'에서 해당 글자가 자동으로 **✅ 추가됨**으로 바뀜
+
 ## 이름 뜻 풀이
 추천 카드마다 이름 전체의 뜻을 한 문장으로 풀어 줍니다(예: “기쁨을 나누는 밝은 마음과 옥빛처럼 맑은 광채를 함께 지닌 사람이 되라는 뜻을 담았습니다.”). 한자별 풀이 키워드는 `tools/meaning_source.txt`에서 고칠 수 있습니다.
 

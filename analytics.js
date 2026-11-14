@@ -16,6 +16,7 @@
   let visitor = get('gachi-vid');
   const isNew = !visitor;
   if (!visitor) { visitor = rid(); set('gachi-vid', visitor); }
+  window.gachiNewVisitor = isNew;   // 처음 온 사람인지 (앱의 '새 한자 안내'를 처음 방문자에게는 안 보이게)
   const session = rid();
   const device = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
   const appMode = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true ? 'app' : 'web';
