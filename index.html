@@ -129,6 +129,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-v
 
 /* 결과 영역 */
 .sec { display: grid; gap: 14px; min-width: 0 }
+/* 결과가 나오기 전에는 결과 영역(제목 포함)을 숨김 */
+.sec.pre { display: none }
 .sechead { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap }
 .sechead h3 { font-family: var(--f-display); font-weight: 400; font-size: 24px }
 .sechead p { margin: 4px 0 0; color: var(--muted); font-size: 13px }
