@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>가치작명소 관리자</title>
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Noto+Serif+KR:wght@600&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 관리자 화면: 위에서부터 요약 숫자 → 추이 차트 → 세부 표 순서로 훑어보는 구조 */
+:root {
+  --bg: #eef1f4; --surface: #ffffff; --sunk: #e3e8ee; --ink: #18212e; --muted: #5b6676; --line: #cfd6df;
+  --accent: #2d3f8f; --accent-ink: #ffffff; --seal: #b23a2b; --grid: #e3e8ee;
+  --good: #2f7a55; --bad: #b23a2b;
+  --f-display: "Song Myung", "Noto Serif KR", "Nanum Myeongjo", serif;
+  --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10151d; --surface: #182029; --sunk: #0c1117; --ink: #e6eaf0; --muted: #98a3b3; --line: #2b3542;
+  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563; --grid: #222b37; --good: #6cc497; --bad: #ef7f70; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #10151d; --surface: #182029; --sunk: #0c1117; --ink: #e6eaf0; --muted: #98a3b3; --line: #2b3542;
+  --accent: #8fa3f0; --accent-ink: #10151d; --seal: #e07563; --grid: #222b37; --good: #6cc497; --bad: #ef7f70; color-scheme: dark }
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body);
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px)) }
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 18px }
+h1, h2, h3 { margin: 0; text-wrap: balance }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums }
+.muted { color: var(--muted) }
+.err { color: var(--bad); font-size: 14px; margin: 0 }
+a { color: var(--accent) }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-block: 8px 12px; border-bottom: 1px solid var(--line) }
+.brand { display: flex; align-items: center; gap: 12px }
+.seal { width: 40px; height: 40px; border: 2px solid var(--seal); color: var(--seal); border-radius: 3px; display: grid; place-items: center; font: 22px var(--f-display); transform: rotate(-3deg) }
+.brand h1 { font: 400 24px var(--f-display) }
+.brand p { margin: 0; font-size: 12px; color: var(--muted) }
+.btn { font: 600 14px var(--f-body); border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; background: var(--accent); color: var(--accent-ink); min-height: 42px }
+.btn.ghost { background: none; color: var(--ink); border: 1px solid var(--line) }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 12px; min-width: 0; align-content: start }
+.card h3 { font-size: 12.5px; font-weight: 600; color: var(--muted); margin-top: 4px }
+.card h2 { font-size: 15px; font-weight: 600 }
+.card .sub { margin: -6px 0 0; font-size: 12.5px; color: var(--muted) }
+
+/* 로그인·설정 */
+.narrow { max-width: 420px; margin: 24px auto 0; width: 100% }
+.field { display: grid; gap: 5px } .field label { font-size: 13px; font-weight: 500 }
+input[type=email], input[type=password] { width: 100%; font: 16px var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 46px }
+.steps { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 14px }
+code { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunk); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere }
+
+/* 필터 줄 */
+.filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap }
+.seg { display: inline-flex; background: var(--sunk); border-radius: 8px; padding: 3px }
+.seg button { border: 0; background: none; color: var(--muted); font: 500 13px var(--f-body); padding: 7px 12px; border-radius: 6px; cursor: pointer; min-height: 36px }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .08) }
+.updated { font-size: 12px; color: var(--muted); margin-left: auto }
+.demo-badge { font-size: 12px; font-weight: 600; color: var(--seal); border: 1px solid var(--seal); border-radius: 999px; padding: 3px 10px }
+
+/* 요약 숫자 */
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px }
+@media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)) } .kpis .kpi:first-child { grid-column: 1 / -1 } }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 2px; min-width: 0 }
+.kpi span { font-size: 12.5px; color: var(--muted) }
+.kpi b { font: 600 28px var(--f-mono); font-variant-numeric: tabular-nums; line-height: 1.2 }
+.kpi small { font-size: 12px; color: var(--muted) }
+
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px }
+@media (max-width: 900px) { .grid2 { grid-template-columns: minmax(0, 1fr) } }
+
+/* 차트 */
+.chart { position: relative }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible }
+.chart text { fill: var(--muted); font: 11px var(--f-body) }
+.chart .gridline { stroke: var(--grid); stroke-width: 1 }
+.chart .bar { fill: var(--accent) }
+.chart .hit { fill: transparent; cursor: pointer }
+.chart .hit:hover + .bar, .chart .bar.on { opacity: .75 }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; padding: 6px 9px; border-radius: 6px; white-space: nowrap; transform: translate(-50%, -110%) }
+details.tbl summary { cursor: pointer; font-size: 13px; color: var(--accent) }
+
+/* 가로 막대 목록 */
+.hbars { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px }
+.hbars li { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr) 4.5em; gap: 10px; align-items: center; font-size: 13.5px }
+.hbars .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.hbars .track { height: 10px; background: var(--sunk); border-radius: 0 4px 4px 0; overflow: hidden }
+.hbars .fill { display: block; height: 100%; background: var(--accent); border-radius: 0 4px 4px 0 }
+.hbars .val { text-align: right; font-family: var(--f-mono); font-size: 12.5px }
+.empty-note { font-size: 13px; color: var(--muted); margin: 0 }
+
+.tw { overflow-x: auto }
+table { border-collapse: collapse; width: 100%; font-size: 13px }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap }
+th { font-weight: 600; color: var(--muted); font-size: 12px }
+td.r, th.r { text-align: right }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="seal" aria-hidden="true">名</div>
+      <div><h1>가치작명소 관리자</h1><p>방문자·기능 사용 통계</p></div></div>
+    <div class="filters">
+      <a href="./" class="btn ghost" style="text-decoration:none">앱으로 가기</a>
+      <button class="btn ghost" type="button" id="logout" hidden>로그아웃</button>
+    </div>
+  </header>
+
+  <!-- 설정 전 안내 -->
+  <section class="card narrow" id="vSetup" hidden>
+    <h2>통계 저장소가 아직 연결되지 않았어요</h2>
+    <p class="sub">아래 순서대로 한 번만 설정하면 방문 통계가 쌓이기 시작합니다.</p>
+    <ol class="steps">
+      <li><b>supabase.com</b>에 가입하고 새 프로젝트를 만듭니다 (지역: Seoul, 무료 플랜).</li>
+      <li>왼쪽 <b>SQL Editor</b>에 저장소의 <code>supabase/setup.sql</code> 내용을 붙여넣고, 맨 아래 이메일을 본인 이메일로 바꾼 뒤 <b>Run</b>.</li>
+      <li><b>Authentication → Users → Add user</b>에서 같은 이메일과 비밀번호로 관리자 계정을 만듭니다 (Auto Confirm 체크).</li>
+      <li><b>Authentication → Sign In / Providers</b>에서 <b>Allow new users to sign up</b>을 끕니다.</li>
+      <li><b>Project Settings → API</b>의 <b>Project URL</b>과 <b>anon(publishable) key</b>를 <code>config.js</code>에 넣습니다.</li>
+    </ol>
+    <button class="btn ghost" type="button" id="demoBtn">예시 데이터로 화면 미리보기</button>
+  </section>
+
+  <!-- 로그인 -->
+  <form class="card narrow" id="vLogin" hidden novalidate>
+    <h2>관리자 로그인</h2>
+    <p class="sub">설정할 때 만든 관리자 이메일로 로그인하세요.</p>
+    <div class="field"><label for="email">이메일</label><input type="email" id="email" autocomplete="username" required></div>
+    <div class="field"><label for="pw">비밀번호</label><input type="password" id="pw" autocomplete="current-password" required></div>
+    <p class="err" id="loginErr" hidden></p>
+    <button class="btn" type="submit" id="loginBtn">로그인</button>
+  </form>
+
+  <!-- 대시보드 -->
+  <main id="vDash" hidden style="display:grid;gap:18px">
+    <div class="filters">
+      <div class="seg" role="group" aria-label="기간">
+        <button type="button" data-days="1">오늘</button>
+        <button type="button" data-days="7" aria-pressed="true">7일</button>
+        <button type="button" data-days="30">30일</button>
+        <button type="button" data-days="90">90일</button>
+      </div>
+      <button class="btn ghost" type="button" id="reload">새로고침</button>
+      <span class="demo-badge" id="demoBadge" hidden>예시 데이터</span>
+      <span class="updated" id="updated"></span>
+    </div>
+    <p class="err" id="dashErr" hidden></p>
+
+    <div class="kpis" id="kpis"></div>
+
+    <section class="card">
+      <h2>일별 순 방문자</h2>
+      <p class="sub">하루에 한 번 이상 들어온 서로 다른 사람 수 (한국 시간 기준)</p>
+      <div class="chart" id="dailyChart"></div>
+      <details class="tbl"><summary>표로 보기</summary><div class="tw" id="dailyTable"></div></details>
+    </section>
+
+    <div class="grid2">
+      <section class="card">
+        <h2>이용 흐름</h2>
+        <p class="sub">방문한 세션 중 기능을 써 보고, 공유까지 한 비율</p>
+        <ul class="hbars" id="funnel"></ul>
+      </section>
+      <section class="card">
+        <h2>기능별 사용 횟수</h2>
+        <p class="sub">버튼을 누른 전체 횟수</p>
+        <ul class="hbars" id="features"></ul>
+      </section>
+      <section class="card">
+        <h2>많이 찾아본 이름 Top 10</h2>
+        <p class="sub">‘한자 찾기’에 입력한 이름 (성씨 제외)</p>
+        <ul class="hbars" id="topNames"></ul>
+      </section>
+      <section class="card">
+        <h2>기기 · 사용 방식 · 유입 경로</h2>
+        <p class="sub">방문 세션 기준</p>
+        <h3>기기 · 실행 방식</h3><ul class="hbars" id="devices"></ul>
+        <h3>유입 경로</h3><ul class="hbars" id="refs"></ul>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>최근 기록 20건</h2>
+      <div class="tw" id="recent"></div>
+    </section>
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  'use strict';
+  const C = window.GACHI_CONFIG || {};
+  const BASE = (C.supabaseUrl || '').replace(/\/$/, ''), KEY = C.supabaseAnonKey || '';
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const fmt = n => n.toLocaleString('ko-KR');
+  const LABEL = { visit: '방문', recommend: '이름 추천 받기', more: '다른 이름 5개 보기', find: '한자 찾기', share_app: '앱 공유', share_name: '이름 공유',
+    copy_name: '이름 복사', detail_open: '상세 감명 열기', tab: '탭 이동', install: '홈 화면 설치' };
+  const dayKey = d => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(d); // YYYY-MM-DD (한국 시간)
+  let days = 7, demo = false;
+
+  function show(v) { ['vSetup', 'vLogin', 'vDash'].forEach(id => ($('#' + id).hidden = id !== v)); $('#logout').hidden = v !== 'vDash' || demo; }
+
+  // ---------- 로그인 (Supabase Auth) ----------
+  const ss = { get() { try { return JSON.parse(sessionStorage.getItem('gachi-admin') || 'null'); } catch (e) { return null; } },
+               set(v) { try { v ? sessionStorage.setItem('gachi-admin', JSON.stringify(v)) : sessionStorage.removeItem('gachi-admin'); } catch (e) {} } };
+  async function auth(grant, body) {
+    const r = await fetch(`${BASE}/auth/v1/token?grant_type=${grant}`, { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error_description || j.msg || j.message || '로그인에 실패했습니다.');
+    const s = { access: j.access_token, refresh: j.refresh_token, exp: Date.now() + (j.expires_in - 60) * 1000, email: j.user && j.user.email };
+    ss.set(s); return s;
+  }
+  async function token() {
+    let s = ss.get(); if (!s) return null;
+    if (Date.now() > s.exp) { try { s = await auth('refresh_token', { refresh_token: s.refresh }); } catch (e) { ss.set(null); return null; } }
+    return s.access;
+  }
+
+  // ---------- 데이터 가져오기 (1,000줄씩 나눠서) ----------
+  async function fetchEvents(since) {
+    const t = await token(); if (!t) throw new Error('auth');
+    const rows = [], page = 1000;
+    for (let from = 0; from < 50000; from += page) {
+      const q = `${BASE}/rest/v1/events?select=created_at,event,visitor,session,device,app_mode,referrer,meta&created_at=gte.${encodeURIComponent(since.toISOString())}&order=created_at.asc`;
+      const r = await fetch(q, { headers: { apikey: KEY, Authorization: 'Bearer ' + t, Range: `${from}-${from + page - 1}`, 'Range-Unit': 'items' } });
+      if (r.status === 401) throw new Error('auth');
+      if (!r.ok) throw new Error('데이터를 불러오지 못했습니다 (' + r.status + ').');
+      const part = await r.json(); rows.push(...part);
+      if (part.length < page) break;
+    }
+    return rows;
+  }
+
+  // 예시 데이터: 설정 전에 화면을 미리 보기 위한 가짜 기록
+  function demoEvents(since) {
+    const out = [], names = ['서윤', '하준', '지안', '도윤', '서아', '이준', '하윤', '시우', '지우', '은우', '수아', '유준'];
+    const refs = [null, null, null, 'kakaotalk', 'm.search.naver.com', 'instagram.com'];
+    let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    const visitors = Array.from({ length: 260 }, (_, i) => 'v' + i), seen = new Set();
+    for (let d = new Date(since); d <= new Date(); d = new Date(d.getTime() + 86400000)) {
+      const n = 8 + Math.floor(rnd() * 22 + (d.getDay() % 6 === 0 ? 10 : 0));
+      for (let i = 0; i < n; i++) {
+        const v = visitors[Math.floor(rnd() * visitors.length)], s = v + d.getTime() + i, t = new Date(d.getTime() + rnd() * 80000000);
+        if (t > new Date()) continue;
+        const base = { visitor: v, session: s, device: rnd() < .78 ? 'mobile' : 'desktop', app_mode: rnd() < .15 ? 'app' : 'web', referrer: refs[Math.floor(rnd() * refs.length)] };
+        out.push({ ...base, created_at: t.toISOString(), event: 'visit', meta: { new_visitor: !seen.has(v) } }); seen.add(v);
+        if (rnd() < .62) { out.push({ ...base, created_at: t.toISOString(), event: 'recommend', meta: {} }); if (rnd() < .5) out.push({ ...base, created_at: t.toISOString(), event: 'more', meta: {} }); }
+        if (rnd() < .35) out.push({ ...base, created_at: t.toISOString(), event: 'find', meta: { name: names[Math.floor(rnd() * rnd() * names.length)] } });
+        if (rnd() < .12) out.push({ ...base, created_at: t.toISOString(), event: rnd() < .5 ? 'share_name' : 'share_app', meta: {} });
+        if (rnd() < .2) out.push({ ...base, created_at: t.toISOString(), event: 'detail_open', meta: {} });
+      }
+    }
+    return out.sort((a, b) => a.created_at < b.created_at ? -1 : 1);
+  }
+
+  // ---------- 그리기 ----------
+  function hbars(el, items, total, opts = {}) {
+    if (!items.length) { el.innerHTML = '<li class="empty-note">아직 기록이 없습니다</li>'; return; }
+    const max = opts.max || Math.max(...items.map(x => x[1]), 1);
+    el.innerHTML = items.map(([k, v]) => `<li><span class="lbl" title="${esc(k)}">${esc(k)}</span>
+      <span class="track"><span class="fill" style="width:${(v / max * 100).toFixed(1)}%"></span></span>
+      <span class="val">${opts.pct ? (total ? Math.round(v / total * 100) : 0) + '%' : fmt(v)}</span></li>`).join('');
+  }
+  function dailyChart(series) {
+    const W = Math.max(300, Math.round($('#dailyChart').clientWidth || 760)), H = 230, L = 34, R = 8, T = 12, B = 26; // 실제 폭으로 그려 글자 크기 유지
+    const max = Math.max(...series.map(x => x[1]), 1);
+    const step = Math.pow(10, Math.floor(Math.log10(max))); const top = Math.ceil(max / step) * step || 1;
+    const ticks = [0, top / 2, top];
+    const bw = (W - L - R) / series.length, gap = Math.max(2, bw * .25), r = Math.min(4, (bw - gap) / 2);
+    const y = v => T + (H - T - B) * (1 - v / top);
+    const every = Math.ceil(series.length / 8);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="일별 순 방문자 막대 차트">`;
+    ticks.forEach(t => { s += `<line class="gridline" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${fmt(Math.round(t))}</text>`; });
+    series.forEach(([d, v], i) => {
+      const x = L + i * bw + gap / 2, w = bw - gap, yy = y(v), h = H - B - yy;
+      const path = h > r ? `M${x},${H - B}V${yy + r}Q${x},${yy} ${x + r},${yy}H${x + w - r}Q${x + w},${yy} ${x + w},${yy + r}V${H - B}Z` : `M${x},${H - B}V${yy}H${x + w}V${H - B}Z`;
+      s += `<rect class="hit" x="${L + i * bw}" y="${T}" width="${bw}" height="${H - T - B}" data-i="${i}"/><path class="bar" d="${path}"/>`;
+      if (i % every === 0 || (i === series.length - 1 && i % every >= every / 2)) s += `<text x="${x + w / 2}" y="${H - 8}" text-anchor="middle">${d.slice(5).replace('-', '.')}</text>`;
+    });
+    s += '</svg><div class="tip" hidden></div>';
+    const el = $('#dailyChart'); el.innerHTML = s;
+    const tip = el.querySelector('.tip'), svg = el.querySelector('svg');
+    el.querySelectorAll('.hit').forEach(h => {
+      const on = () => { const i = +h.dataset.i, [d, v] = series[i], sc = svg.getBoundingClientRect().width / W;
+        tip.textContent = `${d} · ${fmt(v)}명`; tip.hidden = false;
+        tip.style.left = ((L + (i + .5) * bw) * sc) + 'px'; tip.style.top = (y(v) * sc) + 'px'; };
+      h.addEventListener('mouseenter', on); h.addEventListener('click', on); h.addEventListener('mouseleave', () => (tip.hidden = true));
+    });
+    $('#dailyTable').innerHTML = `<table><thead><tr><th>날짜</th><th class="r">순 방문자</th></tr></thead><tbody>${series.slice().reverse().map(([d, v]) => `<tr><td>${d}</td><td class="r num">${fmt(v)}</td></tr>`).join('')}</tbody></table>`;
+  }
+
+  function render(rows, since) {
+    const visits = rows.filter(r => r.event === 'visit');
+    const uniq = a => new Set(a).size;
+    const sessOf = ev => new Set(rows.filter(r => ev.includes(r.event)).map(r => r.session));
+    const count = ev => rows.filter(r => r.event === ev).length;
+    const visitors = uniq(visits.map(r => r.visitor)), sessions = uniq(visits.map(r => r.session));
+    const newV = visits.filter(r => r.meta && r.meta.new_visitor).length;
+    const shares = count('share_app') + count('share_name');
+    $('#kpis').innerHTML = [
+      ['순 방문자', visitors, `신규 ${fmt(newV)}명`],
+      ['방문 횟수', sessions, visitors ? `1인당 ${(sessions / visitors).toFixed(1)}회` : '—'],
+      ['이름 추천', count('recommend'), `다른 이름 보기 ${fmt(count('more'))}회`],
+      ['한자 찾기', count('find'), `상세 감명 ${fmt(count('detail_open'))}회`],
+      ['공유', shares, `앱 ${fmt(count('share_app'))} · 이름 ${fmt(count('share_name'))}`],
+    ].map(([k, v, s]) => `<div class="kpi"><span>${k}</span><b>${fmt(v)}</b><small>${s}</small></div>`).join('');
+
+    // 일별 순 방문자 (빈 날도 0으로 채움)
+    const byDay = {};
+    for (let d = new Date(since); d <= new Date(); d = new Date(d.getTime() + 86400000)) byDay[dayKey(d)] = new Set();
+    visits.forEach(r => { const k = dayKey(new Date(r.created_at)); (byDay[k] = byDay[k] || new Set()).add(r.visitor); });
+    dailyChart(Object.keys(byDay).sort().map(k => [k, byDay[k].size]));
+
+    const used = sessOf(['recommend', 'find']), shared = sessOf(['share_app', 'share_name', 'copy_name']);
+    hbars($('#funnel'), [['방문', sessions], ['추천·찾기 사용', [...used].length], ['공유·복사', [...shared].length]], sessions, { pct: true, max: sessions });
+    const feats = Object.keys(LABEL).filter(e => e !== 'visit' && e !== 'tab').map(e => [LABEL[e], count(e)]).filter(x => x[1]).sort((a, b) => b[1] - a[1]);
+    hbars($('#features'), feats);
+    const nm = {}; rows.filter(r => r.event === 'find' && r.meta && r.meta.name).forEach(r => (nm[r.meta.name] = (nm[r.meta.name] || 0) + 1));
+    hbars($('#topNames'), Object.entries(nm).sort((a, b) => b[1] - a[1]).slice(0, 10));
+    const per = (key, map) => { const o = {}; visits.forEach(r => { const k = map(r[key]); o[k] = (o[k] || 0) + 1; }); return Object.entries(o).sort((a, b) => b[1] - a[1]); };
+    hbars($('#devices'), [...per('device', v => v === 'mobile' ? '휴대폰' : 'PC'), ...per('app_mode', v => v === 'app' ? '홈 화면 앱으로 실행' : '브라우저로 실행')], visits.length, { pct: true, max: visits.length });
+    hbars($('#refs'), per('referrer', v => v ? ({ kakaotalk: '카카오톡' }[v] || v) : '직접 방문·알 수 없음').slice(0, 6), visits.length, { pct: true, max: visits.length });
+
+    const recent = rows.slice(-20).reverse();
+    $('#recent').innerHTML = recent.length ? `<table><thead><tr><th>시각(한국)</th><th>기록</th><th>기기</th><th>내용</th></tr></thead><tbody>${recent.map(r => {
+      const t = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(r.created_at));
+      const m = r.meta || {}; const info = m.name ? `이름: ${m.name}` : m.tab ? `탭: ${m.tab}` : m.new_visitor ? '첫 방문' : '';
+      return `<tr><td class="num">${esc(t)}</td><td>${esc(LABEL[r.event] || r.event)}</td><td>${r.device === 'mobile' ? '휴대폰' : 'PC'}</td><td>${esc(info)}</td></tr>`; }).join('')}</tbody></table>` : '<p class="empty-note">아직 기록이 없습니다. 앱에 한 번 들어가 보면 여기에 나타납니다.</p>';
+  }
+
+  async function load() {
+    const since = new Date(); since.setHours(0, 0, 0, 0); since.setDate(since.getDate() - (days - 1));
+    $('#dashErr').hidden = true; $('#updated').textContent = '불러오는 중…';
+    try {
+      const rows = demo ? demoEvents(since) : await fetchEvents(since);
+      render(rows, since);
+      $('#updated').textContent = '갱신 ' + new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(new Date()) + ` · 기록 ${fmt(rows.length)}건`;
+      if (!demo && !rows.length) { $('#dashErr').textContent = '이 기간에 기록이 없습니다. 관리자 이메일이 setup.sql의 이메일과 같은지도 확인해 주세요.'; $('#dashErr').hidden = false; }
+    } catch (e) {
+      if (e.message === 'auth') { ss.set(null); show('vLogin'); return; }
+      $('#updated').textContent = ''; $('#dashErr').textContent = e.message; $('#dashErr').hidden = false;
+    }
+  }
+
+  // ---------- 이벤트 ----------
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+    days = +b.dataset.days; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); load();
+  }));
+  $('#reload').addEventListener('click', load);
+  $('#demoBtn').addEventListener('click', () => { demo = true; $('#demoBadge').hidden = false; show('vDash'); load(); });
+  $('#logout').addEventListener('click', () => { ss.set(null); show('vLogin'); });
+  $('#vLogin').addEventListener('submit', async e => {
+    e.preventDefault(); const err = $('#loginErr'); err.hidden = true;
+    const email = $('#email').value.trim(), pw = $('#pw').value;
+    if (!email || !pw) { err.textContent = '이메일과 비밀번호를 입력해 주세요.'; err.hidden = false; return; }
+    $('#loginBtn').disabled = true; $('#loginBtn').textContent = '로그인 중…';
+    try { await auth('password', { email, password: pw }); show('vDash'); load(); }
+    catch (x) { err.textContent = /invalid/i.test(x.message) ? '이메일 또는 비밀번호가 맞지 않습니다.' : x.message; err.hidden = false; }
+    finally { $('#loginBtn').disabled = false; $('#loginBtn').textContent = '로그인'; }
+  });
+
+  // ---------- 시작 ----------
+  if (/[?&]demo\b/.test(location.search)) { demo = true; $('#demoBadge').hidden = false; show('vDash'); load(); }
+  else if (!BASE || !KEY) show('vSetup');
+  else if (ss.get()) { show('vDash'); load(); }
+  else show('vLogin');
+})();
+</script>
+</body>
+</html>

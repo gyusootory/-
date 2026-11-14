@@ -1,8 +1,8 @@
-<title>오행 작명소</title>
+<title>가치작명소</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Song+Myung&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Noto+Serif+KR:wght@600&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 /* 레이아웃: 왼쪽 '사주 명식' 고정 패널 + 오른쪽 이름 카드 목록 (모바일은 한 줄) — 쪽빛(인디고) 먹색 위에 오방색을 오행 표시에만 사용 */
 :root {
@@ -18,7 +18,7 @@
   --req-bg: #fbf0ee; --req-ring: rgb(178 58 43 / .22);
   --wood: #2f7a55; --fire: #c0392b; --earth: #a57412; --metal: #6c7480; --water: #1f4f8a;
   --good: #2f7a55; --half: #a57412; --bad: #b23a2b;
-  --f-display: "Song Myung", "Nanum Myeongjo", "Batang", serif;
+  --f-display: "Song Myung", "Noto Serif KR", "Nanum Myeongjo", "Batang", serif;
   --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
@@ -283,6 +283,9 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
   .weights { grid-template-columns: minmax(0, 1fr) }
 }
 
+.foot { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 4px; font-size: 12.5px; color: var(--muted) }
+.foot p { margin: 0 } .foot a { color: var(--accent) }
+.guidebox + .guidebox { margin-top: 0 }
 .guidebox { margin-top: 32px; border-top: 1px solid var(--line); padding-top: 14px }
 .guidebox > summary { font-size: 15px; min-height: 44px; display: flex; align-items: center }
 .guidebox .guide { padding-top: 12px }
@@ -293,8 +296,8 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 <div class="wrap">
   <header class="mast">
     <div class="brand">
-      <div class="seal" aria-hidden="true"><span>五</span><span>行</span><span>作</span><span>名</span></div>
-      <div><h1>오행 작명소</h1><p>사주 · 오행 · 음양 · 81수리 · 항렬자로 이름과 한자를 짓습니다</p></div>
+      <div class="seal" aria-hidden="true"><span>價</span><span>値</span><span>作</span><span>名</span></div>
+      <div><h1>가치작명소</h1><p>사주 · 오행 · 음양 · 81수리 · 항렬자로 이름과 한자를 짓습니다</p></div>
     </div>
     <div class="mast-r">
     <button class="appshare" type="button" id="appShare" aria-label="앱 공유하기">
@@ -434,6 +437,22 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
           </section>
         </div>
   </details>
+
+  <details class="guidebox">
+    <summary>오픈소스 라이선스</summary>
+    <div class="guide"><section>
+      <ul>
+        <li><b>korean-lunar-calendar</b> 0.4.0 — 음력·양력 변환 (한국천문연구원 기준 데이터) · MIT License</li>
+        <li><b>Unicode Unihan Database</b> — 한자 부수·획수 자료 · Unicode License v3</li>
+        <li><b>Song Myung · IBM Plex Sans KR · IBM Plex Mono</b> 글꼴 — SIL Open Font License 1.1</li>
+      </ul>
+    </section></div>
+  </details>
+
+  <footer class="foot">
+    <p><b>가치작명소</b> · 결과는 성명학 이론에 따른 참고용이며, 출생신고 전 대법원 인명용 한자 여부를 꼭 확인하세요.</p>
+    <p><a href="privacy.html">개인정보처리방침</a> · 입력한 생년월일과 성씨는 이 기기 안에서만 계산되고 저장·전송되지 않습니다.</p>
+  </footer>
 </div>
 
 <div id="toast" role="status" aria-live="polite" hidden></div>
@@ -449,4 +468,6 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 <script src="korean-lunar-calendar.min.js"></script>
 <script src="hanja-data.js"></script>
 <script src="engine.js"></script>
+<script src="config.js"></script>
+<script src="analytics.js"></script>
 <script src="app.js"></script>

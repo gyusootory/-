@@ -88,15 +88,18 @@
     return t[(given[0].ch.charCodeAt(0) + given[1].ch.charCodeAt(0)) % t.length]();
   }
 
+  // 방문 통계 기록 (analytics.js가 없거나 꺼져 있으면 아무 일도 안 함)
+  const T = (e, m) => { if (window.gachiTrack) window.gachiTrack(e, m); };
+
   // ---------- 공유 ----------
-  const ARTIFACT_URL = 'https://claude.ai/artifact/4FN2maJB5BLmt48P3fAiS2';
+  const PUBLIC_URL = 'https://gyusootory.github.io/gachi-naming/';
   // 웹사이트로 올린 경우 그 주소를, 그 밖(파일·미리보기)에서는 공개 링크를 공유
   function appUrl() {
     const h = location.hostname;
-    return location.protocol === 'https:' && h && !/claude|anthropic/.test(h) ? location.origin + location.pathname : ARTIFACT_URL;
+    return location.protocol === 'https:' && h && !/claude|anthropic/.test(h) ? location.origin + location.pathname : PUBLIC_URL;
   }
   function cardText(ko, hz, given, ev) {
-    return `[오행 작명소 추천 이름]\n${ko} (${hz}) · ${Math.round(ev.total)}점 ${ev.grade}\n“${nameMeaning(given)}”\n` +
+    return `[가치작명소 추천 이름]\n${ko} (${hz}) · ${Math.round(ev.total)}점 ${ev.grade}\n“${nameMeaning(given)}”\n` +
       given.map(g => `${g.ch} ${g.hun} ${g.eum} — ${g.mean}`).join('\n');
   }
   let toastTimer;
@@ -109,9 +112,10 @@
     $('#shareText').focus(); $('#shareText').select();
   }
   async function share(text) {
-    const url = appUrl(), full = (text ? text + '\n\n' : '') + '오행 작명소에서 직접 지어 보기 ▶ ' + url;
+    T(text ? 'share_name' : 'share_app');
+    const url = appUrl(), full = (text ? text + '\n\n' : '') + '가치작명소에서 직접 지어 보기 ▶ ' + url;
     if (navigator.share) {
-      try { await navigator.share(text ? { title: '오행 작명소', text: full } : { title: '오행 작명소', text: '사주로 아기 이름 짓기 — 오행 작명소', url }); return; }
+      try { await navigator.share(text ? { title: '가치작명소', text: full } : { title: '가치작명소', text: '사주로 아기 이름 짓기 — 가치작명소', url }); return; }
       catch (e) { if (e && e.name === 'AbortError') return; }
     }
     try { await navigator.clipboard.writeText(full); toast('복사했어요! 카톡에 붙여넣기 하세요'); }
@@ -171,7 +175,7 @@
 
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-copy]'); if (!b) return;
-    const t = b.dataset.copy;
+    const t = b.dataset.copy; T('copy_name');
     const done = () => { const o = b.textContent; b.textContent = '복사됨'; setTimeout(() => (b.textContent = o), 1200); };
     const fail = () => { b.textContent = t; b.classList.add('sel'); }; // 복사 불가 시 텍스트를 보여 직접 선택하게 함
     if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, fail); else fail();
@@ -330,7 +334,8 @@
     document.querySelectorAll('[role=tabpanel]').forEach(p => (p.hidden = p.id !== 'p-' + t));
     try { localStorage.setItem('naming-tab', t); } catch (e) {}
   }
-  document.querySelectorAll('[role=tab]').forEach(b => b.addEventListener('click', () => { setTab(b.dataset.tab); window.scrollTo(0, 0); }));
+  document.querySelectorAll('[role=tab]').forEach(b => b.addEventListener('click', () => { setTab(b.dataset.tab); window.scrollTo(0, 0); T('tab', { tab: b.dataset.tab }); }));
+  document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('.card details') && e.target.open) T('detail_open'); }, true);
 
   // ---------- 이벤트 ----------
   ['', 'f-'].forEach(p => {
@@ -347,13 +352,17 @@
     e.preventDefault();
     if (!validate($('#recForm'))) return;
     showRecs(true); $('#moreBtn').hidden = false; $('#fsum').hidden = false;
+    T('recommend', { gender: $('#gender').value, has_time: !!$('#btime').value && !$('#tunknown').checked,
+      lunar: $('#cal').value === 'lunar', hangyeol: !!$('#hangSel').value, candidates: pool.length });
     if (mobile.matches) { setCollapsed(true); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
-  $('#moreBtn').addEventListener('click', () => { showRecs(false); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  $('#moreBtn').addEventListener('click', () => { showRecs(false); T('more', { round }); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   $('#findForm').addEventListener('submit', e => {
     e.preventDefault();
     if (!validate($('#findForm'))) return;
     showFind();
+    // 성씨는 빼고 이름 글자만 기록 (인기 이름 통계용)
+    T('find', { name: $('#wantName').value.replace(/\s/g, '').slice(0, 2), saju: $('#useSaju').checked, combos: findList.length });
     if (mobile.matches) $('#findMeta').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
   $('#findMore').addEventListener('click', moreFind);

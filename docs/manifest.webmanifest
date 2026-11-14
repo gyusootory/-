@@ -1,13 +1,19 @@
 {
-  "name": "오행 작명소",
-  "short_name": "오행작명소",
-  "description": "아기 생년월일시 사주로 오행·음양·81수리를 계산해 이름과 한자를 추천하고 뜻을 풀어 주는 작명 앱",
+  "id": "./",
+  "name": "가치작명소",
+  "short_name": "가치작명소",
+  "description": "아기 생년월일시 사주로 오행·음양·81수리를 계산해 이름과 한자를 추천하고 뜻을 풀어 주는 무료 작명 앱",
   "lang": "ko",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#eef1f4",
   "theme_color": "#b23a2b",
+  "categories": [
+    "lifestyle",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "icon-192.png",

@@ -3,22 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="아기 생년월일시 사주로 오행·음양·81수리를 계산해 이름과 한자를 추천하고 뜻을 풀어 주는 작명 앱">
-<meta property="og:title" content="오행 작명소">
-<meta property="og:description" content="아기 생년월일시 사주로 오행·음양·81수리를 계산해 이름과 한자를 추천하고 뜻을 풀어 주는 작명 앱">
+<meta name="description" content="아기 생년월일시 사주로 오행·음양·81수리를 계산해 이름과 한자를 추천하고 뜻을 풀어 주는 무료 작명 앱">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="가치작명소">
+<meta property="og:title" content="가치작명소 · 사주로 짓는 아기 이름">
+<meta property="og:description" content="아기 생년월일시 사주로 오행·음양·81수리를 계산해 이름과 한자를 추천하고 뜻을 풀어 주는 무료 작명 앱">
+<meta property="og:url" content="https://gyusootory.github.io/gachi-naming/">
+<meta property="og:image" content="https://gyusootory.github.io/gachi-naming/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#b23a2b">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="오행작명소">
+<meta name="apple-mobile-web-app-title" content="가치작명소">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>오행 작명소</title>
+<title>가치작명소</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Song+Myung&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Noto+Serif+KR:wght@600&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 /* 레이아웃: 왼쪽 '사주 명식' 고정 패널 + 오른쪽 이름 카드 목록 (모바일은 한 줄) — 쪽빛(인디고) 먹색 위에 오방색을 오행 표시에만 사용 */
 :root {
@@ -34,7 +41,7 @@
   --req-bg: #fbf0ee; --req-ring: rgb(178 58 43 / .22);
   --wood: #2f7a55; --fire: #c0392b; --earth: #a57412; --metal: #6c7480; --water: #1f4f8a;
   --good: #2f7a55; --half: #a57412; --bad: #b23a2b;
-  --f-display: "Song Myung", "Nanum Myeongjo", "Batang", serif;
+  --f-display: "Song Myung", "Noto Serif KR", "Nanum Myeongjo", "Batang", serif;
   --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
@@ -299,6 +306,9 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
   .weights { grid-template-columns: minmax(0, 1fr) }
 }
 
+.foot { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 4px; font-size: 12.5px; color: var(--muted) }
+.foot p { margin: 0 } .foot a { color: var(--accent) }
+.guidebox + .guidebox { margin-top: 0 }
 .guidebox { margin-top: 32px; border-top: 1px solid var(--line); padding-top: 14px }
 .guidebox > summary { font-size: 15px; min-height: 44px; display: flex; align-items: center }
 .guidebox .guide { padding-top: 12px }
@@ -309,8 +319,8 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 <div class="wrap">
   <header class="mast">
     <div class="brand">
-      <div class="seal" aria-hidden="true"><span>五</span><span>行</span><span>作</span><span>名</span></div>
-      <div><h1>오행 작명소</h1><p>사주 · 오행 · 음양 · 81수리 · 항렬자로 이름과 한자를 짓습니다</p></div>
+      <div class="seal" aria-hidden="true"><span>價</span><span>値</span><span>作</span><span>名</span></div>
+      <div><h1>가치작명소</h1><p>사주 · 오행 · 음양 · 81수리 · 항렬자로 이름과 한자를 짓습니다</p></div>
     </div>
     <div class="mast-r">
     <button class="appshare" type="button" id="appShare" aria-label="앱 공유하기">
@@ -450,6 +460,22 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
           </section>
         </div>
   </details>
+
+  <details class="guidebox">
+    <summary>오픈소스 라이선스</summary>
+    <div class="guide"><section>
+      <ul>
+        <li><b>korean-lunar-calendar</b> 0.4.0 — 음력·양력 변환 (한국천문연구원 기준 데이터) · MIT License</li>
+        <li><b>Unicode Unihan Database</b> — 한자 부수·획수 자료 · Unicode License v3</li>
+        <li><b>Song Myung · IBM Plex Sans KR · IBM Plex Mono</b> 글꼴 — SIL Open Font License 1.1</li>
+      </ul>
+    </section></div>
+  </details>
+
+  <footer class="foot">
+    <p><b>가치작명소</b> · 결과는 성명학 이론에 따른 참고용이며, 출생신고 전 대법원 인명용 한자 여부를 꼭 확인하세요.</p>
+    <p><a href="privacy.html">개인정보처리방침</a> · 입력한 생년월일과 성씨는 이 기기 안에서만 계산되고 저장·전송되지 않습니다.</p>
+  </footer>
 </div>
 
 <div id="toast" role="status" aria-live="polite" hidden></div>
@@ -834,6 +860,52 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
+<script src="config.js"></script>
+<script>
+// =====================================================================
+// 가치작명소 방문 통계 수집기 (Supabase에 익명 이벤트를 한 줄씩 기록)
+// - 보내는 것: 이벤트 이름, 익명 방문자 ID(무작위), 기기 종류, 유입 경로, 기능 사용 정보
+// - 보내지 않는 것: 생년월일, 태어난 시각, 성씨, 이름 전체(성+이름) 등 개인을 알아볼 수 있는 정보
+// - 설정(config.js)이 비어 있거나 웹사이트가 아닌 곳(파일·미리보기)에서 열면 아무것도 보내지 않음
+// =====================================================================
+(function () {
+  'use strict';
+  const C = window.GACHI_CONFIG || {};
+  const on = !!(C.supabaseUrl && C.supabaseAnonKey) && location.protocol === 'https:' && !/claude|anthropic/.test(location.hostname);
+  const get = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const set = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const rid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+  // 같은 브라우저를 다시 방문하면 같은 무작위 ID → '순 방문자' 계산용 (개인 정보 아님)
+  let visitor = get('gachi-vid');
+  const isNew = !visitor;
+  if (!visitor) { visitor = rid(); set('gachi-vid', visitor); }
+  const session = rid();
+  const device = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+  const appMode = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true ? 'app' : 'web';
+  let referrer = '';
+  try {
+    const q = new URLSearchParams(location.search).get('utm_source');
+    if (q) referrer = q.slice(0, 60);
+    else if (document.referrer) { const r = new URL(document.referrer); if (r.hostname !== location.hostname) referrer = r.hostname; }
+  } catch (e) {}
+
+  function track(event, meta) {
+    if (!on) return;
+    const body = JSON.stringify({ event, visitor, session, device, app_mode: appMode, referrer: referrer || null, meta: meta || {} });
+    try {
+      fetch(C.supabaseUrl.replace(/\/$/, '') + '/rest/v1/events', {
+        method: 'POST', keepalive: true, body,
+        headers: { apikey: C.supabaseAnonKey, Authorization: 'Bearer ' + C.supabaseAnonKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      }).catch(() => {});
+    } catch (e) {}
+  }
+  window.gachiTrack = track;
+  track('visit', { new_visitor: isNew });
+  window.addEventListener('appinstalled', () => track('install'));
+})();
+
+</script>
 <script>
 // =====================================================================
 // 화면 로직: 입력 → 사주 계산 → 이름 추천 / 한자 찾기 → 카드 렌더링
@@ -925,15 +997,18 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
     return t[(given[0].ch.charCodeAt(0) + given[1].ch.charCodeAt(0)) % t.length]();
   }
 
+  // 방문 통계 기록 (analytics.js가 없거나 꺼져 있으면 아무 일도 안 함)
+  const T = (e, m) => { if (window.gachiTrack) window.gachiTrack(e, m); };
+
   // ---------- 공유 ----------
-  const ARTIFACT_URL = 'https://claude.ai/artifact/4FN2maJB5BLmt48P3fAiS2';
+  const PUBLIC_URL = 'https://gyusootory.github.io/gachi-naming/';
   // 웹사이트로 올린 경우 그 주소를, 그 밖(파일·미리보기)에서는 공개 링크를 공유
   function appUrl() {
     const h = location.hostname;
-    return location.protocol === 'https:' && h && !/claude|anthropic/.test(h) ? location.origin + location.pathname : ARTIFACT_URL;
+    return location.protocol === 'https:' && h && !/claude|anthropic/.test(h) ? location.origin + location.pathname : PUBLIC_URL;
   }
   function cardText(ko, hz, given, ev) {
-    return `[오행 작명소 추천 이름]\n${ko} (${hz}) · ${Math.round(ev.total)}점 ${ev.grade}\n“${nameMeaning(given)}”\n` +
+    return `[가치작명소 추천 이름]\n${ko} (${hz}) · ${Math.round(ev.total)}점 ${ev.grade}\n“${nameMeaning(given)}”\n` +
       given.map(g => `${g.ch} ${g.hun} ${g.eum} — ${g.mean}`).join('\n');
   }
   let toastTimer;
@@ -946,9 +1021,10 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
     $('#shareText').focus(); $('#shareText').select();
   }
   async function share(text) {
-    const url = appUrl(), full = (text ? text + '\n\n' : '') + '오행 작명소에서 직접 지어 보기 ▶ ' + url;
+    T(text ? 'share_name' : 'share_app');
+    const url = appUrl(), full = (text ? text + '\n\n' : '') + '가치작명소에서 직접 지어 보기 ▶ ' + url;
     if (navigator.share) {
-      try { await navigator.share(text ? { title: '오행 작명소', text: full } : { title: '오행 작명소', text: '사주로 아기 이름 짓기 — 오행 작명소', url }); return; }
+      try { await navigator.share(text ? { title: '가치작명소', text: full } : { title: '가치작명소', text: '사주로 아기 이름 짓기 — 가치작명소', url }); return; }
       catch (e) { if (e && e.name === 'AbortError') return; }
     }
     try { await navigator.clipboard.writeText(full); toast('복사했어요! 카톡에 붙여넣기 하세요'); }
@@ -1008,7 +1084,7 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
 
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-copy]'); if (!b) return;
-    const t = b.dataset.copy;
+    const t = b.dataset.copy; T('copy_name');
     const done = () => { const o = b.textContent; b.textContent = '복사됨'; setTimeout(() => (b.textContent = o), 1200); };
     const fail = () => { b.textContent = t; b.classList.add('sel'); }; // 복사 불가 시 텍스트를 보여 직접 선택하게 함
     if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, fail); else fail();
@@ -1167,7 +1243,8 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
     document.querySelectorAll('[role=tabpanel]').forEach(p => (p.hidden = p.id !== 'p-' + t));
     try { localStorage.setItem('naming-tab', t); } catch (e) {}
   }
-  document.querySelectorAll('[role=tab]').forEach(b => b.addEventListener('click', () => { setTab(b.dataset.tab); window.scrollTo(0, 0); }));
+  document.querySelectorAll('[role=tab]').forEach(b => b.addEventListener('click', () => { setTab(b.dataset.tab); window.scrollTo(0, 0); T('tab', { tab: b.dataset.tab }); }));
+  document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('.card details') && e.target.open) T('detail_open'); }, true);
 
   // ---------- 이벤트 ----------
   ['', 'f-'].forEach(p => {
@@ -1184,13 +1261,17 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
     e.preventDefault();
     if (!validate($('#recForm'))) return;
     showRecs(true); $('#moreBtn').hidden = false; $('#fsum').hidden = false;
+    T('recommend', { gender: $('#gender').value, has_time: !!$('#btime').value && !$('#tunknown').checked,
+      lunar: $('#cal').value === 'lunar', hangyeol: !!$('#hangSel').value, candidates: pool.length });
     if (mobile.matches) { setCollapsed(true); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
-  $('#moreBtn').addEventListener('click', () => { showRecs(false); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  $('#moreBtn').addEventListener('click', () => { showRecs(false); T('more', { round }); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   $('#findForm').addEventListener('submit', e => {
     e.preventDefault();
     if (!validate($('#findForm'))) return;
     showFind();
+    // 성씨는 빼고 이름 글자만 기록 (인기 이름 통계용)
+    T('find', { name: $('#wantName').value.replace(/\s/g, '').slice(0, 2), saju: $('#useSaju').checked, combos: findList.length });
     if (mobile.matches) $('#findMeta').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
   $('#findMore').addEventListener('click', moreFind);
