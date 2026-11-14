@@ -398,6 +398,35 @@ summary { color: var(--gold); font-weight: 600 }
   #moreBtn { background: var(--band); color: var(--gold-hi); box-shadow: 0 10px 26px rgb(10 14 21 / .35); border: 1px solid rgb(201 168 106 / .35) }
 }
 
+
+/* 탭 상단 기능 소개: 한 줄 제목 + 3단계 칩 (작게, 화면 폭 전체) */
+.intro { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 16px;
+  background: var(--surface); box-shadow: var(--shadow); border: 1px solid rgb(201 168 106 / .28) }
+.intro-ic { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 600 19px var(--f-display);
+  color: var(--gold); background: var(--gold-soft); border: 1px solid var(--gold-hi) }
+.intro-tx { min-width: 0; display: grid; gap: 6px }
+.intro-t { font: 500 16.5px/1.35 var(--f-display); letter-spacing: -.005em; color: var(--ink); text-wrap: balance }
+.intro-t b { font-weight: 700; color: var(--gold) }
+.intro-s { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 6px; counter-reset: st; font-size: 12.5px; color: var(--muted) }
+.intro-s li { counter-increment: st; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap }
+.intro-s li::before { content: counter(st); width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center;
+  font: 600 10.5px var(--f-body); color: var(--accent-ink); background: var(--ink) }
+.intro-s li + li::after { content: none }
+.intro-s li:not(:last-child)::after { content: "›"; margin-left: 4px; color: var(--gold-hi); font-weight: 600 }
+/* 결과 자리 안내: 작은 한 줄 */
+.empty { display: flex !important; align-items: center; gap: 10px; padding: 16px 18px !important; box-shadow: none !important;
+  border: 1px dashed var(--line) !important; background: transparent !important; border-radius: 14px !important; color: var(--muted); font-size: 13.5px }
+.empty .empty-seal { width: 30px !important; height: 30px !important; font-size: 15px !important; flex: none }
+.empty p { margin: 0 }
+.panel > h2 { display: none }  /* 탭 상단 소개와 겹치므로 숨김 */
+@media (max-width: 370px) { .intro-ic { display: none } .intro-s { font-size: 11px; gap: 4px } .intro-s li { gap: 3px } .intro-s li:not(:last-child)::after { margin-left: 1px } .intro-t { font-size: 14px } }
+@media (max-width: 760px) {
+  .intro { padding: 12px 14px; gap: 12px; border-radius: 14px }
+  .intro-ic { width: 34px; height: 34px; font-size: 16px }
+  .intro-t { font-size: 15px }
+  .intro-s { font-size: 11.5px }
+}
+
 /* 홈 화면 앱으로 실행할 때만 보이는 시작 인트로 */
 #splash { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; align-content: center; gap: 22px; text-align: center;
   background: radial-gradient(60% 45% at 50% 42%, #1f2a3e 0%, #121826 55%, #0c111b 100%); color: #efe8d8; transition: opacity .5s ease }
@@ -436,6 +465,13 @@ summary { color: var(--gold); font-weight: 600 }
 
   <!-- 탭 ①: 생년월일시로 이름 추천 -->
   <div class="grid" role="tabpanel" id="p-rec" aria-labelledby="t-rec">
+    <div class="intro">
+      <span class="intro-ic" aria-hidden="true">名</span>
+      <div class="intro-tx">
+        <h2 class="intro-t">아이 생일을 넣으면 <b>이름을 추천</b>해 드려요</h2>
+        <ol class="intro-s"><li>생일 입력</li><li>이름 추천</li><li>5개씩 더 보기</li></ol>
+      </div>
+    </div>
     <form class="panel" id="recForm" autocomplete="off" novalidate>
       <h2>① 이름 추천 · 아기 정보</h2>
       <p class="reqnote"><em class="req-badge">필수</em> 표시 항목만 입력하면 추천받을 수 있어요</p>
@@ -475,10 +511,7 @@ summary { color: var(--gold); font-weight: 600 }
       <div class="cards" id="recOut">
         <div class="empty">
           <span class="empty-seal" aria-hidden="true">名</span>
-          <h4>아이 생일을 넣으면 이름을 추천해 드려요</h4>
-          <ol><li><b>성씨 · 성별 · 생년월일</b>을 입력하세요 <small>(태어난 시각을 알면 더 정확해요)</small></li>
-            <li><b>이름 추천 받기</b>를 누르세요</li>
-            <li>마음에 들 때까지 <b>다른 이름 5개 보기</b>로 새 이름을 받으세요</li></ol>
+          <p><b>이름 추천 받기</b>를 누르면 여기에 이름 5개가 나타나요 <small>(태어난 시각을 알면 더 정확해요)</small></p>
         </div>
       </div>
     </section>
@@ -486,6 +519,13 @@ summary { color: var(--gold); font-weight: 600 }
 
   <!-- 탭 ②: 원하는 이름 → 한자 추천 -->
   <div class="grid" role="tabpanel" id="p-find" aria-labelledby="t-find" hidden>
+    <div class="intro">
+      <span class="intro-ic" aria-hidden="true">字</span>
+      <div class="intro-tx">
+        <h2 class="intro-t">원하는 이름에 맞는 <b>한자를 찾아</b> 드려요</h2>
+        <ol class="intro-s"><li>한글 이름 입력</li><li>한자 추천</li><li>뜻·점수 비교</li></ol>
+      </div>
+    </div>
     <form class="panel" id="findForm" autocomplete="off" novalidate>
       <h2>② 원하는 이름 입력</h2>
       <p class="reqnote"><em class="req-badge">필수</em> 표시 항목만 입력하면 한자를 찾아 드려요</p>
@@ -514,10 +554,7 @@ summary { color: var(--gold); font-weight: 600 }
       <div class="cards" id="findOut">
         <div class="empty">
           <span class="empty-seal" aria-hidden="true">字</span>
-          <h4>원하는 이름에 맞는 한자를 찾아 드려요</h4>
-          <ol><li><b>성씨</b>를 고르고 <b>이름</b>을 한글로 입력하세요 <small>(예: 서윤)</small></li>
-            <li>사주까지 맞추려면 <b>생년월일시 반영</b>을 체크하세요</li>
-            <li><b>한자 추천 받기</b>를 누르면 점수 높은 조합부터 보여 드려요</li></ol>
+          <p><b>한자 추천 받기</b>를 누르면 점수 높은 조합부터 나타나요 <small>(사주까지 맞추려면 생년월일시 반영 체크)</small></p>
         </div>
       </div>
       <button class="btn ghost more" type="button" id="findMore" hidden>조합 6개 더 보기</button>

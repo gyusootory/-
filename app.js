@@ -96,7 +96,13 @@
   // 웹사이트로 올린 경우 그 주소를, 그 밖(파일·미리보기)에서는 공개 링크를 공유
   function appUrl() {
     const h = location.hostname;
-    return (location.protocol === 'https:' && h && !/claude|anthropic/.test(h) ? location.origin + location.pathname : PUBLIC_URL) + '?utm_source=share'; // 공유 링크 표시(통계) + 카톡이 미리보기를 새로 읽게 함
+    return (location.protocol === 'https:' && h && !/claude|anthropic/.test(h) ? location.origin + location.pathname : PUBLIC_URL) + '?utm_source=share' + ogVersion(); // 공유 링크 표시(통계) + 카톡이 미리보기를 새로 읽게 함
+  }
+  // og:image 주소의 ?v= 값(미리보기 버전)을 공유 링크에도 붙임 → 미리보기를 바꿀 때마다 카톡이 새로 읽음
+  function ogVersion() {
+    const m = document.querySelector('meta[property="og:image"]');
+    const v = m && (m.content.match(/[?&]v=([\w-]+)/) || [])[1];
+    return v ? '&v=' + v : '';
   }
   function cardText(ko, hz, given, ev) {
     return `[가치작명소 추천 이름]\n${ko} (${hz}) · ${Math.round(ev.total)}점 ${ev.grade}\n“${nameMeaning(given)}”\n` +
