@@ -193,6 +193,14 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 .act.sel { user-select: all }
 #toast { position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; max-width: calc(100% - 32px); text-align: center }
+#reportBox { position: fixed; inset: 0; z-index: 50; background: rgb(10 14 20 / .5); display: grid; place-items: center;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)) }
+#reportBox .sb { background: var(--surface); color: var(--ink); border-radius: 20px; padding: 20px; width: min(100%, 420px); display: grid; gap: 12px }
+#reportBox h3 { font: 600 20px var(--f-display); margin: 0 }
+#reportBox p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.6 }
+#reportBox .rp-note { font-size: 12px }
+.rp-link { background: none; border: 0; padding: 0; color: var(--gold); font: 600 13px var(--f-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer }
+.rp-inline { margin: 6px 0 0; font-size: 12.5px; color: var(--muted) }
 #shareBox { position: fixed; inset: 0; z-index: 50; background: rgb(10 14 20 / .5); display: grid; place-items: center;
   padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)) }
 #shareBox .sb { background: var(--surface); color: var(--ink); border-radius: 14px; padding: 18px; width: min(100%, 440px); display: grid; gap: 10px }
@@ -833,6 +841,19 @@ table.vs td:nth-child(2) { color: var(--ink) }
 </div>
 
 <div id="toast" role="status" aria-live="polite" hidden></div>
+<div id="reportBox" hidden>
+  <form class="sb" id="reportForm" role="dialog" aria-modal="true" aria-labelledby="rpTitle" novalidate>
+    <h3 id="rpTitle">없는 한자 제보</h3>
+    <p id="rpLead">찾는 한자가 목록에 없나요? 알려 주시면 확인해서 추가할게요.</p>
+    <div class="row">
+      <div class="field"><label for="rpEum">소리 (음)</label><input type="text" id="rpEum" maxlength="1" placeholder="예: 규"></div>
+      <div class="field"><label for="rpHanja">한자 <span class="opt">아는 경우</span></label><input type="text" id="rpHanja" maxlength="2" placeholder="예: 珪"></div>
+    </div>
+    <div class="field"><label for="rpHun">뜻 <span class="opt">선택</span></label><input type="text" id="rpHun" maxlength="12" placeholder="예: 홀 규, 서옥"></div>
+    <p class="rp-note">이름 전체나 개인정보는 보내지 않고, 위 글자 정보만 익명으로 전달돼요.</p>
+    <div class="cact"><button class="act" type="submit">제보 보내기</button><button class="act ghost" type="button" id="rpClose">닫기</button></div>
+  </form>
+</div>
 <div id="shareBox" hidden>
   <div class="sb" role="dialog" aria-modal="true" aria-labelledby="sbTitle">
     <h3 id="sbTitle">아래 글을 복사해서 보내세요</h3>
@@ -1401,7 +1422,7 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
     const none = { value: '__none', none: true };
     return {
       search: q => { q = q.trim().replace(/\(.*$/, '').trim(); const hit = q ? items.filter(h => h.ch === q || h.hun.includes(q) || h.mean.includes(q) || (h.hun + ' ' + h.eum).includes(q)) : items; return [...hit, none]; },
-      html: it => it.none ? '<em class="hnone">목록에 없어요</em>' : `<b class="hzc">${it.ch}</b><span class="hd">${esc(it.hun)} ${it.eum} · ${it.strokes}획</span>`,
+      html: it => it.none ? '<em class="hnone">목록에 없어요 · 고르면 제보할 수 있어요</em>' : `<b class="hzc">${it.ch}</b><span class="hd">${esc(it.hun)} ${it.eum} · ${it.strokes}획</span>`,
       label: it => it.none ? '목록에 없어요' : `${it.ch} (${it.hun} ${it.eum})`,
       byValue: v => v === '__none' ? none : items.find(h => h.value === v),
       exact: (q, hit) => hit.find(h => !h.none && h.ch === q),
@@ -1718,7 +1739,7 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
     const cand = syl.map(s => `<div class="cand"><h4>‘${s}’ 후보 한자 <span class="muted">${N.candidates(s).length}자</span></h4>
         <ul>${N.candidates(s).map(h => `<li>${elTag(h.el)}<b>${h.ch}</b> ${esc(h.hun)} ${h.eum} <span class="num">${h.strokes}획</span><small class="ck">${esc(h.mean)}</small></li>`).join('') || '<li class="muted">데이터에 없는 음입니다</li>'}</ul></div>`).join('');
     $('#candOut').innerHTML = cand;
-    if (missing.length) { out.innerHTML = `<p class="err">‘${missing.join(', ')}’ 음의 이름용 한자가 데이터에 없어 한자 조합을 만들 수 없습니다.</p>`; $('#findMore').hidden = true; $('#findMeta').textContent = ''; return; }
+    if (missing.length) { out.innerHTML = `<p class="rp-inline"><button type="button" class="rp-link" data-report="${missing[0]}" data-where="find">‘${missing[0]}’ 한자 제보하기</button> · 알려 주시면 추가할게요</p><p class="err">‘${missing.join(', ')}’ 음의 이름용 한자가 데이터에 없어 한자 조합을 만들 수 없습니다.</p>`; $('#findMore').hidden = true; $('#findMeta').textContent = ''; return; }
     findList = N.rankHanja(surname('f-'), syl, sj && !sj.error ? sj : null, null);
     findShown = 0; out.innerHTML = '';
     $('#findMeta').textContent = `${surname('f-').ko}${raw} · 가능한 한자 조합 ${findList.length}개를 점수순으로 정렬했습니다${sj && !sj.error ? ' (사주 반영)' : ' (사주 미반영)'}.`;
@@ -1847,6 +1868,35 @@ const SURNAMES = [["김","金",[8],["金"]],["이","李",[7],["木"]],["박","�
     setTab('rec'); markNeed(); updateSummary();
     showRecs(true); $('#fsum').hidden = false; if (mobile.matches) setCollapsed(true);
     window.scrollTo(0, 0); T('rename_go');
+  });
+
+  // ---------- 없는 한자 제보 (관리자 화면 '없는 한자 제보'에 모임) ----------
+  function openReport(eum, where) {
+    $('#rpEum').value = eum || ''; $('#rpHanja').value = ''; $('#rpHun').value = '';
+    $('#reportForm').dataset.where = where || '';
+    $('#rpLead').textContent = eum ? `‘${eum}’(으)로 읽는 한자 중 찾는 글자가 없나요? 알려 주시면 확인해서 추가할게요.` : '찾는 한자가 목록에 없나요? 알려 주시면 확인해서 추가할게요.';
+    $('#reportBox').hidden = false; setTimeout(() => $(eum ? '#rpHanja' : '#rpEum').focus(), 50);
+  }
+  document.addEventListener('click', e => { const b = e.target.closest('[data-report]'); if (b) openReport(b.dataset.report, b.dataset.where); });
+  $('#rpClose').addEventListener('click', () => ($('#reportBox').hidden = true));
+  $('#reportBox').addEventListener('click', e => { if (e.target.id === 'reportBox') $('#reportBox').hidden = true; });
+  $('#reportForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const eum = $('#rpEum').value.trim().slice(0, 1);
+    const hanja = [...$('#rpHanja').value].filter(c => /[㐀-鿿豈-﫿]/.test(c)).join('').slice(0, 2);   // 한자만 남김
+    const hun = $('#rpHun').value.trim().slice(0, 12);
+    if (!/^[가-힣]$/.test(eum) && !hanja) { toast('소리(음)나 한자 중 하나는 입력해 주세요'); return; }
+    T('hanja_report', { eum, hanja, hun, where: $('#reportForm').dataset.where || '' });
+    $('#reportBox').hidden = true; toast('제보해 주셔서 고마워요! 확인 후 추가할게요');
+  });
+  // 이름 비교 탭에서 '목록에 없어요'를 고르면 그 자리에서 제보 안내
+  document.addEventListener('change', e => {
+    const sel = e.target; if (!sel.matches || !sel.matches('#m-hz select, #c-hz select')) return;
+    const f = sel.closest('.field'); const old = f.querySelector('.rp-inline'); if (old) old.remove();
+    if (sel.value === '__none') {
+      const syl = (f.querySelector('label').textContent.match(/‘(.)’/) || [])[1] || '';
+      f.insertAdjacentHTML('beforeend', `<p class="rp-inline"><button type="button" class="rp-link" data-report="${syl}" data-where="compare">‘${syl}’ 한자 제보하기</button></p>`);
+    }
   });
 
   // ---------- 모바일: 명식 입력 접기/펼치기 ----------

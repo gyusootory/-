@@ -179,6 +179,14 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 .act.sel { user-select: all }
 #toast { position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; max-width: calc(100% - 32px); text-align: center }
+#reportBox { position: fixed; inset: 0; z-index: 50; background: rgb(10 14 20 / .5); display: grid; place-items: center;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)) }
+#reportBox .sb { background: var(--surface); color: var(--ink); border-radius: 20px; padding: 20px; width: min(100%, 420px); display: grid; gap: 12px }
+#reportBox h3 { font: 600 20px var(--f-display); margin: 0 }
+#reportBox p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.6 }
+#reportBox .rp-note { font-size: 12px }
+.rp-link { background: none; border: 0; padding: 0; color: var(--gold); font: 600 13px var(--f-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer }
+.rp-inline { margin: 6px 0 0; font-size: 12.5px; color: var(--muted) }
 #shareBox { position: fixed; inset: 0; z-index: 50; background: rgb(10 14 20 / .5); display: grid; place-items: center;
   padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)) }
 #shareBox .sb { background: var(--surface); color: var(--ink); border-radius: 14px; padding: 18px; width: min(100%, 440px); display: grid; gap: 10px }
@@ -819,6 +827,19 @@ table.vs td:nth-child(2) { color: var(--ink) }
 </div>
 
 <div id="toast" role="status" aria-live="polite" hidden></div>
+<div id="reportBox" hidden>
+  <form class="sb" id="reportForm" role="dialog" aria-modal="true" aria-labelledby="rpTitle" novalidate>
+    <h3 id="rpTitle">없는 한자 제보</h3>
+    <p id="rpLead">찾는 한자가 목록에 없나요? 알려 주시면 확인해서 추가할게요.</p>
+    <div class="row">
+      <div class="field"><label for="rpEum">소리 (음)</label><input type="text" id="rpEum" maxlength="1" placeholder="예: 규"></div>
+      <div class="field"><label for="rpHanja">한자 <span class="opt">아는 경우</span></label><input type="text" id="rpHanja" maxlength="2" placeholder="예: 珪"></div>
+    </div>
+    <div class="field"><label for="rpHun">뜻 <span class="opt">선택</span></label><input type="text" id="rpHun" maxlength="12" placeholder="예: 홀 규, 서옥"></div>
+    <p class="rp-note">이름 전체나 개인정보는 보내지 않고, 위 글자 정보만 익명으로 전달돼요.</p>
+    <div class="cact"><button class="act" type="submit">제보 보내기</button><button class="act ghost" type="button" id="rpClose">닫기</button></div>
+  </form>
+</div>
 <div id="shareBox" hidden>
   <div class="sb" role="dialog" aria-modal="true" aria-labelledby="sbTitle">
     <h3 id="sbTitle">아래 글을 복사해서 보내세요</h3>

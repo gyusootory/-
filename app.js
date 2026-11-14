@@ -135,7 +135,7 @@
     const none = { value: '__none', none: true };
     return {
       search: q => { q = q.trim().replace(/\(.*$/, '').trim(); const hit = q ? items.filter(h => h.ch === q || h.hun.includes(q) || h.mean.includes(q) || (h.hun + ' ' + h.eum).includes(q)) : items; return [...hit, none]; },
-      html: it => it.none ? '<em class="hnone">목록에 없어요</em>' : `<b class="hzc">${it.ch}</b><span class="hd">${esc(it.hun)} ${it.eum} · ${it.strokes}획</span>`,
+      html: it => it.none ? '<em class="hnone">목록에 없어요 · 고르면 제보할 수 있어요</em>' : `<b class="hzc">${it.ch}</b><span class="hd">${esc(it.hun)} ${it.eum} · ${it.strokes}획</span>`,
       label: it => it.none ? '목록에 없어요' : `${it.ch} (${it.hun} ${it.eum})`,
       byValue: v => v === '__none' ? none : items.find(h => h.value === v),
       exact: (q, hit) => hit.find(h => !h.none && h.ch === q),
@@ -452,7 +452,7 @@
     const cand = syl.map(s => `<div class="cand"><h4>‘${s}’ 후보 한자 <span class="muted">${N.candidates(s).length}자</span></h4>
         <ul>${N.candidates(s).map(h => `<li>${elTag(h.el)}<b>${h.ch}</b> ${esc(h.hun)} ${h.eum} <span class="num">${h.strokes}획</span><small class="ck">${esc(h.mean)}</small></li>`).join('') || '<li class="muted">데이터에 없는 음입니다</li>'}</ul></div>`).join('');
     $('#candOut').innerHTML = cand;
-    if (missing.length) { out.innerHTML = `<p class="err">‘${missing.join(', ')}’ 음의 이름용 한자가 데이터에 없어 한자 조합을 만들 수 없습니다.</p>`; $('#findMore').hidden = true; $('#findMeta').textContent = ''; return; }
+    if (missing.length) { out.innerHTML = `<p class="rp-inline"><button type="button" class="rp-link" data-report="${missing[0]}" data-where="find">‘${missing[0]}’ 한자 제보하기</button> · 알려 주시면 추가할게요</p><p class="err">‘${missing.join(', ')}’ 음의 이름용 한자가 데이터에 없어 한자 조합을 만들 수 없습니다.</p>`; $('#findMore').hidden = true; $('#findMeta').textContent = ''; return; }
     findList = N.rankHanja(surname('f-'), syl, sj && !sj.error ? sj : null, null);
     findShown = 0; out.innerHTML = '';
     $('#findMeta').textContent = `${surname('f-').ko}${raw} · 가능한 한자 조합 ${findList.length}개를 점수순으로 정렬했습니다${sj && !sj.error ? ' (사주 반영)' : ' (사주 미반영)'}.`;
@@ -581,6 +581,35 @@
     setTab('rec'); markNeed(); updateSummary();
     showRecs(true); $('#fsum').hidden = false; if (mobile.matches) setCollapsed(true);
     window.scrollTo(0, 0); T('rename_go');
+  });
+
+  // ---------- 없는 한자 제보 (관리자 화면 '없는 한자 제보'에 모임) ----------
+  function openReport(eum, where) {
+    $('#rpEum').value = eum || ''; $('#rpHanja').value = ''; $('#rpHun').value = '';
+    $('#reportForm').dataset.where = where || '';
+    $('#rpLead').textContent = eum ? `‘${eum}’(으)로 읽는 한자 중 찾는 글자가 없나요? 알려 주시면 확인해서 추가할게요.` : '찾는 한자가 목록에 없나요? 알려 주시면 확인해서 추가할게요.';
+    $('#reportBox').hidden = false; setTimeout(() => $(eum ? '#rpHanja' : '#rpEum').focus(), 50);
+  }
+  document.addEventListener('click', e => { const b = e.target.closest('[data-report]'); if (b) openReport(b.dataset.report, b.dataset.where); });
+  $('#rpClose').addEventListener('click', () => ($('#reportBox').hidden = true));
+  $('#reportBox').addEventListener('click', e => { if (e.target.id === 'reportBox') $('#reportBox').hidden = true; });
+  $('#reportForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const eum = $('#rpEum').value.trim().slice(0, 1);
+    const hanja = [...$('#rpHanja').value].filter(c => /[㐀-鿿豈-﫿]/.test(c)).join('').slice(0, 2);   // 한자만 남김
+    const hun = $('#rpHun').value.trim().slice(0, 12);
+    if (!/^[가-힣]$/.test(eum) && !hanja) { toast('소리(음)나 한자 중 하나는 입력해 주세요'); return; }
+    T('hanja_report', { eum, hanja, hun, where: $('#reportForm').dataset.where || '' });
+    $('#reportBox').hidden = true; toast('제보해 주셔서 고마워요! 확인 후 추가할게요');
+  });
+  // 이름 비교 탭에서 '목록에 없어요'를 고르면 그 자리에서 제보 안내
+  document.addEventListener('change', e => {
+    const sel = e.target; if (!sel.matches || !sel.matches('#m-hz select, #c-hz select')) return;
+    const f = sel.closest('.field'); const old = f.querySelector('.rp-inline'); if (old) old.remove();
+    if (sel.value === '__none') {
+      const syl = (f.querySelector('label').textContent.match(/‘(.)’/) || [])[1] || '';
+      f.insertAdjacentHTML('beforeend', `<p class="rp-inline"><button type="button" class="rp-link" data-report="${syl}" data-where="compare">‘${syl}’ 한자 제보하기</button></p>`);
+    }
   });
 
   // ---------- 모바일: 명식 입력 접기/펼치기 ----------
