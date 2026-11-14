@@ -433,6 +433,23 @@ summary { color: var(--gold); font-weight: 600 }
 .info-pop .tip { color: var(--muted); font-size: 12.5px }
 @media (prefers-reduced-motion: no-preference) { .info-pop:not([hidden]) { animation: pop-in .2s ease } @keyframes pop-in { from { opacity: 0; transform: translateY(-4px) } } }
 
+/* 점수순 페이지 넘기기 */
+.pager { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; padding-top: 4px }
+.pager button { min-width: 40px; height: 40px; padding: 0 12px; border-radius: 11px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  font: 600 14px var(--f-body); cursor: pointer; font-variant-numeric: tabular-nums }
+.pager button[aria-current="page"] { background: var(--ink); color: var(--accent-ink); border-color: var(--ink) }
+.pager button:disabled { opacity: .35; cursor: default }
+.pager .gap { color: var(--muted); padding: 0 2px }
+/* 저장 */
+.act.save { background: transparent; color: var(--ink); border-color: var(--line) }
+.act.save.on { background: var(--gold-soft); color: var(--gold); border-color: var(--gold-hi) }
+.act.del { color: var(--bad) }
+.cnt { font-style: normal; font: 700 10.5px var(--f-body); background: var(--seal); color: #fff; border-radius: 999px; padding: 1px 6px; margin-left: 3px; vertical-align: 1px }
+.grid.one { grid-template-columns: minmax(0, 1fr) }
+.sdate { font-size: 12px; color: var(--muted) }
+.scard .chars .ch { padding-bottom: 12px }
+@media (max-width: 760px) { .cact .act { padding: 10px 8px; font-size: 13.5px } .pager button { min-width: 38px; height: 40px; padding: 0 10px } }
+
 /* 탭 상단 기능 소개: 한 줄 제목 + 3단계 칩 (작게, 화면 폭 전체) */
 .intro { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 16px;
   background: var(--surface); box-shadow: var(--shadow); border: 1px solid rgb(201 168 106 / .28) }
@@ -513,6 +530,7 @@ summary { color: var(--gold); font-weight: 600 }
     <nav class="tabs" role="tablist">
       <button role="tab" data-tab="rec" id="t-rec" aria-selected="true" aria-controls="p-rec"><span class="ti" aria-hidden="true">名</span><span class="lf">① 이름 추천</span><span class="ls">이름 추천</span></button>
       <button role="tab" data-tab="find" id="t-find" aria-selected="false" aria-controls="p-find"><span class="ti" aria-hidden="true">字</span><span class="lf">② 이름으로 한자 찾기</span><span class="ls">한자 찾기</span></button>
+      <button role="tab" data-tab="saved" id="t-saved" aria-selected="false" aria-controls="p-saved"><span class="ti" aria-hidden="true">藏</span><span class="lf">③ 저장한 이름 <em class="cnt" hidden></em></span><span class="ls">저장 <em class="cnt" hidden></em></span></button>
     </nav>
     </div>
   </header>
@@ -570,14 +588,30 @@ summary { color: var(--gold); font-weight: 600 }
     <section class="sec">
       <div class="sechead">
         <div><h3>사주 맞춤 추천 이름</h3><p id="recMeta"></p></div>
-        <button class="btn ghost" type="button" id="moreBtn" hidden><span aria-hidden="true">↻</span> 다른 이름 5개 보기</button>
+        <button class="btn ghost" type="button" id="moreBtn" hidden>다음 5개 보기 <span aria-hidden="true">›</span></button>
       </div>
       <div class="cards" id="recOut">
         <div class="empty">
           <span class="empty-seal" aria-hidden="true">名</span>
-          <p><b>이름 추천 받기</b>를 누르면 여기에 이름 5개가 나타나요 <small>(태어난 시각을 알면 더 정확해요)</small></p>
+          <p><b>이름 추천 받기</b>를 누르면 점수 높은 순으로 이름이 나타나요 <small>(태어난 시각을 알면 더 정확해요)</small></p>
         </div>
       </div>
+      <nav class="pager" id="recPager" aria-label="추천 이름 페이지" hidden></nav>
+    </section>
+  </div>
+
+  <!-- 탭 ③: 저장한 이름 -->
+  <div class="grid one" role="tabpanel" id="p-saved" aria-labelledby="t-saved" hidden>
+    <div class="intro">
+      <span class="intro-ic" aria-hidden="true">藏</span>
+      <div class="intro-tx">
+        <h2 class="intro-t">마음에 든 이름을 <b>모아 두는 곳</b>이에요</h2>
+        <ol class="intro-s"><li>카드의 ♡ 저장</li><li>여기서 비교</li><li>가족과 공유</li></ol>
+      </div>
+    </div>
+    <section class="sec">
+      <div class="sechead"><div><h3>저장한 이름</h3><p id="savedMeta"></p></div></div>
+      <div class="cards" id="savedOut"></div>
     </section>
   </div>
 

@@ -202,10 +202,16 @@
   });
 
   // ---------- 이름 카드 ----------
-  function nameCard(item, rank, sur) {
+  function nameCard(item, rank, sur, from) {
     const { given, ev } = item;
     const fullKo = sur.ko + given.map(g => g.ko).join('');
     const fullH = sur.hanja + given.map(g => g.ch).join('');
+    const key = fullH;
+    // 저장 버튼을 눌렀을 때 쓸 정보 (점수는 이 순간의 사주 기준)
+    cardInfo.set(key, { key, ko: fullKo, hz: fullH, sur: { ko: sur.ko, hanja: sur.hanja }, from: from || 'rec',
+      given: given.map(g => ({ ch: g.ch, ko: g.ko, eum: g.eum, hun: g.hun, mean: g.mean, strokes: g.strokes, el: g.el })),
+      score: Math.round(ev.total), grade: ev.grade, meaning: nameMeaning(given), share: cardText(fullKo, fullH, given, ev) });
+    const isSaved = saved.some(x => x.key === key);
     const chars = [
       ...sur.hanja.split('').map((c, k) => ({ ch: c, ko: sur.ko[k] || sur.ko, sub: '성씨', strokes: sur.strokes[k], el: sur.els[k], surname: true })),
       ...given.map(g => ({ ch: g.ch, ko: g.ko, sub: `${g.hun} ${g.eum}`, strokes: g.strokes, el: g.el })),
@@ -243,8 +249,9 @@
         ${alts ? `<h4>같은 소리의 다른 한자 조합</h4><ul class="alts">${alts}</ul>` : ''}
       </details>
       <div class="cact">
-        <button class="act" type="button" data-share="${esc(cardText(fullKo, fullH, given, ev))}">이 이름 공유하기</button>
-        <button class="act ghost" type="button" data-copy="${esc(fullKo + ' ' + fullH)}">이름만 복사</button>
+        <button class="act save${isSaved ? ' on' : ''}" type="button" data-save="${esc(key)}" aria-pressed="${isSaved}">${isSaved ? '♥ 저장됨' : '♡ 저장'}</button>
+        <button class="act" type="button" data-share="${esc(cardText(fullKo, fullH, given, ev))}">공유하기</button>
+        <button class="act ghost" type="button" data-copy="${esc(fullKo + ' ' + fullH)}">이름 복사</button>
       </div>
     </article>`;
   }
@@ -257,8 +264,52 @@
     if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, fail); else fail();
   });
 
+  // ---------- 저장한 이름 (이 기기·브라우저에 보관) ----------
+  const SAVE_KEY = 'gachi-saved';
+  const cardInfo = new Map();
+  let saved = (() => { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '[]'); } catch (e) { return []; } })();
+  function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(saved)); return true; } catch (e) { return false; } }
+  function syncSaveButtons(key) {
+    const on = saved.some(x => x.key === key);
+    document.querySelectorAll('[data-save]').forEach(b => { if (b.dataset.save === key) { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.textContent = on ? '♥ 저장됨' : '♡ 저장'; } });
+  }
+  function renderSaved() {
+    document.querySelectorAll('.cnt').forEach(c => { c.textContent = saved.length || ''; c.hidden = !saved.length; });
+    const out = $('#savedOut'); if (!out) return;
+    $('#savedMeta').textContent = saved.length ? `${saved.length}개 · 최근 저장한 순서 · 점수는 저장할 때의 사주 기준` : '';
+    if (!saved.length) {
+      out.innerHTML = '<div class="empty"><span class="empty-seal" aria-hidden="true">藏</span><p>추천 카드의 <b>♡ 저장</b>을 누르면 여기에 모여요 <small>(이 휴대폰·브라우저에 보관돼요)</small></p></div>';
+      return;
+    }
+    const fmt = t => new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(t));
+    out.innerHTML = saved.slice().sort((a, b) => b.savedAt - a.savedAt).map(r => `<article class="card scard">
+      <header class="chead"><span class="sdate">${fmt(r.savedAt)} 저장 · ${r.from === 'find' ? '한자 찾기' : '이름 추천'}</span>
+        <div class="score" style="--p:${r.score}"><b>${r.score}</b><small>${esc(r.grade)}</small></div></header>
+      <div class="chars">${[...r.sur.hanja].map((c, k) => `<div class="ch sur"><span class="hz">${c}</span><span class="hk">${r.sur.ko[k] || r.sur.ko}</span><span class="hs">성씨</span></div>`).join('')}
+        ${r.given.map(g => `<div class="ch"><span class="hz">${g.ch}</span><span class="hk">${g.ko}</span><span class="hs">${esc(g.hun)} ${g.eum}</span></div>`).join('')}</div>
+      <div class="meaning"><p class="msent">“${esc(r.meaning)}”</p>
+        <ul class="mlist">${r.given.map(g => `<li><b>${g.ch}</b><span class="mh">${esc(g.hun)} ${g.eum}</span><span class="mk">${esc(g.mean)}</span></li>`).join('')}</ul></div>
+      <div class="cact">
+        <button class="act" type="button" data-share="${esc(r.share)}">공유하기</button>
+        <button class="act ghost" type="button" data-copy="${esc(r.ko + ' ' + r.hz)}">이름 복사</button>
+        <button class="act ghost del" type="button" data-unsave="${esc(r.key)}">삭제</button>
+      </div></article>`).join('');
+  }
+  document.addEventListener('click', e => {
+    const s = e.target.closest('[data-save]'), u = e.target.closest('[data-unsave]');
+    if (s) {
+      const key = s.dataset.save, i = saved.findIndex(x => x.key === key);
+      if (i >= 0) { saved.splice(i, 1); toast('저장을 취소했어요'); }
+      else { const info = cardInfo.get(key); if (!info) return; saved.push({ ...info, savedAt: Date.now() }); T('save_name');
+        toast(persist() ? '저장했어요 · 아래 ‘저장’ 탭에서 다시 볼 수 있어요' : '이 브라우저에서는 저장이 안 돼요 (개인정보 보호 모드 확인)'); }
+      persist(); syncSaveButtons(key); renderSaved();
+    } else if (u) {
+      const key = u.dataset.unsave; saved = saved.filter(x => x.key !== key); persist(); renderSaved(); syncSaveButtons(key); toast('삭제했어요');
+    }
+  });
+
   // ---------- 기능 1: 사주 맞춤 추천 ----------
-  let pool = [], shown = new Set();
+  let pool = [];
   function hangSpec() {
     const v = $('#hangSel').value; if (!v) return null;
     return { h: N.byChar(v), pos: +$('#hangPos').value };
@@ -288,34 +339,44 @@
       const r = N.rankHanja(sur, n.split(''), sj, fixed, true);
       return r.length ? { hangul: n, ...r[0], alts: r.slice(1, 4) } : null;
     }).filter(Boolean).sort((a, b) => b.ev.total - a.ev.total);
-    shown = new Set();
   }
-  function pickFive() {
-    const top = pool.slice(0, Math.max(30, Math.ceil(pool.length * 0.45))).filter(x => !shown.has(x.hangul));
-    let src = top.length >= 5 ? top : pool.filter(x => !shown.has(x.hangul));
-    let reset = false;
-    if (src.length < 5) { shown = new Set(); src = pool.slice(0, 30); reset = true; }
-    // 점수가 높을수록 뽑힐 확률이 높은 가중 무작위 추출
-    const pick = [], bag = [...src];
-    while (pick.length < 5 && bag.length) {
-      const w = bag.map(x => Math.pow(Math.max(x.ev.total - 50, 1), 3));
-      let r = Math.random() * w.reduce((a, b) => a + b, 0), i = 0;
-      while ((r -= w[i]) > 0 && i < bag.length - 1) i++; // 소수점 오차로 범위를 넘지 않게
-      pick.push(bag.splice(i, 1)[0]);
-    }
-    pick.sort((a, b) => b.ev.total - a.ev.total).forEach(x => shown.add(x.hangul));
-    return { pick, reset };
+  // 점수 높은 순으로 5개씩 페이지 넘기기 (같은 조건이면 언제나 같은 순서)
+  const PAGE = 5;
+  let recPage = 0;
+  function renderRecPage() {
+    const pages = Math.ceil(pool.length / PAGE);
+    recPage = Math.max(0, Math.min(recPage, pages - 1));
+    const from = recPage * PAGE, list = pool.slice(from, from + PAGE);
+    $('#recMeta').textContent = `후보 ${pool.length}개를 점수 높은 순으로 · ${from + 1}~${from + list.length}위`;
+    $('#recOut').innerHTML = list.map((x, k) => nameCard(x, from + k + 1, surname(), 'rec')).join('');
+    renderPager($('#recPager'), recPage, pages, n => goRecPage(n));
+    $('#moreBtn').hidden = recPage >= pages - 1;
   }
-  let round = 0;
+  function goRecPage(n) {
+    recPage = n; renderRecPage(); T('more', { page: recPage + 1 });
+    $('#recMeta').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  // 페이지 번호 줄: ‹ 1 … 4 5 6 … 18 ›
+  function renderPager(el, cur, pages, go) {
+    if (pages <= 1) { el.hidden = true; return; }
+    const nums = new Set([0, pages - 1, cur - 1, cur, cur + 1].filter(n => n >= 0 && n < pages));
+    const seq = [...nums].sort((a, b) => a - b);
+    let html = `<button type="button" data-p="${cur - 1}" ${cur === 0 ? 'disabled' : ''} aria-label="이전 페이지">‹ 이전</button>`;
+    seq.forEach((n, i) => {
+      if (i && n - seq[i - 1] > 1) html += '<span class="gap">…</span>';
+      html += `<button type="button" data-p="${n}"${n === cur ? ' aria-current="page"' : ''}>${n + 1}</button>`;
+    });
+    html += `<button type="button" data-p="${cur + 1}" ${cur >= pages - 1 ? 'disabled' : ''} aria-label="다음 페이지">다음 ›</button>`;
+    el.innerHTML = html; el.hidden = false;
+    el.onclick = e => { const b = e.target.closest('button[data-p]'); if (b && !b.disabled) go(+b.dataset.p); };
+  }
   function showRecs(rebuild) {
     const sj = readBirth();
     renderSaju(sj);
     if (!sj || sj.error) { $('#recOut').innerHTML = '<p class="muted">생년월일을 먼저 입력해 주세요.</p>'; return; }
-    if (rebuild) { buildPool(sj); round = 0; }
-    if (!pool.length) { $('#recOut').innerHTML = '<p class="muted">조건에 맞는 이름이 없습니다. 항렬자나 성별 조건을 바꿔 보세요.</p>'; return; }
-    const { pick, reset } = pickFive(); round = reset ? 1 : round + 1;
-    $('#recMeta').textContent = `${pool.length}개 후보 중 ${round}번째 추천 · 지금까지 ${shown.size}개 제안`;
-    $('#recOut').innerHTML = (reset ? '<p class="muted">상위 후보를 모두 보여드려 처음부터 다시 추천합니다.</p>' : '') + pick.map((x, k) => nameCard(x, k + 1, surname())).join('');
+    if (rebuild) { buildPool(sj); recPage = 0; }
+    if (!pool.length) { $('#recOut').innerHTML = '<p class="muted">조건에 맞는 이름이 없습니다. 항렬자나 성별 조건을 바꿔 보세요.</p>'; $('#recPager').hidden = true; $('#moreBtn').hidden = true; return; }
+    renderRecPage();
   }
 
   // ---------- 기능 2: 한자 찾기 ----------
@@ -345,7 +406,7 @@
   }
   function moreFind() {
     const next = findList.slice(findShown, findShown + 6);
-    $('#findOut').insertAdjacentHTML('beforeend', next.map((x, k) => nameCard(x, findShown + k + 1, surname('f-'))).join(''));
+    $('#findOut').insertAdjacentHTML('beforeend', next.map((x, k) => nameCard(x, findShown + k + 1, surname('f-'), 'find')).join(''));
     findShown += next.length;
     $('#findMore').hidden = findShown >= findList.length;
   }
@@ -417,6 +478,7 @@
     document.querySelectorAll('[role=tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
     document.querySelectorAll('[role=tabpanel]').forEach(p => (p.hidden = p.id !== 'p-' + t));
     try { localStorage.setItem('naming-tab', t); } catch (e) {}
+    if (t === 'saved') renderSaved();
   }
   document.querySelectorAll('[role=tab]').forEach(b => b.addEventListener('click', () => { setTab(b.dataset.tab); window.scrollTo(0, 0); T('tab', { tab: b.dataset.tab }); }));
   document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('.card details') && e.target.open) T('detail_open'); }, true);
@@ -435,12 +497,12 @@
   $('#recForm').addEventListener('submit', e => {
     e.preventDefault();
     if (!validate($('#recForm'))) return;
-    showRecs(true); $('#moreBtn').hidden = false; $('#fsum').hidden = false;
+    showRecs(true); $('#fsum').hidden = false;
     T('recommend', { gender: $('#gender').value, has_time: !!$('#btime').value && !$('#tunknown').checked,
       lunar: $('#cal').value === 'lunar', hangyeol: !!$('#hangSel').value, candidates: pool.length });
     if (mobile.matches) { setCollapsed(true); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
-  $('#moreBtn').addEventListener('click', () => { showRecs(false); T('more', { round }); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  $('#moreBtn').addEventListener('click', () => goRecPage(recPage + 1));
   $('#findForm').addEventListener('submit', e => {
     e.preventDefault();
     if (!validate($('#findForm'))) return;
@@ -474,6 +536,7 @@
   markNeed();
   renderSaju(null);
   let tab = 'rec'; try { tab = localStorage.getItem('naming-tab') || 'rec'; } catch (e) {}
-  if (tab !== 'rec' && tab !== 'find') tab = 'rec';
+  if (!['rec', 'find', 'saved'].includes(tab)) tab = 'rec';
   setTab(tab);
+  renderSaved();
 })();
