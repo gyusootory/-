@@ -249,6 +249,13 @@ td.r, th.r { text-align: right }
   const HSET = new Set(typeof HANJA !== 'undefined' ? HANJA.map(h => h[0]) : []);
   const EUMN = {}; if (typeof HANJA !== 'undefined') HANJA.forEach(h => (EUMN[h[1]] = (EUMN[h[1]] || 0) + 1));
   const ADDED_AT = {}; if (typeof HANJA_UPDATES !== 'undefined') HANJA_UPDATES.forEach(u => u.chars.forEach(c => (ADDED_AT[c[0]] = u.date)));
+  // 소리 + 뜻(훈)으로 앱 한자 찾기: 띄어쓰기·끝의 소리 글자는 무시 ("옥돌 현", "옥돌현", "옥돌" 모두 → 玹)
+  const findByHun = (eum, w) => {
+    let n = String(w || '').replace(/\s+/g, ''); if (n.length > 1 && n.endsWith(eum)) n = n.slice(0, -1);
+    if (!n || typeof HANJA === 'undefined') return null;
+    const h = HANJA.find(x => x[1] === eum && (x[2] === n || (n.length >= 2 && (x[2].includes(n) || n.includes(x[2])))));
+    return h ? h[0] : null;
+  };
   // 한자를 모르는 제보 등은 관리자가 직접 '처리 완료'로 표시 (이 브라우저에 보관)
   const doneGet = () => { try { return new Set(JSON.parse(localStorage.getItem('gachi-admin-done') || '[]')); } catch (e) { return new Set(); } };
   const doneSet = s => { try { localStorage.setItem('gachi-admin-done', JSON.stringify([...s])); } catch (e) {} };
@@ -303,7 +310,7 @@ td.r, th.r { text-align: right }
         if (rnd() < .3) out.push({ ...base, created_at: t.toISOString(), event: 'tab', meta: { tab: ['find', 'mine', 'saved', 'rec'][Math.floor(rnd() * 4)] } });
         if (rnd() < .15) { out.push({ ...base, created_at: t.toISOString(), event: 'mine', meta: { score: Math.round(50 + rnd() * 45), cand: rnd() < .4 } }); if (rnd() < .3) out.push({ ...base, created_at: t.toISOString(), event: 'rename_go', meta: {} }); }
         if (rnd() < .18) out.push({ ...base, created_at: t.toISOString(), event: 'save_name', meta: {} });
-        if (rnd() < .03) { const R = [['규', '珪', '홀 규'], ['자', '', ''], ['현', '玹', '옥돌 현'], ['총', '聰', '총명할']][Math.floor(rnd() * 4)]; out.push({ ...base, created_at: t.toISOString(), event: 'hanja_report', meta: { eum: R[0], hanja: R[1], hun: R[2], where: rnd() < .5 ? 'compare' : 'find' } }); }
+        if (rnd() < .03) { const R = [['규', '珪', '홀 규'], ['자', '', ''], ['현', '玹', '옥돌 현'], ['총', '聰', '총명할'], ['현', '', '옥돌 현']][Math.floor(rnd() * 5)]; out.push({ ...base, created_at: t.toISOString(), event: 'hanja_report', meta: { eum: R[0], hanja: R[1], hun: R[2], where: rnd() < .5 ? 'compare' : 'find' } }); }
         if (rnd() < .35) out.push({ ...base, created_at: t.toISOString(), event: 'find', meta: { name: names[Math.floor(rnd() * rnd() * names.length)] } });
         if (rnd() < .12) out.push({ ...base, created_at: t.toISOString(), event: rnd() < .5 ? 'share_name' : 'share_app', meta: {} });
         if (rnd() < .2) out.push({ ...base, created_at: t.toISOString(), event: 'detail_open', meta: {} });
@@ -378,7 +385,13 @@ td.r, th.r { text-align: right }
     const recent3 = Date.now() - 3 * 86400000, done = doneGet();
     const status = g => {
       const k = g.eum + '|' + g.hanja;
-      if (g.hanja && HSET.has(g.hanja)) return { st: 'added', html: `<span class="st ok">✅ 추가됨${ADDED_AT[g.hanja] ? ' · ' + ADDED_AT[g.hanja].slice(5).replace('-', '.') : ''}</span>` };
+      const okHtml = c => `<span class="st ok">✅ 추가됨 ${c}${ADDED_AT[c] ? ' · ' + ADDED_AT[c].slice(5).replace('-', '.') : ''}</span>`;
+      if (g.hanja && [...g.hanja].every(c => HSET.has(c))) return { st: 'added', html: okHtml(g.hanja) };
+      // 한자를 모르고 '소리 + 뜻'만 적은 제보 → 같은 소리·같은 뜻의 한자가 앱에 있으면 추가된 것으로 판정 (예: 현 + 옥돌 → 玹)
+      if (!g.hanja && g.eum && g.hun.size) {
+        const found = [...g.hun].map(w => findByHun(g.eum, w));
+        if (found.every(Boolean)) return { st: 'added', html: okHtml([...new Set(found)].join('')) };
+      }
       if (done.has(k)) return { st: 'done', html: `<span class="st ok">✔ 처리 완료</span> <button type="button" class="mini" data-undone="${esc(k)}">되돌리기</button>` };
       return { st: 'wait', html: `<span class="st wait">대기</span> <button type="button" class="mini" data-done="${esc(k)}">처리 완료로 표시</button>` };
     };
