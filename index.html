@@ -380,6 +380,9 @@ summary { color: var(--gold); font-weight: 600 }
 .guide h3 { font-weight: 600 }
 .guidebox > summary { color: var(--ink) }
 .foot a { color: var(--gold) }
+/* 관리자 입구: 하단 오른쪽의 아주 작은 점 (아는 사람만 누름) */
+.foot .adm { justify-self: end; width: 32px; height: 32px; margin: 2px -8px -8px 0; display: grid; place-items: center; -webkit-tap-highlight-color: transparent }
+.foot .adm::after { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--muted); opacity: .3 }
 #shareBox .sb { border-radius: 20px }
 #toast { background: var(--band); color: var(--band-ink); box-shadow: 0 8px 24px rgb(0 0 0 / .25) }
 .fsum { border-radius: 14px }
@@ -836,6 +839,7 @@ table.vs td:nth-child(2) { color: var(--ink) }
   <footer class="foot">
     <p><b>가치작명소</b> · 결과는 성명학 이론에 따른 참고용이며, 출생신고 전 대법원 인명용 한자 여부를 꼭 확인하세요.</p>
     <p><a href="privacy.html">개인정보처리방침</a> · 입력한 생년월일과 성씨는 이 기기 안에서만 계산되고 저장·전송되지 않습니다.</p>
+    <a class="adm" href="admin.html" aria-label="관리자" title="관리자" rel="nofollow"></a>
   </footer>
 </div>
 
