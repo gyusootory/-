@@ -87,3 +87,24 @@ js += '// HANJA_UPDATES: 한자 추가 안내 [{date, chars:[[한자, 음, 훈]]
 js += 'const HANJA_UPDATES = ' + json.dumps([{'date': u['date'], 'chars': [[c, byc[c][1], byc[c][2]] for c in u['chars']]} for u in ups], ensure_ascii=False, separators=(',',':')) + ';\n'
 open(os.path.join(ROOT,'hanja-data.js'),'w',encoding='utf-8').write(js)
 print(len(out), 'hanja,', len(sur), 'surnames')
+
+# ---------- 관리자 화면용: 한자 한 글자를 넣으면 원획·부수·자원오행·소리를 자동으로 채우는 사전 ----------
+# 한국 소리(kHangul)가 있는 한자만 담음. 형식: "한자 부수번호 원획 소리들" 을 줄바꿈으로 연결
+lines = []
+for ch, rs, tot, hg in con.execute("select character,kRSKangXi,kTotalStrokes,kHangul from unihan where kRSKangXi is not null and kHangul is not null and kHangul<>''"):
+    try:
+        r, res = rs.split()[0].split('.'); r, res = int(r.rstrip("'")), int(res)
+        t = int(tot.split()[0])
+    except Exception:
+        continue
+    won = NUM.get(ch) or FIX.get(ch) or (rad_strokes(r) + res if res > 0 else t)
+    sounds = ''.join(dict.fromkeys(s.split(':')[0] for s in hg.split()))
+    lines.append(f'{ch}{r},{won},{sounds}')
+el_r = {}
+for r, e in ELEM.items(): el_r.setdefault(e, []).append(r)
+adm = '// 자동 생성 파일 (tools/build_data.py) — 관리자 화면 전용 한자 사전\n'
+adm += 'const HZ_ELEM_BY_RAD = ' + json.dumps({str(r): e for r, e in ELEM.items()}, separators=(',', ':')) + ';\n'
+adm += 'const HZ_ELEM_OVR = ' + json.dumps(OVR, ensure_ascii=False, separators=(',', ':')) + ';\n'
+adm += 'const HZ_DICT = ' + json.dumps('\n'.join(lines), ensure_ascii=False) + ';\n'
+open(os.path.join(ROOT, 'hanja-dict.js'), 'w', encoding='utf-8').write(adm)
+print('관리자 사전', len(lines), '자,', round(len(adm.encode()) / 1024), 'KB')

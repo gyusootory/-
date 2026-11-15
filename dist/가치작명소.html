@@ -1319,7 +1319,15 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
 (function () {
   'use strict';
   const N = window.Naming;
-  N.index(HANJA);
+  // ---------- 관리자가 추가한 한자 (Supabase hanja_extra) ----------
+  // 앞에 받아 둔 목록을 먼저 합치고(인터넷이 없어도 동작), 서버에서 새 목록을 받으면 다시 합침
+  const EXTRA_KEY = 'gachi-extra';
+  let EXTRA = []; try { EXTRA = JSON.parse(localStorage.getItem(EXTRA_KEY) || '[]'); } catch (e) {}
+  function mergeExtra(rows) {
+    rows.forEach(r => { if (r && r.ch && r.eum && !HANJA.some(h => h[0] === r.ch && h[1] === r.eum)) HANJA.push([r.ch, r.eum, r.hun, +r.strokes, r.elem, +r.radical || 0, r.meaning || r.hun]); });
+    N.index(HANJA);
+  }
+  mergeExtra(EXTRA);
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const EL_CLASS = { 木: 'wood', 火: 'fire', 土: 'earth', 金: 'metal', 水: 'water' };
@@ -2134,17 +2142,34 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
   setCollapsed(false);
   markNeed();
   renderSaju(null);
-  // 상단 한 줄 공지: 가장 최근 한자 추가 소식 (X를 누르면 그 업데이트는 다시 안 보임)
-  (function hanjaNotice() {
-    if (typeof HANJA_UPDATES === 'undefined' || !HANJA_UPDATES.length) return;
-    const u = HANJA_UPDATES[HANJA_UPDATES.length - 1], KEY = 'gachi-notice-off';
-    try { if (localStorage.getItem(KEY) === u.date) return; } catch (e) {}
-    const d = new Date(u.date + 'T00:00:00'), W = '일월화수목금토';
-    const list = u.chars.map(c => `${esc(c[2])} ‘${esc(c[1])}’<span class="nb-h">${c[0]}</span>`).join(', ');
+  // ---------- 상단 한 줄 공지: 가장 최근에 추가된 한자 (X를 누르면 그 날짜 공지는 다시 안 보임) ----------
+  const kstDate = t => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(new Date(t));
+  function renderNotice() {
+    const g = {};
+    (typeof HANJA_UPDATES !== 'undefined' ? HANJA_UPDATES : []).forEach(u => u.chars.forEach(c => (g[u.date] = g[u.date] || []).push(c)));
+    EXTRA.filter(r => r.notice !== false && r.created_at).forEach(r => { const d = kstDate(r.created_at); (g[d] = g[d] || []).push([r.ch, r.eum, r.hun]); });
+    const date = Object.keys(g).sort().pop(), KEY = 'gachi-notice-off';
+    const old = document.querySelector('.notice'); if (old) old.remove();
+    if (!date) return;
+    try { if (localStorage.getItem(KEY) === date) return; } catch (e) {}
+    const d = new Date(date + 'T00:00:00'), W = '일월화수목금토';
+    const list = g[date].map(c => `${esc(c[2])} ‘${esc(c[1])}’<span class="nb-h">${esc(c[0])}</span>`).join(', ');
     const el = document.createElement('div'); el.className = 'notice'; el.setAttribute('role', 'status');
     el.innerHTML = `<span class="nb-tag">공지</span><p>${d.getMonth() + 1}/${d.getDate()}(${W[d.getDay()]}) 추가된 한자 : ${list}</p><button type="button" class="nb-x" aria-label="공지 닫기">✕</button>`;
     document.querySelector('.mast').after(el);
-    el.querySelector('.nb-x').addEventListener('click', () => { try { localStorage.setItem(KEY, u.date); } catch (e) {} el.remove(); });
+    el.querySelector('.nb-x').addEventListener('click', () => { try { localStorage.setItem(KEY, date); } catch (e) {} el.remove(); });
+  }
+  renderNotice();
+  (function fetchExtra() {
+    const C = window.GACHI_CONFIG || {};
+    if (!C.supabaseUrl || !C.supabaseAnonKey || location.protocol !== 'https:') return;
+    fetch(C.supabaseUrl.replace(/\/$/, '') + '/rest/v1/hanja_extra?select=ch,eum,hun,strokes,elem,radical,meaning,notice,created_at&order=created_at.asc',
+      { headers: Object.assign({ apikey: C.supabaseAnonKey }, /^eyJ/.test(C.supabaseAnonKey) ? { Authorization: 'Bearer ' + C.supabaseAnonKey } : {}) })
+      .then(r => r.ok ? r.json() : null).then(rows => {
+        if (!Array.isArray(rows)) return;
+        EXTRA = rows; try { localStorage.setItem(EXTRA_KEY, JSON.stringify(rows)); } catch (e) {}
+        mergeExtra(rows); renderNotice();
+      }).catch(() => {});
   })();
   let tab = 'rec'; try { tab = localStorage.getItem('naming-tab') || 'rec'; } catch (e) {}
   if (!['rec', 'find', 'mine', 'saved'].includes(tab)) tab = 'rec';

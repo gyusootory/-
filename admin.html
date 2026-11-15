@@ -52,6 +52,18 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .card h2 { font-size: 15px; font-weight: 600 }
 .card .sub { margin: -6px 0 0; font-size: 12.5px; color: var(--muted) }
 
+/* 한자 추가 */
+.addgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px 12px; align-items: end }
+.addgrid .wide { grid-column: 1 / -1 }
+.addgrid input:not([type=checkbox]), .addgrid select { width: 100%; font: 16px var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; min-height: 44px }
+.addgrid #aCh { font: 600 24px var(--f-display); padding-block: 4px }
+.addgrid small { font-size: 12px; color: var(--muted); min-height: 1em }
+.addgrid .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap }
+.chk { display: flex; align-items: center; gap: 8px; font-size: 13.5px }
+.amsg { font-size: 13px; font-weight: 600 } .amsg.ok { color: var(--good) } .amsg.bad { color: var(--seal) }
+.setup-note { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--sunk); font-size: 13px; line-height: 1.6 }
+.mini.add { border-color: var(--accent); color: var(--ink); font-weight: 700 }
+
 /* 로그인·설정 */
 .narrow { max-width: 420px; margin: 24px auto 0; width: 100% }
 .field { display: grid; gap: 5px } .field label { font-size: 13px; font-weight: 500 }
@@ -165,9 +177,27 @@ td.r, th.r { text-align: right }
 
     <div class="kpis" id="kpis"></div>
 
+    <section class="card" id="addCard">
+      <h2>한자 추가 · 앱 공지</h2>
+      <p class="sub">한자 한 글자를 넣으면 <b>획수·오행·소리가 자동으로</b> 채워져요 · ‘앱에 추가’를 누르면 앱 한자 목록에 바로 들어가고, 앱 상단에 <b>‘추가된 한자’ 공지가 자동으로</b> 떠요</p>
+      <p class="setup-note" id="addSetup" hidden></p>
+      <form id="addForm" class="addgrid" novalidate autocomplete="off">
+        <div class="field"><label for="aCh">한자</label><input id="aCh" maxlength="2" placeholder="例 羅"><small id="aChHint"></small></div>
+        <div class="field"><label for="aEum">소리(음)</label><input id="aEum" maxlength="1" placeholder="나"><small id="aEumHint"></small></div>
+        <div class="field"><label for="aHun">뜻(훈)</label><input id="aHun" maxlength="12" placeholder="새그물"><small>&nbsp;</small></div>
+        <div class="field"><label for="aStrokes">원획</label><input id="aStrokes" type="number" min="1" max="64" inputmode="numeric"><small>&nbsp;</small></div>
+        <div class="field"><label for="aElem">자원오행</label><select id="aElem"><option value="">선택</option><option>木</option><option>火</option><option>土</option><option>金</option><option>水</option></select><small>&nbsp;</small></div>
+        <div class="field wide"><label for="aMean">이름 풀이 문구 <span class="muted">(선택 · 비우면 뜻으로 대신)</span></label><input id="aMean" maxlength="40" placeholder="예: 비단처럼 곱고 넓게 펼쳐지는 기운"></div>
+        <label class="chk wide"><input type="checkbox" id="aNotice" checked> 앱 상단 공지에 올리기</label>
+        <div class="wide row"><button class="btn" id="aSave" type="submit">앱에 추가</button><span id="aMsg" class="amsg" role="status"></span></div>
+      </form>
+      <h3>관리자 화면에서 추가한 한자</h3>
+      <div class="tw" id="extraList"></div>
+    </section>
+
     <section class="card" id="repCard">
       <h2>없는 한자 제보</h2>
-      <p class="sub">사용자가 알려 준 글자 · <b>대기</b>가 위로 · 앱 데이터에 들어간 한자는 <b>자동으로 ‘추가됨’</b> · 한자를 모르는 제보는 직접 ‘처리 완료’로 표시 <span id="repSummary"></span></p>
+      <p class="sub">사용자가 알려 준 글자 · <b>대기</b>가 위로 · 앱 데이터에 들어간 한자는 <b>자동으로 ‘추가됨’</b> · <b>‘한자 추가’</b>를 누르면 위 칸에 자동으로 채워져요 · 추가하지 않을 제보는 ‘처리 완료’ <span id="repSummary"></span></p>
       <div class="tw" id="reports"></div>
     </section>
 
@@ -233,6 +263,7 @@ td.r, th.r { text-align: right }
 
 <script src="config.js"></script>
 <script src="hanja-data.js"></script>
+<script src="hanja-dict.js"></script>
 <script>
 (function () {
   'use strict';
@@ -249,6 +280,14 @@ td.r, th.r { text-align: right }
   const HSET = new Set(typeof HANJA !== 'undefined' ? HANJA.map(h => h[0]) : []);
   const EUMN = {}; if (typeof HANJA !== 'undefined') HANJA.forEach(h => (EUMN[h[1]] = (EUMN[h[1]] || 0) + 1));
   const ADDED_AT = {}; if (typeof HANJA_UPDATES !== 'undefined') HANJA_UPDATES.forEach(u => u.chars.forEach(c => (ADDED_AT[c[0]] = u.date)));
+  const kstDate = t => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(new Date(t));
+  let EXTRA = [], EXTRA_OK = null;   // 관리자 화면에서 추가한 한자(서버 hanja_extra 표)
+  function absorbExtra(rows) {
+    rows.forEach(r => {
+      if (!HANJA.some(h => h[0] === r.ch && h[1] === r.eum)) { HANJA.push([r.ch, r.eum, r.hun, r.strokes, r.elem, r.radical || 0, r.meaning || r.hun]); EUMN[r.eum] = (EUMN[r.eum] || 0) + 1; }
+      HSET.add(r.ch); ADDED_AT[r.ch] = ADDED_AT[r.ch] || kstDate(r.created_at);
+    });
+  }
   // 소리 + 뜻(훈)으로 앱 한자 찾기: 띄어쓰기·끝의 소리 글자는 무시 ("옥돌 현", "옥돌현", "옥돌" 모두 → 玹)
   const findByHun = (eum, w) => {
     let n = String(w || '').replace(/\s+/g, ''); if (n.length > 1 && n.endsWith(eum)) n = n.slice(0, -1);
@@ -257,8 +296,10 @@ td.r, th.r { text-align: right }
     return h ? h[0] : null;
   };
   // 한자를 모르는 제보 등은 관리자가 직접 '처리 완료'로 표시 (이 브라우저에 보관)
-  const doneGet = () => { try { return new Set(JSON.parse(localStorage.getItem('gachi-admin-done') || '[]')); } catch (e) { return new Set(); } };
-  const doneSet = s => { try { localStorage.setItem('gachi-admin-done', JSON.stringify([...s])); } catch (e) {} };
+  const localDone = () => { try { return new Set(JSON.parse(localStorage.getItem('gachi-admin-done') || '[]')); } catch (e) { return new Set(); } };
+  const localDoneSet = s => { try { localStorage.setItem('gachi-admin-done', JSON.stringify([...s])); } catch (e) {} };
+  let SERVER_DONE = null;   // 서버(report_done 표)에 보관된 처리 완료 목록 · 표가 없으면 null → 이 브라우저에만 보관
+  const doneGet = () => new Set([...localDone(), ...(SERVER_DONE || [])]);
 
   function show(v) { ['vSetup', 'vLogin', 'vDash'].forEach(id => ($('#' + id).hidden = id !== v)); $('#logout').hidden = v !== 'vDash' || demo; }
 
@@ -393,7 +434,7 @@ td.r, th.r { text-align: right }
         if (found.every(Boolean)) return { st: 'added', html: okHtml([...new Set(found)].join('')) };
       }
       if (done.has(k)) return { st: 'done', html: `<span class="st ok">✔ 처리 완료</span> <button type="button" class="mini" data-undone="${esc(k)}">되돌리기</button>` };
-      return { st: 'wait', html: `<span class="st wait">대기</span> <button type="button" class="mini" data-done="${esc(k)}">처리 완료로 표시</button>` };
+      return { st: 'wait', html: `<span class="st wait">대기</span> <button type="button" class="mini add" data-add="${esc(g.eum + '|' + g.hanja + '|' + ([...g.hun][0] || ''))}">한자 추가</button> <button type="button" class="mini" data-done="${esc(k)}">처리 완료</button>` };
     };
     const groups = Object.values(rg).map(g => ({ ...g, s: status(g) }));
     const order = { wait: 0, done: 1, added: 2 };
@@ -465,6 +506,7 @@ td.r, th.r { text-align: right }
     $('#dashErr').hidden = true; $('#updated').textContent = '불러오는 중…';
     try {
       const rows = demo ? demoEvents(since) : await fetchEvents(since);
+      await Promise.all([loadExtra(), loadDone()]);
       render(rows, since); lastRows = rows; lastSince = since;
       $('#updated').textContent = '갱신 ' + new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(new Date()) + ` · 기록 ${fmt(rows.length)}건`;
       if (!demo && !rows.length) { $('#dashErr').textContent = '이 기간에 기록이 없습니다. 관리자 이메일이 setup.sql의 이메일과 같은지도 확인해 주세요.'; $('#dashErr').hidden = false; }
@@ -483,7 +525,10 @@ td.r, th.r { text-align: right }
   document.addEventListener('click', e => {
     const d = e.target.closest('[data-done]'), u = e.target.closest('[data-undone]');
     if (!d && !u) return;
-    const s = doneGet(); d ? s.add(d.dataset.done) : s.delete(u.dataset.undone); doneSet(s); render(lastRows, lastSince);
+    const key = d ? d.dataset.done : u.dataset.undone, loc = localDone();
+    if (d) { if (SERVER_DONE && !demo) { SERVER_DONE.add(key); api('report_done', { method: 'POST', body: JSON.stringify({ key }), headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' } }).catch(() => {}); } else loc.add(key); }
+    else { loc.delete(key); if (SERVER_DONE && !demo) { SERVER_DONE.delete(key); api('report_done?key=eq.' + encodeURIComponent(key), { method: 'DELETE' }).catch(() => {}); } }
+    localDoneSet(loc); render(lastRows, lastSince);
   });
   // 지금 기간의 기록을 엑셀에서 열 수 있는 CSV로 내려받기 (한국 시간)
   $('#csv').addEventListener('click', () => {
@@ -505,6 +550,107 @@ td.r, th.r { text-align: right }
     try { await auth('password', { email, password: pw }); show('vDash'); load(); }
     catch (x) { err.textContent = /invalid/i.test(x.message) ? '이메일 또는 비밀번호가 맞지 않습니다.' : x.message; err.hidden = false; }
     finally { $('#loginBtn').disabled = false; $('#loginBtn').textContent = '로그인'; }
+  });
+
+  // ---------- 한자 추가 (관리자) ----------
+  async function api(path, opt = {}) {
+    const t = await token(); if (!t) throw new Error('auth');
+    const r = await fetch(`${BASE}/rest/v1/${path}`, Object.assign({}, opt, { headers: Object.assign({ apikey: KEY, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, opt.headers || {}) }));
+    if (r.status === 401) throw new Error('auth');
+    const j = r.status === 204 ? null : await r.json().catch(() => null);
+    if (!r.ok) { const e = new Error((j && (j.message || j.hint)) || ('오류 ' + r.status)); e.status = r.status; e.code = j && j.code; throw e; }
+    return j;
+  }
+  const SETUP_MSG = '처음 한 번만 설정이 필요해요: Supabase → <b>SQL Editor</b>에 <code>supabase/hanja_admin.sql</code> 내용을 붙여넣고, 안의 <code>admin@example.com</code>을 관리자 이메일로 바꾼 뒤 <b>Run</b>을 눌러 주세요.';
+  async function loadExtra() {
+    if (demo) { EXTRA_OK = false; renderExtra(); return; }
+    try { EXTRA = await api('hanja_extra?select=*&order=created_at.desc') || []; EXTRA_OK = true; absorbExtra(EXTRA); }
+    catch (e) { if (e.message === 'auth') throw e; EXTRA_OK = false; }
+    renderExtra();
+  }
+  async function loadDone() {
+    if (demo) return;
+    try { const rows = await api('report_done?select=key'); SERVER_DONE = new Set((rows || []).map(r => r.key)); }
+    catch (e) { if (e.message === 'auth') throw e; SERVER_DONE = null; }
+  }
+  function renderExtra() {
+    $('#addSetup').hidden = EXTRA_OK !== false;
+    $('#addSetup').innerHTML = demo ? '예시 데이터 모드에서는 추가해도 저장되지 않아요. 입력하면 자동으로 채워지는 모습만 미리 볼 수 있어요.' : SETUP_MSG;
+    $('#extraList').innerHTML = EXTRA.length ? `<table class="rep"><thead><tr><th>한자</th><th>소리·뜻</th><th class="r">원획</th><th>오행</th><th>추가한 날</th><th>공지</th><th></th></tr></thead><tbody>${
+      EXTRA.map(r => `<tr><td class="h">${esc(r.ch)}</td><td>${esc(r.hun)} ${esc(r.eum)}</td><td class="r num">${r.strokes}</td><td>${esc(r.elem)}</td><td class="num">${kstDate(r.created_at).slice(5).replace('-', '.')}</td><td>${r.notice ? '✔' : '—'}</td>
+        <td><button type="button" class="mini" data-del="${r.id}">삭제</button></td></tr>`).join('')}</tbody></table>`
+      : `<p class="empty-note">${EXTRA_OK ? '아직 관리자 화면에서 추가한 한자가 없어요.' : '설정 후 여기에 추가한 한자가 쌓여요.'}</p>`;
+  }
+  // 한자 사전(관리자 전용): 글자 → [부수, 원획, 소리들]
+  let DICT = null;
+  const dictGet = ch => {
+    if (!DICT) { DICT = new Map(); if (typeof HZ_DICT !== 'undefined') HZ_DICT.split('\n').forEach(l => { const c = String.fromCodePoint(l.codePointAt(0)), rest = l.slice(c.length).split(','); DICT.set(c, [+rest[0], +rest[1], rest[2] || '']); }); }
+    return DICT.get(ch);
+  };
+  const isHz = c => /[㐀-鿿豈-﫿]/.test(c);
+  function fillFromChar() {
+    const ch = [...$('#aCh').value].find(isHz) || '';
+    const msg = $('#aMsg'); msg.textContent = ''; msg.className = 'amsg';
+    $('#aChHint').textContent = ''; $('#aEumHint').textContent = '';
+    if (!ch) return;
+    const d = dictGet(ch);
+    if (!d) { $('#aChHint').textContent = '사전에 없는 글자 · 획수·오행을 직접 넣어 주세요'; return; }
+    $('#aStrokes').value = d[1];
+    $('#aElem').value = (typeof HZ_ELEM_OVR !== 'undefined' && HZ_ELEM_OVR[ch]) || (typeof HZ_ELEM_BY_RAD !== 'undefined' && HZ_ELEM_BY_RAD[d[0]]) || '';
+    const sounds = [...d[2]];
+    $('#aChHint').textContent = `부수 ${d[0]}번 · 원획 ${d[1]}획 자동` + ($('#aElem').value ? '' : ' · 오행은 직접 골라 주세요');
+    $('#aEumHint').textContent = sounds.length ? '사전 소리: ' + sounds.join(' · ') : '';
+    if (!$('#aEum').value && sounds.length) $('#aEum').value = sounds[0];
+    checkDup();
+  }
+  function checkDup() {
+    const ch = [...$('#aCh').value].find(isHz), eum = $('#aEum').value.trim();
+    const h = ch && HANJA.find(x => x[0] === ch && (!eum || x[1] === eum));
+    if (h) { $('#aMsg').textContent = `이미 앱에 있어요: ${h[0]} (${h[2]} ${h[1]})`; $('#aMsg').className = 'amsg bad'; }
+  }
+  $('#aCh').addEventListener('input', fillFromChar);
+  $('#aEum').addEventListener('input', () => { $('#aMsg').textContent = ''; checkDup(); });
+  $('#addForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#aMsg'), bad = t => { msg.textContent = t; msg.className = 'amsg bad'; };
+    const row = { ch: [...$('#aCh').value].find(isHz) || '', eum: $('#aEum').value.trim(), hun: $('#aHun').value.trim(),
+      strokes: +$('#aStrokes').value, elem: $('#aElem').value, meaning: $('#aMean').value.trim() || null, notice: $('#aNotice').checked };
+    const d = row.ch && dictGet(row.ch); row.radical = d ? d[0] : null;
+    if (!row.ch) return bad('한자를 넣어 주세요');
+    if (!/^[가-힣]$/.test(row.eum)) return bad('소리(음)는 한글 한 글자로 넣어 주세요');
+    if (!row.hun) return bad('뜻(훈)을 넣어 주세요');
+    if (!(row.strokes >= 1 && row.strokes <= 64)) return bad('원획을 확인해 주세요');
+    if (!row.elem) return bad('자원오행을 골라 주세요');
+    if (HANJA.some(x => x[0] === row.ch && x[1] === row.eum)) return bad('이미 앱에 있는 한자예요');
+    if (demo) { msg.textContent = '예시 모드라 저장하지 않았어요 (실제 로그인 후에는 바로 추가돼요)'; msg.className = 'amsg ok'; return; }
+    if (EXTRA_OK === false) { $('#addSetup').hidden = false; return bad('먼저 위 안내대로 설정을 한 번 해 주세요'); }
+    $('#aSave').disabled = true;
+    try {
+      await api('hanja_extra', { method: 'POST', body: JSON.stringify(row), headers: { Prefer: 'return=minimal' } });
+      await loadExtra(); render(lastRows, lastSince);
+      $('#addForm').reset(); $('#aNotice').checked = true; $('#aChHint').textContent = ''; $('#aEumHint').textContent = '';
+      msg.textContent = `✅ ${row.ch}(${row.hun} ${row.eum}) 추가 완료! 사용자가 앱을 새로 열면 목록과 상단 공지에 나타나요`; msg.className = 'amsg ok';
+    } catch (x) {
+      if (x.message === 'auth') { ss.set(null); show('vLogin'); return; }
+      bad(x.status === 403 || /row-level|permission/i.test(x.message) ? '저장 권한이 없어요. SQL의 관리자 이메일이 로그인 이메일과 같은지 확인해 주세요' : '저장하지 못했어요: ' + x.message);
+    } finally { $('#aSave').disabled = false; }
+  });
+  document.addEventListener('click', async e => {
+    const a = e.target.closest('[data-add]'), del = e.target.closest('[data-del]');
+    if (a) {
+      const [eum, hz, hun] = a.dataset.add.split('|');
+      $('#addForm').reset(); $('#aNotice').checked = true;
+      $('#aEum').value = eum || ''; $('#aHun').value = (hun || '').replace(/\s+/g, '').replace(new RegExp(eum + '$'), '');
+      $('#aCh').value = hz || ''; fillFromChar();
+      $('#addCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => $(hz ? '#aHun' : '#aCh').focus({ preventScroll: true }), 350);
+      if (!hz) { $('#aMsg').textContent = '제보에 한자가 없어요 · 소리와 뜻으로 맞는 한자를 찾아 넣어 주세요'; $('#aMsg').className = 'amsg'; }
+    }
+    if (del) {
+      const r = EXTRA.find(x => String(x.id) === del.dataset.del); if (!r) return;
+      if (!confirm(`${r.ch}(${r.hun} ${r.eum})를 앱에서 뺄까요?`)) return;
+      try { await api('hanja_extra?id=eq.' + r.id, { method: 'DELETE' }); location.reload(); } catch (x) { alert('삭제하지 못했어요: ' + x.message); }
+    }
   });
 
   // ---------- 시작 ----------

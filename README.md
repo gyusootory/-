@@ -33,12 +33,18 @@
 - 다시 만들기: `node tools/store_assets.js <@fontsource 글꼴 폴더>`
 - 개인정보처리방침: `privacy.html`
 
-## 한자 추가하는 법 (업데이트 절차)
-1. `tools/hanja_source.txt`의 해당 소리 줄에 `한자훈` 추가 (예: `현 … 玹옥돌`)
-2. `tools/meaning_source.txt`에 `玹:옥돌처럼 은은한 광채` 처럼 뜻 풀이 한 줄 추가
-3. `tools/hanja_updates.json`에 날짜와 글자 추가 → 앱 상단에 **한 줄 공지**(가장 최근 날짜분)가 표시되고, 사용자가 ✕를 누르면 그 업데이트 공지는 다시 안 보임
-4. `python3 tools/build_data.py <unihan.db>` → `python3 tools/bundle.py`
-5. 관리자 화면 '없는 한자 제보'에서 해당 글자가 자동으로 **✅ 추가됨**으로 바뀜
+## 한자 추가하는 법
+**관리자 화면에서 (권장, 코드 수정 없음)**
+1. 처음 한 번: Supabase SQL Editor에서 `supabase/hanja_admin.sql` 실행 (안의 `admin@example.com`을 관리자 이메일로 변경)
+2. 관리자 화면 → '한자 추가 · 앱 공지'에 한자 한 글자 입력 → 획수·부수·오행·소리 자동 채움 → 뜻(훈) 입력 → '앱에 추가'
+   - 제보 목록의 '한자 추가' 버튼을 누르면 제보 내용이 자동으로 채워짐
+3. 사용자가 앱을 새로 열면 한자 목록에 합쳐지고, 상단에 '추가된 한자' 한 줄 공지가 표시됨(✕로 닫으면 그 날짜 공지는 다시 안 보임)
+4. 제보 '처리 완료'도 서버(report_done 표)에 저장되어 휴대폰·PC 어디서나 같게 보임
+
+**코드로 (기본 데이터에 영구 반영)**
+1. `tools/hanja_source.txt`의 해당 소리 줄에 `한자훈` 추가, `tools/meaning_source.txt`에 뜻 풀이 한 줄 추가
+2. `tools/hanja_updates.json`에 날짜와 글자 추가 → 앱 상단 공지에 함께 표시
+3. `python3 tools/build_data.py <unihan.db>` → `python3 tools/bundle.py` (관리자용 한자 사전 `hanja-dict.js`도 함께 생성)
 
 ## 이름 뜻 풀이
 추천 카드마다 이름 전체의 뜻을 한 문장으로 풀어 줍니다(예: “기쁨을 나누는 밝은 마음과 옥빛처럼 맑은 광채를 함께 지닌 사람이 되라는 뜻을 담았습니다.”). 한자별 풀이 키워드는 `tools/meaning_source.txt`에서 고칠 수 있습니다.

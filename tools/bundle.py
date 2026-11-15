@@ -50,7 +50,7 @@ pwa = (head + '<meta name="theme-color" content="#121826">\n'
 pwa += body + ("\n<script>if ('serviceWorker' in navigator && location.protocol === 'https:') "
                "navigator.serviceWorker.register('sw.js').catch(function () {});</script>\n</html>\n")
 open(os.path.join(D, 'index.html'), 'w', encoding='utf-8').write(pwa)
-for f in ['admin.html', 'privacy.html', 'icon-96.png', 'hanja-data.js']:   # 관리자 화면이 한자 데이터로 '추가됨'을 확인
+for f in ['admin.html', 'privacy.html', 'icon-96.png', 'hanja-data.js', 'hanja-dict.js']:   # 관리자 화면이 한자 데이터로 '추가됨'을 확인
     shutil.copy(os.path.join(R, f), os.path.join(D, f))
 if not os.path.exists(os.path.join(D, 'config.js')):  # 이미 키를 넣어 둔 docs/config.js는 덮어쓰지 않음
     shutil.copy(os.path.join(R, 'config.js'), os.path.join(D, 'config.js'))
