@@ -207,6 +207,13 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 #reportBox p, #fbBox p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.6 }
 #reportBox .rp-note, #fbBox .rp-note { font-size: 12px }
 #fbBox[hidden] { display: none }
+.rp-exist { padding: 12px; border-radius: 12px; background: var(--gold-soft); border: 1px solid rgb(201 168 106 / .45); display: grid; gap: 8px; font-size: 13.5px; color: var(--ink) }
+.rp-exist[hidden] { display: none }
+.rp-exist b.t { font-size: 14px }
+.rp-exist ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px }
+.rp-exist li { display: flex; align-items: baseline; gap: 6px; padding: 5px 10px; border-radius: 10px; background: var(--surface); border: 1px solid rgb(201 168 106 / .35) }
+.rp-exist li b { font: 600 20px var(--f-display) } .rp-exist li span { font-size: 12.5px; color: var(--muted) }
+.rp-exist .rp-link { justify-self: start; font-size: 12.5px }
 #fbText { width: 100%; min-height: 150px; resize: vertical; font: 16px/1.6 var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px }
 #fbText:focus { outline: 2px solid var(--gold); outline-offset: 1px }
 .fb-count { justify-self: end; font-size: 12px; color: var(--muted); margin-top: -6px }
@@ -901,6 +908,7 @@ table.vs td:nth-child(2) { color: var(--ink) }
       <div class="field"><label for="rpHanja">한자 <span class="opt">아는 경우</span></label><input type="text" id="rpHanja" maxlength="2" placeholder="예: 珪"></div>
     </div>
     <div class="field"><label for="rpHun">뜻 <span class="opt">선택</span></label><input type="text" id="rpHun" maxlength="12" placeholder="예: 홀 규, 서옥"></div>
+    <div class="rp-exist" id="rpExist" hidden></div>
     <p class="rp-note">이름 전체나 개인정보는 보내지 않고, 위 글자 정보만 익명으로 전달돼요.</p>
     <div class="cact"><button class="act" type="submit">제보 보내기</button><button class="act ghost" type="button" id="rpClose">닫기</button></div>
   </form>
@@ -2022,7 +2030,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
 
   // ---------- 없는 한자 제보 (관리자 화면 '없는 한자 제보'에 모임) ----------
   function openReport(eum, where) {
-    $('#rpEum').value = eum || ''; $('#rpHanja').value = ''; $('#rpHun').value = '';
+    $('#rpEum').value = eum || ''; $('#rpHanja').value = ''; $('#rpHun').value = ''; $('#rpExist').hidden = true; $('#reportForm').dataset.force = '';
     $('#reportForm').dataset.where = where || '';
     $('#rpLead').textContent = eum ? `‘${eum}’(으)로 읽는 한자 중 찾는 글자가 없나요? 알려 주시면 확인해서 추가할게요.` : '찾는 한자가 목록에 없나요? 알려 주시면 확인해서 추가할게요.';
     $('#reportBox').hidden = false; setTimeout(() => $(eum ? '#rpHanja' : '#rpEum').focus(), 50);
@@ -2036,7 +2044,26 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     const hanja = [...$('#rpHanja').value].filter(c => /[㐀-鿿豈-﫿]/.test(c)).join('').slice(0, 2);   // 한자만 남김
     const hun = $('#rpHun').value.trim().slice(0, 12);
     if (!/^[가-힣]$/.test(eum) && !hanja) { toast('소리(음)나 한자 중 하나는 입력해 주세요'); return; }
-    T('hanja_report', { eum, hanja, hun, where: $('#reportForm').dataset.where || '' });
+    // 이미 앱에 있는 한자면 보내지 않고 바로 알려 줌 (한자를 적었으면 그 글자, 아니면 소리+뜻으로 확인)
+    const box = $('#rpExist'), form = $('#reportForm');
+    if (form.dataset.force !== '1') {
+      let found = [];
+      if (hanja) found = [...hanja].map(c => N.byChar(c)).filter(Boolean);
+      else if (eum && hun) {
+        let w = hun.replace(/\s+/g, ''); if (w.length > 1 && w.endsWith(eum)) w = w.slice(0, -1);
+        found = N.candidates(eum).filter(h => h.eum === eum && (h.hun === w || (w.length >= 2 && (h.hun.includes(w) || w.includes(h.hun)))));
+      }
+      if (found.length) {
+        box.innerHTML = `<b class="t">이미 앱에 있는 한자예요 🙂</b><ul>${found.map(h => `<li><b>${h.ch}</b><span>${esc(h.hun)} ${h.eum} · ${h.strokes}획</span></li>`).join('')}</ul>
+          <span>‘${found[0].eum}’ 소리의 한자 목록에서 고를 수 있어요.</span>${hanja ? '' : '<button type="button" class="rp-link" id="rpForce">찾는 글자가 아니에요 · 그래도 제보하기</button>'}`;
+        box.hidden = false; T('hanja_report_exist', { eum, hanja });
+        const f = $('#rpForce'); if (f) f.addEventListener('click', () => { form.dataset.force = '1'; form.requestSubmit(); });
+        return;
+      }
+    }
+    const forced = form.dataset.force === '1'; form.dataset.force = ''; box.hidden = true;
+    // forced: 비슷한 글자가 있다고 안내했는데도 '찾는 글자가 아니에요'로 보낸 제보 → 관리자 화면에서 꼭 보이게 표시
+    T('hanja_report', Object.assign({ eum, hanja, hun, where: $('#reportForm').dataset.where || '' }, forced ? { force: 1 } : {}));
     $('#reportBox').hidden = true; toast('제보해 주셔서 고마워요! 확인 후 추가할게요');
   });
   // ---------- 의견 남기기 ----------

@@ -193,6 +193,13 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 #reportBox p, #fbBox p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.6 }
 #reportBox .rp-note, #fbBox .rp-note { font-size: 12px }
 #fbBox[hidden] { display: none }
+.rp-exist { padding: 12px; border-radius: 12px; background: var(--gold-soft); border: 1px solid rgb(201 168 106 / .45); display: grid; gap: 8px; font-size: 13.5px; color: var(--ink) }
+.rp-exist[hidden] { display: none }
+.rp-exist b.t { font-size: 14px }
+.rp-exist ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px }
+.rp-exist li { display: flex; align-items: baseline; gap: 6px; padding: 5px 10px; border-radius: 10px; background: var(--surface); border: 1px solid rgb(201 168 106 / .35) }
+.rp-exist li b { font: 600 20px var(--f-display) } .rp-exist li span { font-size: 12.5px; color: var(--muted) }
+.rp-exist .rp-link { justify-self: start; font-size: 12.5px }
 #fbText { width: 100%; min-height: 150px; resize: vertical; font: 16px/1.6 var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px }
 #fbText:focus { outline: 2px solid var(--gold); outline-offset: 1px }
 .fb-count { justify-self: end; font-size: 12px; color: var(--muted); margin-top: -6px }
@@ -887,6 +894,7 @@ table.vs td:nth-child(2) { color: var(--ink) }
       <div class="field"><label for="rpHanja">한자 <span class="opt">아는 경우</span></label><input type="text" id="rpHanja" maxlength="2" placeholder="예: 珪"></div>
     </div>
     <div class="field"><label for="rpHun">뜻 <span class="opt">선택</span></label><input type="text" id="rpHun" maxlength="12" placeholder="예: 홀 규, 서옥"></div>
+    <div class="rp-exist" id="rpExist" hidden></div>
     <p class="rp-note">이름 전체나 개인정보는 보내지 않고, 위 글자 정보만 익명으로 전달돼요.</p>
     <div class="cact"><button class="act" type="submit">제보 보내기</button><button class="act ghost" type="button" id="rpClose">닫기</button></div>
   </form>

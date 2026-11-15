@@ -219,7 +219,7 @@ td.r, th.r { text-align: right }
 
     <section class="card" id="repCard">
       <h2>없는 한자 제보</h2>
-      <p class="sub">사용자가 알려 준 글자 · <b>대기</b>가 위로 · 새로 넣은 한자는 <b>‘추가됨’</b>, 처음부터 앱에 있던 글자는 <b>‘원래 있음’</b>으로 자동 표시 · <b>‘한자 추가’</b>를 누르면 위 칸에 자동으로 채워져요 · 추가하지 않을 제보는 ‘처리 완료’ <span id="repSummary"></span></p>
+      <p class="sub">사용자가 알려 준 글자 · <b>대기</b>가 위로 · 새로 넣은 한자는 <b>자동으로 ‘추가됨’</b> · 이미 앱에 있던 글자 제보는 표시하지 않음 · <b>‘한자 추가’</b>를 누르면 위 칸에 자동으로 채워져요 · 추가하지 않을 제보는 ‘처리 완료’ <span id="repSummary"></span></p>
       <div class="tw" id="reports"></div>
     </section>
 
@@ -295,7 +295,7 @@ td.r, th.r { text-align: right }
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = n => n.toLocaleString('ko-KR');
   const LABEL = { visit: '방문', recommend: '이름 추천 받기', more: '다음 페이지 보기', find: '한자 찾기', share_app: '앱 공유', share_name: '이름 공유',
-    copy_name: '이름 복사', detail_open: '상세 감명 열기', info_open: '도움말(ⓘ) 열기', save_name: '이름 저장', mine: '이름 비교', rename_go: '개명 후보 보기', hanja_report: '없는 한자 제보', show_all: '21위 이하 더 보기', upd_seen: '새 한자 안내 확인', feedback: '의견 남기기', feedback_open: '의견 창 열기', tab: '탭 이동', install: '홈 화면 설치' };
+    copy_name: '이름 복사', detail_open: '상세 감명 열기', info_open: '도움말(ⓘ) 열기', save_name: '이름 저장', mine: '이름 비교', rename_go: '개명 후보 보기', hanja_report: '없는 한자 제보', show_all: '21위 이하 더 보기', upd_seen: '새 한자 안내 확인', hanja_report_exist: '제보 전 이미 있는 한자 안내', notice_more: '공지 펼쳐 보기', feedback: '의견 남기기', feedback_open: '의견 창 열기', tab: '탭 이동', install: '홈 화면 설치' };
   const dayKey = d => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(d); // YYYY-MM-DD (한국 시간)
   let days = 7, demo = false, lastRows = [], lastSince = new Date();
   // 앱의 한자 데이터(hanja-data.js)로 제보된 한자가 이미 추가됐는지 자동 확인
@@ -444,7 +444,7 @@ td.r, th.r { text-align: right }
     // 없는 한자 제보: 소리+한자로 묶어서 많이 들어온 순
     const rg = {};
     reps.forEach(r => { const m = r.meta || {}, k = (m.eum || '?') + '|' + (m.hanja || ''); const g = rg[k] || (rg[k] = { eum: m.eum || '', hanja: m.hanja || '', hun: new Set(), where: new Set(), n: 0, last: r.created_at });
-      g.n++; if (m.hun) g.hun.add(m.hun); if (m.where) g.where.add(m.where); if (r.created_at > g.last) g.last = r.created_at; });
+      g.n++; if (m.force) g.force = true; if (m.hun) g.hun.add(m.hun); if (m.where) g.where.add(m.where); if (r.created_at > g.last) g.last = r.created_at; });
     const W = { find: '한자 찾기', compare: '이름 비교' };
     const recent3 = Date.now() - 3 * 86400000, done = doneGet();
     const status = g => {
@@ -456,21 +456,22 @@ td.r, th.r { text-align: right }
       const stOf = cs => [...cs].some(c => ADDED_AT[c]) ? 'added' : 'had';
       if (g.hanja && [...g.hanja].every(c => HSET.has(c))) return { st: stOf(g.hanja), html: okHtml(g.hanja) };
       // 한자를 모르고 '소리 + 뜻'만 적은 제보 → 같은 소리·같은 뜻의 한자가 앱에 있으면 추가된 것으로 판정 (예: 현 + 옥돌 → 玹)
-      if (!g.hanja && g.eum && g.hun.size) {
+      if (!g.hanja && g.eum && g.hun.size && !g.force) {   // '찾는 글자가 아니에요'로 보낸 제보는 뜻이 같아도 대기로 둠
         const found = [...g.hun].map(w => findByHun(g.eum, w));
         if (found.every(Boolean)) { const cs = [...new Set(found)].join(''); return { st: stOf(cs), html: okHtml(cs) }; }
       }
       if (done.has(k)) return { st: 'done', html: `<span class="st ok">✔ 처리 완료</span> <button type="button" class="mini" data-undone="${esc(k)}">되돌리기</button>` };
       return { st: 'wait', html: `<span class="st wait">대기</span> <button type="button" class="mini add" data-add="${esc(g.eum + '|' + g.hanja + '|' + ([...g.hun][0] || ''))}">한자 추가</button> <button type="button" class="mini" data-done="${esc(k)}">처리 완료</button>` };
     };
-    const groups = Object.values(rg).map(g => ({ ...g, s: status(g) }));
+    // 처음부터 앱에 있던 글자를 찾지 못한 제보('원래 있음')는 처리할 일이 없으니 목록에서 뺌
+    const groups = Object.values(rg).map(g => ({ ...g, s: status(g) })).filter(g => g.s.st !== 'had');
     const order = { wait: 0, done: 1, added: 2, had: 3 };
     groups.sort((a, b) => order[a.s.st] - order[b.s.st] || b.n - a.n || (b.last > a.last ? 1 : -1));
     const waitN = groups.filter(g => g.s.st === 'wait').length;
-    $('#repSummary').textContent = reps.length ? `대기 ${waitN}종 · 추가됨 ${groups.filter(g => g.s.st === 'added').length}종 · 원래 있음 ${groups.filter(g => g.s.st === 'had').length}종 · 처리 완료 ${groups.filter(g => g.s.st === 'done').length}종` : '';
-    $('#reports').innerHTML = reps.length ? `<table class="rep"><thead><tr><th>상태</th><th>소리</th><th>한자</th><th>뜻(사용자 입력)</th><th class="r">횟수</th><th>어디서</th><th>마지막 제보</th></tr></thead><tbody>${
+    $('#repSummary').textContent = groups.length ? `대기 ${waitN}종 · 추가됨 ${groups.filter(g => g.s.st === 'added').length}종 · 처리 완료 ${groups.filter(g => g.s.st === 'done').length}종` : '';
+    $('#reports').innerHTML = groups.length ? `<table class="rep"><thead><tr><th>상태</th><th>소리</th><th>한자</th><th>뜻(사용자 입력)</th><th class="r">횟수</th><th>어디서</th><th>마지막 제보</th></tr></thead><tbody>${
       groups.map(g => `<tr class="${g.s.st}"><td>${g.s.html}</td><td>${esc(g.eum)}${g.hanja ? '' : `<br><small class="muted">현재 ${EUMN[g.eum] || 0}자</small>`}</td><td class="h">${esc(g.hanja) || '<span class="muted">모름</span>'}</td>
-        <td>${esc([...g.hun].join(', ')) || '—'}</td><td class="r c">${fmt(g.n)}</td><td>${[...g.where].map(w => W[w] || w).join(', ') || '—'}</td>
+        <td>${esc([...g.hun].join(', ')) || '—'}${g.force && g.s.st === 'wait' ? '<br><small class="muted">같은 뜻 글자가 있다고 안내했지만 다른 글자라고 함</small>' : ''}</td><td class="r c">${fmt(g.n)}</td><td>${[...g.where].map(w => W[w] || w).join(', ') || '—'}</td>
         <td class="num">${new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric' }).format(new Date(g.last))}${new Date(g.last).getTime() > recent3 ? '<span class="badge-new">NEW</span>' : ''}</td></tr>`).join('')}</tbody></table>`
       : '<p class="empty-note">이 기간에 들어온 제보가 없습니다.</p>';
     const kp = [...document.querySelectorAll('.kpi')].pop(); if (kp && reps.length) { kp.querySelector('small').textContent = `대기 ${waitN}종 · 아래에서 확인`; kp.classList.toggle('alert', waitN > 0); }
