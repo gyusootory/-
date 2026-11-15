@@ -27,19 +27,22 @@
     else if (document.referrer) { const r = new URL(document.referrer); if (r.hostname !== location.hostname) referrer = r.hostname; }
   } catch (e) {}
 
-  function track(event, meta) {
-    if (!on) return;
+  function track(event, meta) { send(event, meta); }
+  // 보내고 성공 여부(true/false)를 알려 줌 (의견 남기기처럼 결과를 보여 줘야 할 때 사용)
+  function send(event, meta) {
+    if (!on) return Promise.resolve(false);
     const body = JSON.stringify({ event, visitor, session, device, app_mode: appMode, referrer: referrer || null, meta: meta || {} });
     try {
-      fetch(C.supabaseUrl.replace(/\/$/, '') + '/rest/v1/events', {
+      return fetch(C.supabaseUrl.replace(/\/$/, '') + '/rest/v1/events', {
         method: 'POST', keepalive: true, body,
         headers: Object.assign({ apikey: C.supabaseAnonKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
           // 예전 방식 anon 키(eyJ…)만 Authorization에도 넣음. 새 publishable 키(sb_publishable_…)는 apikey 헤더만 사용
           /^eyJ/.test(C.supabaseAnonKey) ? { Authorization: 'Bearer ' + C.supabaseAnonKey } : {}),
-      }).catch(() => {});
-    } catch (e) {}
+      }).then(r => r.ok).catch(() => false);
+    } catch (e) { return Promise.resolve(false); }
   }
   window.gachiTrack = track;
+  window.gachiSend = send;
   track('visit', { new_visitor: isNew });
   window.addEventListener('appinstalled', () => track('install'));
 })();

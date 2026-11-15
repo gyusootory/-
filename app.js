@@ -685,6 +685,23 @@
     T('hanja_report', { eum, hanja, hun, where: $('#reportForm').dataset.where || '' });
     $('#reportBox').hidden = true; toast('제보해 주셔서 고마워요! 확인 후 추가할게요');
   });
+  // ---------- 의견 남기기 ----------
+  const fbText = $('#fbText');
+  $('#fbOpen').addEventListener('click', () => { $('#fbBox').hidden = false; setTimeout(() => fbText.focus(), 50); T('feedback_open'); });
+  const fbClose = () => ($('#fbBox').hidden = true);
+  $('#fbClose').addEventListener('click', fbClose);
+  $('#fbBox').addEventListener('click', e => { if (e.target.id === 'fbBox') fbClose(); });
+  fbText.addEventListener('input', () => ($('#fbCount').textContent = `${fbText.value.length} / 500`));
+  $('#fbForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = fbText.value.trim().slice(0, 500);
+    if (msg.length < 2) { toast('의견을 적어 주세요'); fbText.focus(); return; }
+    const btn = $('#fbSend'); btn.disabled = true; btn.textContent = '보내는 중…';
+    const ok = window.gachiSend ? await window.gachiSend('feedback', { msg, tab: tab }) : false;
+    btn.disabled = false; btn.textContent = '보내기';
+    if (ok) { fbText.value = ''; $('#fbCount').textContent = '0 / 500'; fbClose(); toast('소중한 의견 고마워요! 꼭 읽어 볼게요'); }
+    else toast('지금은 보낼 수 없어요. 인터넷 연결을 확인하고 다시 시도해 주세요');
+  });
   // 이름 비교 탭에서 '목록에 없어요'를 고르면 그 자리에서 제보 안내
   document.addEventListener('change', e => {
     const sel = e.target; if (!sel.matches || !sel.matches('#m-hz select, #c-hz select')) return;

@@ -70,6 +70,14 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .setup-note { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--sunk); font-size: 13px; line-height: 1.6 }
 .mini.add { border-color: var(--accent); color: var(--ink); font-weight: 700 }
 
+/* 사용자 의견 */
+.fb-item { border-top: 1px solid var(--line); padding: 12px 0 2px; display: grid; gap: 6px }
+.fb-item:first-child { border-top: 0; padding-top: 0 }
+.fb-meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+.fb-msg { margin: 0; font-size: 14.5px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere }
+.cnt-badge { font: 600 12px var(--f-body); color: var(--muted); margin-left: 4px }
+#fbList { max-height: 520px; overflow: auto }
+
 /* 로그인·설정 */
 .narrow { max-width: 420px; margin: 24px auto 0; width: 100% }
 .field { display: grid; gap: 5px } .field label { font-size: 13px; font-weight: 500 }
@@ -201,6 +209,12 @@ td.r, th.r { text-align: right }
       <div class="tw" id="extraList"></div>
     </section>
 
+    <section class="card" id="fbCard">
+      <h2>사용자 의견 <span class="cnt-badge" id="fbNum"></span></h2>
+      <p class="sub">앱 상단 ‘의견 남기기’로 들어온 글 · 최신순 · 위에서 고른 기간 기준</p>
+      <div id="fbList"></div>
+    </section>
+
     <section class="card" id="repCard">
       <h2>없는 한자 제보</h2>
       <p class="sub">사용자가 알려 준 글자 · <b>대기</b>가 위로 · 앱 데이터에 들어간 한자는 <b>자동으로 ‘추가됨’</b> · <b>‘한자 추가’</b>를 누르면 위 칸에 자동으로 채워져요 · 추가하지 않을 제보는 ‘처리 완료’ <span id="repSummary"></span></p>
@@ -279,7 +293,7 @@ td.r, th.r { text-align: right }
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = n => n.toLocaleString('ko-KR');
   const LABEL = { visit: '방문', recommend: '이름 추천 받기', more: '다음 페이지 보기', find: '한자 찾기', share_app: '앱 공유', share_name: '이름 공유',
-    copy_name: '이름 복사', detail_open: '상세 감명 열기', info_open: '도움말(ⓘ) 열기', save_name: '이름 저장', mine: '이름 비교', rename_go: '개명 후보 보기', hanja_report: '없는 한자 제보', show_all: '21위 이하 더 보기', upd_seen: '새 한자 안내 확인', tab: '탭 이동', install: '홈 화면 설치' };
+    copy_name: '이름 복사', detail_open: '상세 감명 열기', info_open: '도움말(ⓘ) 열기', save_name: '이름 저장', mine: '이름 비교', rename_go: '개명 후보 보기', hanja_report: '없는 한자 제보', show_all: '21위 이하 더 보기', upd_seen: '새 한자 안내 확인', feedback: '의견 남기기', feedback_open: '의견 창 열기', tab: '탭 이동', install: '홈 화면 설치' };
   const dayKey = d => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(d); // YYYY-MM-DD (한국 시간)
   let days = 7, demo = false, lastRows = [], lastSince = new Date();
   // 앱의 한자 데이터(hanja-data.js)로 제보된 한자가 이미 추가됐는지 자동 확인
@@ -357,6 +371,7 @@ td.r, th.r { text-align: right }
         if (rnd() < .3) out.push({ ...base, created_at: t.toISOString(), event: 'tab', meta: { tab: ['find', 'mine', 'saved', 'rec'][Math.floor(rnd() * 4)] } });
         if (rnd() < .15) { out.push({ ...base, created_at: t.toISOString(), event: 'mine', meta: { score: Math.round(50 + rnd() * 45), cand: rnd() < .4 } }); if (rnd() < .3) out.push({ ...base, created_at: t.toISOString(), event: 'rename_go', meta: {} }); }
         if (rnd() < .18) out.push({ ...base, created_at: t.toISOString(), event: 'save_name', meta: {} });
+        if (rnd() < .02) { const F = ['쌍둥이 이름도 같이 추천해 주면 좋겠어요', '한자 뜻 풀이가 자세해서 좋아요! 와이프랑 같이 보고 있어요', '돌림자를 두 글자로 넣을 수 있으면 좋겠습니다', '광고 없이 무료라 너무 좋네요 감사합니다'][Math.floor(rnd() * 4)]; out.push({ ...base, created_at: t.toISOString(), event: 'feedback', meta: { msg: F, tab: rnd() < .5 ? 'rec' : 'find' } }); }
         if (rnd() < .03) { const R = [['규', '珪', '홀 규'], ['자', '', ''], ['현', '玹', '옥돌 현'], ['총', '聰', '총명할'], ['현', '', '옥돌 현']][Math.floor(rnd() * 5)]; out.push({ ...base, created_at: t.toISOString(), event: 'hanja_report', meta: { eum: R[0], hanja: R[1], hun: R[2], where: rnd() < .5 ? 'compare' : 'find' } }); }
         if (rnd() < .35) out.push({ ...base, created_at: t.toISOString(), event: 'find', meta: { name: names[Math.floor(rnd() * rnd() * names.length)] } });
         if (rnd() < .12) out.push({ ...base, created_at: t.toISOString(), event: rnd() < .5 ? 'share_name' : 'share_app', meta: {} });
@@ -454,6 +469,13 @@ td.r, th.r { text-align: right }
       : '<p class="empty-note">이 기간에 들어온 제보가 없습니다.</p>';
     const kp = [...document.querySelectorAll('.kpi')].pop(); if (kp && reps.length) { kp.querySelector('small').textContent = `대기 ${waitN}종 · 아래에서 확인`; kp.classList.toggle('alert', waitN > 0); }
 
+    // 사용자 의견
+    const fbs = rows.filter(r => r.event === 'feedback' && r.meta && r.meta.msg).reverse();
+    const TABN = { rec: '이름 추천', find: '한자 찾기', mine: '이름 비교', saved: '저장' };
+    $('#fbNum').textContent = fbs.length ? fbs.length + '건' : '';
+    $('#fbList').innerHTML = fbs.length ? fbs.map(r => `<div class="fb-item"><div class="fb-meta"><span class="num">${new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(r.created_at))}</span><span>${r.device === 'mobile' ? '휴대폰' : 'PC'}</span>${r.meta.tab ? `<span>${esc(TABN[r.meta.tab] || r.meta.tab)} 화면에서</span>` : ''}${new Date(r.created_at).getTime() > Date.now() - 3 * 86400000 ? '<span class="badge-new">NEW</span>' : ''}</div><p class="fb-msg">${esc(r.meta.msg)}</p></div>`).join('')
+      : '<p class="empty-note">이 기간에 들어온 의견이 없어요.</p>';
+
     // 탭별 이용
     const TL = { rec: '① 이름 추천', find: '② 한자 찾기', mine: '③ 이름 비교', saved: '④ 저장' };
     const tc = {}; rows.filter(r => r.event === 'tab').forEach(r => { const k = TL[r.meta.tab] || r.meta.tab; tc[k] = (tc[k] || 0) + 1; });
@@ -502,7 +524,7 @@ td.r, th.r { text-align: right }
     $('#recent').innerHTML = recent.length ? `<table><thead><tr><th>시각(한국)</th><th>기록</th><th>기기</th><th>내용</th></tr></thead><tbody>${recent.map(r => {
       const t = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(r.created_at));
       const m = r.meta || {};
-      const info = r.event === 'hanja_report' ? `제보: ${m.eum || ''} ${m.hanja || ''} ${m.hun || ''}` : r.event === 'mine' ? `지금 이름 ${m.score}점${m.cand ? ' · 개명할 이름 비교' : ''}`
+      const info = r.event === 'feedback' ? `의견: ${String(m.msg || '').slice(0, 40)}${String(m.msg || '').length > 40 ? '…' : ''}` : r.event === 'hanja_report' ? `제보: ${m.eum || ''} ${m.hanja || ''} ${m.hun || ''}` : r.event === 'mine' ? `지금 이름 ${m.score}점${m.cand ? ' · 개명할 이름 비교' : ''}`
         : r.event === 'more' && m.page ? `${m.page}페이지` : m.name ? `이름: ${m.name}` : m.tab ? `탭: ${({ rec: '이름 추천', find: '한자 찾기', mine: '이름 비교', saved: '저장' })[m.tab] || m.tab}` : m.new_visitor ? '첫 방문' : '';
       return `<tr><td class="num">${esc(t)}</td><td>${esc(LABEL[r.event] || r.event)}</td><td>${r.device === 'mobile' ? '휴대폰' : 'PC'}</td><td>${esc(info)}</td></tr>`; }).join('')}</tbody></table>` : '<p class="empty-note">아직 기록이 없습니다. 앱에 한 번 들어가 보면 여기에 나타납니다.</p>';
   }

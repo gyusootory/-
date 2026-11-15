@@ -203,12 +203,18 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 .act.sel { user-select: all }
 #toast { position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; max-width: calc(100% - 32px); text-align: center }
-#reportBox { position: fixed; inset: 0; z-index: 50; background: rgb(10 14 20 / .5); display: grid; place-items: center;
+#reportBox, #fbBox { position: fixed; inset: 0; z-index: 50; background: rgb(10 14 20 / .5); display: grid; place-items: center;
   padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)) }
-#reportBox .sb { background: var(--surface); color: var(--ink); border-radius: 20px; padding: 20px; width: min(100%, 420px); display: grid; gap: 12px }
-#reportBox h3 { font: 600 20px var(--f-display); margin: 0 }
-#reportBox p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.6 }
-#reportBox .rp-note { font-size: 12px }
+#reportBox .sb, #fbBox .sb { background: var(--surface); color: var(--ink); border-radius: 20px; padding: 20px; width: min(100%, 420px); display: grid; gap: 12px }
+#reportBox h3, #fbBox h3 { font: 600 20px var(--f-display); margin: 0 }
+#reportBox p, #fbBox p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.6 }
+#reportBox .rp-note, #fbBox .rp-note { font-size: 12px }
+#fbBox[hidden] { display: none }
+#fbText { width: 100%; min-height: 150px; resize: vertical; font: 16px/1.6 var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px }
+#fbText:focus { outline: 2px solid var(--gold); outline-offset: 1px }
+.fb-count { justify-self: end; font-size: 12px; color: var(--muted); margin-top: -6px }
+/* 좁은 화면: 헤더 버튼 2개가 한 줄에 들어가게 */
+@media (max-width: 420px) { .mast-r { gap: 6px } .mast-r .appshare { padding: 6px 10px; gap: 4px } }
 .rp-link { background: none; border: 0; padding: 0; color: var(--gold); font: 600 13px var(--f-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer }
 .rp-inline { margin: 6px 0 0; font-size: 12.5px; color: var(--muted) }
 #shareBox { position: fixed; inset: 0; z-index: 50; background: rgb(10 14 20 / .5); display: grid; place-items: center;
@@ -622,9 +628,12 @@ table.vs td:nth-child(2) { color: var(--ink) }
   <header class="mast">
     <div class="brand">
       <img class="logo" src="icon-96.png" width="52" height="52" alt="">
-      <div><h1>가치작명소 <em class="free">무료</em></h1><p>평생 부를 이름, 성명학 기반으로 가치 있게 지어 드립니다</p></div>
+      <div><h1>가치작명소</h1><p>평생 부를 이름, 성명학 기반으로 가치 있게 지어 드립니다</p></div>
     </div>
     <div class="mast-r">
+    <button class="appshare fbbtn" type="button" id="fbOpen" aria-label="의견 남기기">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+      <span>의견 남기기</span></button>
     <button class="appshare" type="button" id="appShare" aria-label="앱 공유하기">
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
       <span>앱 공유</span></button>
@@ -885,6 +894,16 @@ table.vs td:nth-child(2) { color: var(--ink) }
     <div class="field"><label for="rpHun">뜻 <span class="opt">선택</span></label><input type="text" id="rpHun" maxlength="12" placeholder="예: 홀 규, 서옥"></div>
     <p class="rp-note">이름 전체나 개인정보는 보내지 않고, 위 글자 정보만 익명으로 전달돼요.</p>
     <div class="cact"><button class="act" type="submit">제보 보내기</button><button class="act ghost" type="button" id="rpClose">닫기</button></div>
+  </form>
+</div>
+<div id="fbBox" hidden>
+  <form class="sb" id="fbForm" role="dialog" aria-modal="true" aria-labelledby="fbTitle" novalidate>
+    <h3 id="fbTitle">의견 남기기</h3>
+    <p>불편한 점, 바라는 기능, 응원 한마디 모두 좋아요. 남겨 주신 의견은 꼼꼼히 읽고 앱을 고치는 데 쓸게요.</p>
+    <textarea id="fbText" maxlength="500" placeholder="예: 쌍둥이 이름도 같이 추천해 주면 좋겠어요"></textarea>
+    <span class="fb-count" id="fbCount">0 / 500</span>
+    <p class="rp-note">익명으로 전달돼요. 이름·전화번호 같은 개인정보는 적지 말아 주세요.</p>
+    <div class="cact"><button class="act" type="submit" id="fbSend">보내기</button><button class="act ghost" type="button" id="fbClose">닫기</button></div>
   </form>
 </div>
 <div id="shareBox" hidden>
@@ -1303,19 +1322,22 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     else if (document.referrer) { const r = new URL(document.referrer); if (r.hostname !== location.hostname) referrer = r.hostname; }
   } catch (e) {}
 
-  function track(event, meta) {
-    if (!on) return;
+  function track(event, meta) { send(event, meta); }
+  // 보내고 성공 여부(true/false)를 알려 줌 (의견 남기기처럼 결과를 보여 줘야 할 때 사용)
+  function send(event, meta) {
+    if (!on) return Promise.resolve(false);
     const body = JSON.stringify({ event, visitor, session, device, app_mode: appMode, referrer: referrer || null, meta: meta || {} });
     try {
-      fetch(C.supabaseUrl.replace(/\/$/, '') + '/rest/v1/events', {
+      return fetch(C.supabaseUrl.replace(/\/$/, '') + '/rest/v1/events', {
         method: 'POST', keepalive: true, body,
         headers: Object.assign({ apikey: C.supabaseAnonKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
           // 예전 방식 anon 키(eyJ…)만 Authorization에도 넣음. 새 publishable 키(sb_publishable_…)는 apikey 헤더만 사용
           /^eyJ/.test(C.supabaseAnonKey) ? { Authorization: 'Bearer ' + C.supabaseAnonKey } : {}),
-      }).catch(() => {});
-    } catch (e) {}
+      }).then(r => r.ok).catch(() => false);
+    } catch (e) { return Promise.resolve(false); }
   }
   window.gachiTrack = track;
+  window.gachiSend = send;
   track('visit', { new_visitor: isNew });
   window.addEventListener('appinstalled', () => track('install'));
 })();
@@ -2008,6 +2030,23 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     if (!/^[가-힣]$/.test(eum) && !hanja) { toast('소리(음)나 한자 중 하나는 입력해 주세요'); return; }
     T('hanja_report', { eum, hanja, hun, where: $('#reportForm').dataset.where || '' });
     $('#reportBox').hidden = true; toast('제보해 주셔서 고마워요! 확인 후 추가할게요');
+  });
+  // ---------- 의견 남기기 ----------
+  const fbText = $('#fbText');
+  $('#fbOpen').addEventListener('click', () => { $('#fbBox').hidden = false; setTimeout(() => fbText.focus(), 50); T('feedback_open'); });
+  const fbClose = () => ($('#fbBox').hidden = true);
+  $('#fbClose').addEventListener('click', fbClose);
+  $('#fbBox').addEventListener('click', e => { if (e.target.id === 'fbBox') fbClose(); });
+  fbText.addEventListener('input', () => ($('#fbCount').textContent = `${fbText.value.length} / 500`));
+  $('#fbForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = fbText.value.trim().slice(0, 500);
+    if (msg.length < 2) { toast('의견을 적어 주세요'); fbText.focus(); return; }
+    const btn = $('#fbSend'); btn.disabled = true; btn.textContent = '보내는 중…';
+    const ok = window.gachiSend ? await window.gachiSend('feedback', { msg, tab: tab }) : false;
+    btn.disabled = false; btn.textContent = '보내기';
+    if (ok) { fbText.value = ''; $('#fbCount').textContent = '0 / 500'; fbClose(); toast('소중한 의견 고마워요! 꼭 읽어 볼게요'); }
+    else toast('지금은 보낼 수 없어요. 인터넷 연결을 확인하고 다시 시도해 주세요');
   });
   // 이름 비교 탭에서 '목록에 없어요'를 고르면 그 자리에서 제보 안내
   document.addEventListener('change', e => {
