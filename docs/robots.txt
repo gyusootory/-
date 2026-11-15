@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+
+Sitemap: https://gyusootory.github.io/gachi-naming/sitemap.xml
+Sitemap: https://gachi-naming.web.app/sitemap.xml
