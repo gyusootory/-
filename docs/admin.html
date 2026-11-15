@@ -60,6 +60,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .addgrid small { font-size: 12px; color: var(--muted); min-height: 1em }
 .addgrid .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap }
 .chk { display: flex; align-items: center; gap: 8px; font-size: 13.5px }
+.need { font-size: 11px; font-weight: 700; color: var(--seal); margin-left: 4px }
+.autotag { font-size: 11px; font-weight: 700; color: var(--good); margin-left: 4px }
+.addgrid .auto input[readonly], .addgrid .auto select:disabled { background: var(--sunk); border-style: dashed; color: var(--ink); opacity: 1; pointer-events: none }
+.linkbtn { border: 0; background: none; padding: 0; font: inherit; color: var(--muted); text-decoration: underline; cursor: pointer }
+.schip { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 1px 7px; margin-left: 4px; font: 600 12px var(--f-body); cursor: pointer }
+.schip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
 .amsg { font-size: 13px; font-weight: 600 } .amsg.ok { color: var(--good) } .amsg.bad { color: var(--seal) }
 .setup-note { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--sunk); font-size: 13px; line-height: 1.6 }
 .mini.add { border-color: var(--accent); color: var(--ink); font-weight: 700 }
@@ -183,10 +189,10 @@ td.r, th.r { text-align: right }
       <p class="setup-note" id="addSetup" hidden></p>
       <form id="addForm" class="addgrid" novalidate autocomplete="off">
         <div class="field"><label for="aCh">한자</label><input id="aCh" maxlength="2" placeholder="例 羅"><small id="aChHint"></small></div>
-        <div class="field"><label for="aEum">소리(음)</label><input id="aEum" maxlength="1" placeholder="나"><small id="aEumHint"></small></div>
-        <div class="field"><label for="aHun">뜻(훈)</label><input id="aHun" maxlength="12" placeholder="새그물"><small>&nbsp;</small></div>
-        <div class="field"><label for="aStrokes">원획</label><input id="aStrokes" type="number" min="1" max="64" inputmode="numeric"><small>&nbsp;</small></div>
-        <div class="field"><label for="aElem">자원오행</label><select id="aElem"><option value="">선택</option><option>木</option><option>火</option><option>土</option><option>金</option><option>水</option></select><small>&nbsp;</small></div>
+        <div class="field"><label for="aHun">뜻(훈) <span class="need">직접 입력</span></label><input id="aHun" maxlength="12" placeholder="예: 빛날"><small>사전에 한국어 뜻이 없어 이것만 직접 적어요</small></div>
+        <div class="field af auto"><label for="aEum">소리(음) <span class="autotag">자동</span></label><input id="aEum" maxlength="1" readonly tabindex="-1"><small id="aEumHint"></small></div>
+        <div class="field af auto"><label for="aStrokes">원획 <span class="autotag">자동</span></label><input id="aStrokes" type="number" min="1" max="64" inputmode="numeric" readonly tabindex="-1"><small>&nbsp;</small></div>
+        <div class="field af auto"><label for="aElem">자원오행 <span class="autotag">자동</span></label><select id="aElem" disabled><option value="">—</option><option>木</option><option>火</option><option>土</option><option>金</option><option>水</option></select><small><button type="button" class="linkbtn" id="aUnlock">자동값 직접 고치기</button></small></div>
         <div class="field wide"><label for="aMean">이름 풀이 문구 <span class="muted">(선택 · 비우면 뜻으로 대신)</span></label><input id="aMean" maxlength="40" placeholder="예: 비단처럼 곱고 넓게 펼쳐지는 기운"></div>
         <label class="chk wide"><input type="checkbox" id="aNotice" checked> 앱 상단 공지에 올리기</label>
         <div class="wide row"><button class="btn" id="aSave" type="submit">앱에 추가</button><span id="aMsg" class="amsg" role="status"></span></div>
@@ -588,27 +594,41 @@ td.r, th.r { text-align: right }
     return DICT.get(ch);
   };
   const isHz = c => /[㐀-鿿豈-﫿]/.test(c);
-  function fillFromChar() {
+  // 자동값 잠금/풀기: 기본은 잠금(사전값 그대로), 사전에 없거나 유파가 다를 때만 직접 고침
+  function lockAuto(lock) {
+    $('#aEum').readOnly = lock; $('#aStrokes').readOnly = lock; $('#aElem').disabled = lock;
+    document.querySelectorAll('#addForm .autotag').forEach(t => (t.textContent = lock ? '자동' : '직접 수정'));
+    $('#aUnlock').textContent = lock ? '자동값 직접 고치기' : '자동값으로 되돌리기';
+    document.querySelectorAll('#addForm .field.af').forEach(f => f.classList.toggle('auto', lock));
+    if (lock) fillFromChar(true);
+  }
+  function fillFromChar(keepMsg) {
     const ch = [...$('#aCh').value].find(isHz) || '';
-    const msg = $('#aMsg'); msg.textContent = ''; msg.className = 'amsg';
-    $('#aChHint').textContent = ''; $('#aEumHint').textContent = '';
+    if (keepMsg !== true) { $('#aMsg').textContent = ''; $('#aMsg').className = 'amsg'; }
+    $('#aChHint').textContent = ''; $('#aEumHint').innerHTML = '';
+    // 한자를 바꾸면 자동값을 모두 새로 채움 (이전 글자의 값이 남지 않게)
+    $('#aEum').value = ''; $('#aStrokes').value = ''; $('#aElem').value = '';
     if (!ch) return;
     const d = dictGet(ch);
-    if (!d) { $('#aChHint').textContent = '사전에 없는 글자 · 획수·오행을 직접 넣어 주세요'; return; }
+    if (!d) { $('#aChHint').textContent = '사전에 없는 글자예요 · 소리·획수·오행을 직접 넣어 주세요'; if ($('#aEum').readOnly) lockAuto(false); return; }
     $('#aStrokes').value = d[1];
     $('#aElem').value = (typeof HZ_ELEM_OVR !== 'undefined' && HZ_ELEM_OVR[ch]) || (typeof HZ_ELEM_BY_RAD !== 'undefined' && HZ_ELEM_BY_RAD[d[0]]) || '';
-    const sounds = [...d[2]];
-    $('#aChHint').textContent = `부수 ${d[0]}번 · 원획 ${d[1]}획 자동` + ($('#aElem').value ? '' : ' · 오행은 직접 골라 주세요');
-    $('#aEumHint').textContent = sounds.length ? '사전 소리: ' + sounds.join(' · ') : '';
-    if (!$('#aEum').value && sounds.length) $('#aEum').value = sounds[0];
+    const sounds = [...d[2]], want = $('#addForm').dataset.eum || '';
+    $('#aEum').value = sounds.includes(want) ? want : (sounds[0] || '');
+    $('#aChHint').textContent = `부수 ${d[0]}번 · 원획 ${d[1]}획` + ($('#aElem').value ? '' : ' · 오행은 직접 골라 주세요');
+    if (!$('#aElem').value && $('#aEum').readOnly) lockAuto(false);
+    // 소리가 여러 개인 글자(예: 羅 나·라)는 눌러서 고름
+    if (sounds.length > 1) $('#aEumHint').innerHTML = '소리 고르기:' + sounds.map(x => `<button type="button" class="schip" data-snd="${x}" aria-pressed="${x === $('#aEum').value}">${x}</button>`).join('');
     checkDup();
   }
   function checkDup() {
     const ch = [...$('#aCh').value].find(isHz), eum = $('#aEum').value.trim();
     const h = ch && HANJA.find(x => x[0] === ch && (!eum || x[1] === eum));
-    if (h) { $('#aMsg').textContent = `이미 앱에 있어요: ${h[0]} (${h[2]} ${h[1]})`; $('#aMsg').className = 'amsg bad'; }
+    if (h) { $('#aMsg').textContent = `이미 앱에 있어요: ${h[0]} (${h[2]} ${h[1]}) · 추가하지 않아도 돼요`; $('#aMsg').className = 'amsg bad'; }
   }
-  $('#aCh').addEventListener('input', fillFromChar);
+  $('#aCh').addEventListener('input', () => { $('#addForm').dataset.eum = ''; fillFromChar(); });
+  $('#aUnlock').addEventListener('click', () => lockAuto(!$('#aEum').readOnly));
+  $('#aEumHint').addEventListener('click', e => { const b = e.target.closest('[data-snd]'); if (!b) return; $('#addForm').dataset.eum = b.dataset.snd; fillFromChar(); });
   $('#aEum').addEventListener('input', () => { $('#aMsg').textContent = ''; checkDup(); });
   $('#addForm').addEventListener('submit', async e => {
     e.preventDefault();
@@ -618,7 +638,8 @@ td.r, th.r { text-align: right }
     const d = row.ch && dictGet(row.ch); row.radical = d ? d[0] : null;
     if (!row.ch) return bad('한자를 넣어 주세요');
     if (!/^[가-힣]$/.test(row.eum)) return bad('소리(음)는 한글 한 글자로 넣어 주세요');
-    if (!row.hun) return bad('뜻(훈)을 넣어 주세요');
+    if (HANJA.some(x => x[0] === row.ch && x[1] === row.eum)) { const h = HANJA.find(x => x[0] === row.ch && x[1] === row.eum); return bad(`이미 앱에 있어요: ${h[0]} (${h[2]} ${h[1]}) · 추가하지 않아도 돼요`); }
+    if (!row.hun) { $('#aHun').focus(); return bad('뜻(훈)을 적어 주세요 (예: 빛날)'); }
     if (!(row.strokes >= 1 && row.strokes <= 64)) return bad('원획을 확인해 주세요');
     if (!row.elem) return bad('자원오행을 골라 주세요');
     if (HANJA.some(x => x[0] === row.ch && x[1] === row.eum)) return bad('이미 앱에 있는 한자예요');
@@ -628,7 +649,7 @@ td.r, th.r { text-align: right }
     try {
       await api('hanja_extra', { method: 'POST', body: JSON.stringify(row), headers: { Prefer: 'return=minimal' } });
       await loadExtra(); render(lastRows, lastSince);
-      $('#addForm').reset(); $('#aNotice').checked = true; $('#aChHint').textContent = ''; $('#aEumHint').textContent = '';
+      $('#addForm').reset(); $('#aNotice').checked = true; $('#aChHint').textContent = ''; $('#aEumHint').textContent = ''; $('#addForm').dataset.eum = ''; if (!$('#aEum').readOnly) lockAuto(true);
       msg.textContent = `✅ ${row.ch}(${row.hun} ${row.eum}) 추가 완료! 사용자가 앱을 새로 열면 목록과 상단 공지에 나타나요`; msg.className = 'amsg ok';
     } catch (x) {
       if (x.message === 'auth') { ss.set(null); show('vLogin'); return; }
@@ -639,9 +660,9 @@ td.r, th.r { text-align: right }
     const a = e.target.closest('[data-add]'), del = e.target.closest('[data-del]');
     if (a) {
       const [eum, hz, hun] = a.dataset.add.split('|');
-      $('#addForm').reset(); $('#aNotice').checked = true;
-      $('#aEum').value = eum || ''; $('#aHun').value = (hun || '').replace(/\s+/g, '').replace(new RegExp(eum + '$'), '');
-      $('#aCh').value = hz || ''; fillFromChar();
+      $('#addForm').reset(); $('#aNotice').checked = true; if (!$('#aEum').readOnly) lockAuto(true);
+      $('#addForm').dataset.eum = eum || ''; $('#aHun').value = (hun || '').replace(/\s+/g, '').replace(new RegExp(eum + '$'), '');
+      $('#aCh').value = hz || ''; fillFromChar(); if (!hz) $('#aEum').value = eum || '';
       $('#addCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
       setTimeout(() => $(hz ? '#aHun' : '#aCh').focus({ preventScroll: true }), 350);
       if (!hz) { $('#aMsg').textContent = '제보에 한자가 없어요 · 소리와 뜻으로 맞는 한자를 찾아 넣어 주세요'; $('#aMsg').className = 'amsg'; }
