@@ -853,7 +853,8 @@
     const date = Object.keys(g).sort().pop(), KEY = 'gachi-notice-off';
     const old = document.querySelector('.notice'); if (old) old.remove();
     if (!date) return;
-    try { if (localStorage.getItem(KEY) === date) return; } catch (e) {}
+    const sig = date + ':' + g[date].map(c => c[0] + c[1]).sort().join('');   // 같은 날 글자가 더 추가되면 다시 보이게
+    try { const off = localStorage.getItem(KEY); if (off === sig) return; } catch (e) {}
     const W = '일월화수목금토', md = ds => { const d = new Date(ds + 'T00:00:00'); return `${d.getMonth() + 1}/${d.getDate()}(${W[d.getDay()]})`; };
     const list = g[date].map(c => `${esc(c[2])} ‘${esc(c[1])}’<span class="nb-h">${esc(c[0])}</span>`).join(', ');
     // 펼쳐 보기: 최근 1주일(한국 날짜 기준, 오늘 포함 7일) 추가된 한자를 날짜별로
@@ -864,14 +865,14 @@
     const chip = c => { const h = N.byChar(c[0]); return `<li><b>${esc(c[0])}</b><span>${esc(c[2])} ${esc(c[1])}${h ? ` · ${h.strokes}획 · ${h.el}` : ''}</span></li>`; };
     const el = document.createElement('div'); el.className = 'notice'; el.setAttribute('role', 'status');
     el.innerHTML = `<span class="nb-tag">공지</span><p>${md(date)} 추가된 한자 : ${list}</p>
-      <button type="button" class="nb-more" aria-expanded="false" aria-controls="nbWeek">최근 1주일 <span aria-hidden="true">▾</span></button>
+      <button type="button" class="nb-more" aria-expanded="false" aria-controls="nbWeek" aria-label="최근 1주일 추가된 한자 펼쳐 보기" title="최근 1주일 추가된 한자"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg></button>
       <button type="button" class="nb-x" aria-label="공지 닫기">✕</button>
       <div class="nb-week" id="nbWeek" hidden><p class="nb-sum">최근 1주일 동안 추가된 한자 ${total}자 · 한자 찾기 · 이름 비교에서 바로 고를 수 있어요</p>${
         week.map(x => `<div class="nb-day"><h4>${md(x)}</h4><ul>${g[x].map(chip).join('')}</ul></div>`).join('')}</div>`;
     document.querySelector('.mast').after(el);
     const more = el.querySelector('.nb-more');
-    more.addEventListener('click', () => { const open = more.getAttribute('aria-expanded') !== 'true'; more.setAttribute('aria-expanded', open); el.querySelector('.nb-week').hidden = !open; more.querySelector('span').textContent = open ? '▴' : '▾'; if (open) T('notice_more'); });
-    el.querySelector('.nb-x').addEventListener('click', () => { try { localStorage.setItem(KEY, date); } catch (e) {} el.remove(); });
+    more.addEventListener('click', () => { const open = more.getAttribute('aria-expanded') !== 'true'; more.setAttribute('aria-expanded', open); el.querySelector('.nb-week').hidden = !open; if (open) T('notice_more'); });
+    el.querySelector('.nb-x').addEventListener('click', () => { try { localStorage.setItem(KEY, sig); } catch (e) {} el.remove(); });
   }
   renderNotice();
   (function fetchExtra() {
