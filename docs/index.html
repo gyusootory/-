@@ -88,6 +88,11 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0 }
 /* 본문 그리드 */
 .grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 28px; padding-top: 24px; align-items: start }
 @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr) } }
+/* PC: 결과가 나오기 전에는 입력 칸을 가운데에 넓게 (오른쪽이 텅 비어 보이지 않게) */
+@media (min-width: 861px) {
+  .grid:has(> .sec.pre) { grid-template-columns: minmax(0, 1fr) }
+  .grid:has(> .sec.pre) > .panel, .grid:has(> .sec.pre) > .intro { width: min(100%, 620px); justify-self: center }
+}
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 14px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px) }
 @media (max-width: 860px) { .panel { position: static } }
 .panel h2, .sec h2 { font: 600 12px var(--f-body); letter-spacing: .12em; color: var(--muted) }
@@ -1396,7 +1401,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     search: searchSur, html: it => `<b>${it.ko}</b><span>${it.hz}</span>`, label: it => `${it.ko} (${it.hz})`,
     byValue: v => SUR_ITEMS.find(x => x.value === v),
     exact: (q, hit) => hit.find(it => it.ko === q || it.hz === q || `${it.ko} (${it.hz})` === q),
-    placeholder: '성씨 검색 (예: 김, 金, ㄱ)', hint: '많이 쓰는 성씨', none: '찾는 성씨가 없어요',
+    placeholder: '예: 김, 金, ㄱ', hint: '많이 쓰는 성씨', none: '찾는 성씨가 없어요',
   };
   function makeCombo(sel, cfg = SUR_CFG) {
     const field = sel.closest('.field');

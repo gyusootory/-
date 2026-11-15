@@ -50,7 +50,7 @@
     search: searchSur, html: it => `<b>${it.ko}</b><span>${it.hz}</span>`, label: it => `${it.ko} (${it.hz})`,
     byValue: v => SUR_ITEMS.find(x => x.value === v),
     exact: (q, hit) => hit.find(it => it.ko === q || it.hz === q || `${it.ko} (${it.hz})` === q),
-    placeholder: '성씨 검색 (예: 김, 金, ㄱ)', hint: '많이 쓰는 성씨', none: '찾는 성씨가 없어요',
+    placeholder: '예: 김, 金, ㄱ', hint: '많이 쓰는 성씨', none: '찾는 성씨가 없어요',
   };
   function makeCombo(sel, cfg = SUR_CFG) {
     const field = sel.closest('.field');
