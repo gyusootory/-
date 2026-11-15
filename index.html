@@ -411,7 +411,8 @@ summary { color: var(--gold); font-weight: 600 }
 @media (max-width: 760px) {
   body::before { background: var(--band) }
   /* 휴대폰: clip-path는 고정 탭바까지 잘라 버리므로 음수 여백으로 띠를 화면 끝까지 늘임 */
-  .mast { padding-block: 14px 14px; clip-path: none; box-shadow: none;
+  /* 위쪽: 상태 표시줄·다이내믹 아일랜드(안전 영역) 높이만큼 + 여유 22px → 앱 이름·버튼이 가려지지 않게 */
+  .mast { padding-block: calc(22px + env(safe-area-inset-top, 0px)) 14px; clip-path: none; box-shadow: none;
     margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))) calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
     padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)) }
   .logo { width: 40px; height: 40px; border-radius: 11px }
