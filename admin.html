@@ -99,8 +99,8 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunk); p
 .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px }
 .kpi.alert { box-shadow: inset 0 0 0 1.5px var(--seal), 0 8px 28px rgb(20 26 38 / .06) } .kpi.alert b { color: var(--seal) }
 .rep td.h { font: 600 20px var(--f-display) }
-.rep tr.added td, .rep tr.done td { opacity: .62 } .rep tr.added td:first-child, .rep tr.done td:first-child { opacity: 1 }
-.st { font-size: 12px; font-weight: 700; white-space: nowrap } .st.ok { color: var(--good) } .st.wait { color: var(--seal) }
+.rep tr.added td, .rep tr.done td, .rep tr.had td { opacity: .62 } .rep tr.added td:first-child, .rep tr.done td:first-child, .rep tr.had td:first-child { opacity: 1 }
+.st { font-size: 12px; font-weight: 700; white-space: nowrap } .st.had { color: var(--muted) } .st.ok { color: var(--good) } .st.wait { color: var(--seal) }
 .mini { font: 500 11.5px var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 3px 8px; cursor: pointer; white-space: nowrap }
 #repSummary { display: block; margin-top: 4px; color: var(--ink); font-weight: 600 } .rep td.c { font-weight: 700 } .badge-new { font: 700 10px var(--f-body); color: #fff; background: var(--seal); border-radius: 999px; padding: 1px 6px; margin-left: 4px }
 .statrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px } .statrow div { background: var(--bg); border-radius: 12px; padding: 10px 12px } .statrow b { display: block; font: 700 22px var(--f-display) } .statrow span { font-size: 12px; color: var(--muted) }
@@ -219,7 +219,7 @@ td.r, th.r { text-align: right }
 
     <section class="card" id="repCard">
       <h2>없는 한자 제보</h2>
-      <p class="sub">사용자가 알려 준 글자 · <b>대기</b>가 위로 · 앱 데이터에 들어간 한자는 <b>자동으로 ‘추가됨’</b> · <b>‘한자 추가’</b>를 누르면 위 칸에 자동으로 채워져요 · 추가하지 않을 제보는 ‘처리 완료’ <span id="repSummary"></span></p>
+      <p class="sub">사용자가 알려 준 글자 · <b>대기</b>가 위로 · 새로 넣은 한자는 <b>‘추가됨’</b>, 처음부터 앱에 있던 글자는 <b>‘원래 있음’</b>으로 자동 표시 · <b>‘한자 추가’</b>를 누르면 위 칸에 자동으로 채워져요 · 추가하지 않을 제보는 ‘처리 완료’ <span id="repSummary"></span></p>
       <div class="tw" id="reports"></div>
     </section>
 
@@ -449,21 +449,25 @@ td.r, th.r { text-align: right }
     const recent3 = Date.now() - 3 * 86400000, done = doneGet();
     const status = g => {
       const k = g.eum + '|' + g.hanja;
-      const okHtml = c => `<span class="st ok">✅ 추가됨 ${c}${ADDED_AT[c] ? ' · ' + ADDED_AT[c].slice(5).replace('-', '.') : ''}</span>`;
-      if (g.hanja && [...g.hanja].every(c => HSET.has(c))) return { st: 'added', html: okHtml(g.hanja) };
+      // 추가한 기록(날짜)이 있으면 '추가됨', 처음부터 앱에 있던 글자면 '원래 있음'
+      const okHtml = cs => { const chars = [...cs], add = chars.filter(c => ADDED_AT[c]);
+        return add.length ? `<span class="st ok">✅ 추가됨 ${chars.join('')} · ${ADDED_AT[add[0]].slice(5).replace('-', '.')}</span>`
+          : `<span class="st had">☑ 원래 있음 ${chars.join('')}</span>`; };
+      const stOf = cs => [...cs].some(c => ADDED_AT[c]) ? 'added' : 'had';
+      if (g.hanja && [...g.hanja].every(c => HSET.has(c))) return { st: stOf(g.hanja), html: okHtml(g.hanja) };
       // 한자를 모르고 '소리 + 뜻'만 적은 제보 → 같은 소리·같은 뜻의 한자가 앱에 있으면 추가된 것으로 판정 (예: 현 + 옥돌 → 玹)
       if (!g.hanja && g.eum && g.hun.size) {
         const found = [...g.hun].map(w => findByHun(g.eum, w));
-        if (found.every(Boolean)) return { st: 'added', html: okHtml([...new Set(found)].join('')) };
+        if (found.every(Boolean)) { const cs = [...new Set(found)].join(''); return { st: stOf(cs), html: okHtml(cs) }; }
       }
       if (done.has(k)) return { st: 'done', html: `<span class="st ok">✔ 처리 완료</span> <button type="button" class="mini" data-undone="${esc(k)}">되돌리기</button>` };
       return { st: 'wait', html: `<span class="st wait">대기</span> <button type="button" class="mini add" data-add="${esc(g.eum + '|' + g.hanja + '|' + ([...g.hun][0] || ''))}">한자 추가</button> <button type="button" class="mini" data-done="${esc(k)}">처리 완료</button>` };
     };
     const groups = Object.values(rg).map(g => ({ ...g, s: status(g) }));
-    const order = { wait: 0, done: 1, added: 2 };
+    const order = { wait: 0, done: 1, added: 2, had: 3 };
     groups.sort((a, b) => order[a.s.st] - order[b.s.st] || b.n - a.n || (b.last > a.last ? 1 : -1));
     const waitN = groups.filter(g => g.s.st === 'wait').length;
-    $('#repSummary').textContent = reps.length ? `대기 ${waitN}종 · 추가됨 ${groups.filter(g => g.s.st === 'added').length}종 · 처리 완료 ${groups.filter(g => g.s.st === 'done').length}종` : '';
+    $('#repSummary').textContent = reps.length ? `대기 ${waitN}종 · 추가됨 ${groups.filter(g => g.s.st === 'added').length}종 · 원래 있음 ${groups.filter(g => g.s.st === 'had').length}종 · 처리 완료 ${groups.filter(g => g.s.st === 'done').length}종` : '';
     $('#reports').innerHTML = reps.length ? `<table class="rep"><thead><tr><th>상태</th><th>소리</th><th>한자</th><th>뜻(사용자 입력)</th><th class="r">횟수</th><th>어디서</th><th>마지막 제보</th></tr></thead><tbody>${
       groups.map(g => `<tr class="${g.s.st}"><td>${g.s.html}</td><td>${esc(g.eum)}${g.hanja ? '' : `<br><small class="muted">현재 ${EUMN[g.eum] || 0}자</small>`}</td><td class="h">${esc(g.hanja) || '<span class="muted">모름</span>'}</td>
         <td>${esc([...g.hun].join(', ')) || '—'}</td><td class="r c">${fmt(g.n)}</td><td>${[...g.where].map(w => W[w] || w).join(', ') || '—'}</td>
