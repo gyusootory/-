@@ -613,12 +613,23 @@ table.vs td:nth-child(2) { color: var(--ink) }
 
 @media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease both } @keyframes rise { from { transform: translateY(6px); opacity: .4 } } }
 /* 상단 한 줄 공지 */
-.notice { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 8px 6px 8px 12px; border-radius: 12px; background: var(--gold-soft); border: 1px solid rgb(201 168 106 / .45); color: var(--ink); font-size: 13px }
+.notice { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; padding: 8px 6px 8px 12px; border-radius: 12px; background: var(--gold-soft); border: 1px solid rgb(201 168 106 / .45); color: var(--ink); font-size: 13px }
 .notice p { margin: 0; flex: 1; min-width: 0; line-height: 1.45 }
 .nb-tag { flex: none; font: 700 11px var(--f-body); padding: 2px 7px; border-radius: 6px; background: var(--ink); color: var(--accent-ink) }
 .nb-h { font-family: var(--f-display); margin-left: 2px }
 .nb-x { flex: none; width: 32px; height: 32px; border: 0; background: none; color: var(--muted); font-size: 14px; border-radius: 8px; cursor: pointer }
 .nb-x:hover { background: rgb(0 0 0 / .06) }
+.nb-more { flex: none; border: 1px solid rgb(201 168 106 / .55); background: var(--surface); color: var(--ink); font: 600 12px var(--f-body); border-radius: 999px; padding: 5px 10px; cursor: pointer; white-space: nowrap }
+.nb-more[aria-expanded="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+.nb-week { flex: 1 0 100%; display: grid; gap: 10px; padding: 10px 6px 6px 0; border-top: 1px solid rgb(201 168 106 / .35); margin-top: 4px }
+.nb-week[hidden] { display: none }
+.nb-sum { margin: 0; font-size: 12.5px; color: var(--muted) }
+.nb-day h4 { margin: 0 0 6px; font: 700 12.5px var(--f-body); color: var(--ink) }
+.nb-day ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px }
+.nb-day li { display: flex; align-items: baseline; gap: 6px; padding: 6px 10px; border-radius: 10px; background: var(--surface); border: 1px solid rgb(201 168 106 / .35) }
+.nb-day li b { font: 600 20px var(--f-display); color: var(--ink) }
+.nb-day li span { font-size: 12.5px; color: var(--muted) }
+@media (max-width: 520px) { .notice > p { flex: 1 1 calc(100% - 100px) } .nb-x { order: 2 } .nb-more { order: 3; margin: -2px 0 2px 46px; padding: 4px 10px } .nb-week { order: 4 } }
 </style>
 
 <div class="wrap">
@@ -2196,11 +2207,23 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     const old = document.querySelector('.notice'); if (old) old.remove();
     if (!date) return;
     try { if (localStorage.getItem(KEY) === date) return; } catch (e) {}
-    const d = new Date(date + 'T00:00:00'), W = '일월화수목금토';
+    const W = '일월화수목금토', md = ds => { const d = new Date(ds + 'T00:00:00'); return `${d.getMonth() + 1}/${d.getDate()}(${W[d.getDay()]})`; };
     const list = g[date].map(c => `${esc(c[2])} ‘${esc(c[1])}’<span class="nb-h">${esc(c[0])}</span>`).join(', ');
+    // 펼쳐 보기: 최근 1주일(한국 날짜 기준, 오늘 포함 7일) 추가된 한자를 날짜별로
+    const from = kstDate(Date.now() - 6 * 86400000);
+    const week = Object.keys(g).filter(x => x >= from).sort().reverse();
+    if (!week.includes(date)) week.unshift(date);
+    const total = week.reduce((n, x) => n + g[x].length, 0);
+    const chip = c => { const h = N.byChar(c[0]); return `<li><b>${esc(c[0])}</b><span>${esc(c[2])} ${esc(c[1])}${h ? ` · ${h.strokes}획 · ${h.el}` : ''}</span></li>`; };
     const el = document.createElement('div'); el.className = 'notice'; el.setAttribute('role', 'status');
-    el.innerHTML = `<span class="nb-tag">공지</span><p>${d.getMonth() + 1}/${d.getDate()}(${W[d.getDay()]}) 추가된 한자 : ${list}</p><button type="button" class="nb-x" aria-label="공지 닫기">✕</button>`;
+    el.innerHTML = `<span class="nb-tag">공지</span><p>${md(date)} 추가된 한자 : ${list}</p>
+      <button type="button" class="nb-more" aria-expanded="false" aria-controls="nbWeek">최근 1주일 <span aria-hidden="true">▾</span></button>
+      <button type="button" class="nb-x" aria-label="공지 닫기">✕</button>
+      <div class="nb-week" id="nbWeek" hidden><p class="nb-sum">최근 1주일 동안 추가된 한자 ${total}자 · 한자 찾기 · 이름 비교에서 바로 고를 수 있어요</p>${
+        week.map(x => `<div class="nb-day"><h4>${md(x)}</h4><ul>${g[x].map(chip).join('')}</ul></div>`).join('')}</div>`;
     document.querySelector('.mast').after(el);
+    const more = el.querySelector('.nb-more');
+    more.addEventListener('click', () => { const open = more.getAttribute('aria-expanded') !== 'true'; more.setAttribute('aria-expanded', open); el.querySelector('.nb-week').hidden = !open; more.querySelector('span').textContent = open ? '▴' : '▾'; if (open) T('notice_more'); });
     el.querySelector('.nb-x').addEventListener('click', () => { try { localStorage.setItem(KEY, date); } catch (e) {} el.remove(); });
   }
   renderNotice();
