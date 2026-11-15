@@ -63,6 +63,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .need { font-size: 11px; font-weight: 700; color: var(--seal); margin-left: 4px }
 .autotag { font-size: 11px; font-weight: 700; color: var(--good); margin-left: 4px }
 .addgrid .auto input[readonly], .addgrid .auto select:disabled { background: var(--sunk); border-style: dashed; color: var(--ink); opacity: 1; pointer-events: none }
+.dictbtn { display: inline-flex; align-items: center; gap: 2px; font: 600 12px var(--f-body); color: var(--ink); border: 1px solid var(--accent); border-radius: 7px; padding: 3px 8px; margin-right: 4px; text-decoration: none; cursor: pointer }
+.dictbtn[aria-disabled="true"] { opacity: .45; pointer-events: none }
 .linkbtn { border: 0; background: none; padding: 0; font: inherit; color: var(--muted); text-decoration: underline; cursor: pointer }
 .schip { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 1px 7px; margin-left: 4px; font: 600 12px var(--f-body); cursor: pointer }
 .schip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
@@ -197,7 +199,7 @@ td.r, th.r { text-align: right }
       <p class="setup-note" id="addSetup" hidden></p>
       <form id="addForm" class="addgrid" novalidate autocomplete="off">
         <div class="field"><label for="aCh">한자</label><input id="aCh" maxlength="2" placeholder="例 羅"><small id="aChHint"></small></div>
-        <div class="field"><label for="aHun">뜻(훈) <span class="need">직접 입력</span></label><input id="aHun" maxlength="12" placeholder="예: 빛날"><small>사전에 한국어 뜻이 없어 이것만 직접 적어요</small></div>
+        <div class="field"><label for="aHun">뜻(훈) <span class="need">직접 입력</span></label><input id="aHun" maxlength="12" placeholder="예: 빛날"><small><a class="dictbtn" id="aDict" target="_blank" rel="noopener" aria-disabled="true">📖 사전에서 뜻 확인</a></small></div>
         <div class="field af auto"><label for="aEum">소리(음) <span class="autotag">자동</span></label><input id="aEum" maxlength="1" readonly tabindex="-1"><small id="aEumHint"></small></div>
         <div class="field af auto"><label for="aStrokes">원획 <span class="autotag">자동</span></label><input id="aStrokes" type="number" min="1" max="64" inputmode="numeric" readonly tabindex="-1"><small>&nbsp;</small></div>
         <div class="field af auto"><label for="aElem">자원오행 <span class="autotag">자동</span></label><select id="aElem" disabled><option value="">—</option><option>木</option><option>火</option><option>土</option><option>金</option><option>水</option></select><small><button type="button" class="linkbtn" id="aUnlock">자동값 직접 고치기</button></small></div>
@@ -628,6 +630,9 @@ td.r, th.r { text-align: right }
     const ch = [...$('#aCh').value].find(isHz) || '';
     if (keepMsg !== true) { $('#aMsg').textContent = ''; $('#aMsg').className = 'amsg'; }
     $('#aChHint').textContent = ''; $('#aEumHint').innerHTML = '';
+    const dch = [...$('#aCh').value].find(isHz) || '', dl = $('#aDict');
+    if (dch) { dl.href = 'https://hanja.dict.naver.com/#/search?query=' + encodeURIComponent(dch); dl.setAttribute('aria-disabled', 'false'); dl.title = dch + ' 뜻을 네이버 한자사전에서 보기'; }
+    else { dl.removeAttribute('href'); dl.setAttribute('aria-disabled', 'true'); }
     // 한자를 바꾸면 자동값을 모두 새로 채움 (이전 글자의 값이 남지 않게)
     $('#aEum').value = ''; $('#aStrokes').value = ''; $('#aElem').value = '';
     if (!ch) return;
