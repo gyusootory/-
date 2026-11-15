@@ -819,6 +819,18 @@
   setCollapsed(false);
   markNeed();
   renderSaju(null);
+  // 상단 한 줄 공지: 가장 최근 한자 추가 소식 (X를 누르면 그 업데이트는 다시 안 보임)
+  (function hanjaNotice() {
+    if (typeof HANJA_UPDATES === 'undefined' || !HANJA_UPDATES.length) return;
+    const u = HANJA_UPDATES[HANJA_UPDATES.length - 1], KEY = 'gachi-notice-off';
+    try { if (localStorage.getItem(KEY) === u.date) return; } catch (e) {}
+    const d = new Date(u.date + 'T00:00:00'), W = '일월화수목금토';
+    const list = u.chars.map(c => `${esc(c[2])} ‘${esc(c[1])}’<span class="nb-h">${c[0]}</span>`).join(', ');
+    const el = document.createElement('div'); el.className = 'notice'; el.setAttribute('role', 'status');
+    el.innerHTML = `<span class="nb-tag">공지</span><p>${d.getMonth() + 1}/${d.getDate()}(${W[d.getDay()]}) 추가된 한자 : ${list}</p><button type="button" class="nb-x" aria-label="공지 닫기">✕</button>`;
+    document.querySelector('.mast').after(el);
+    el.querySelector('.nb-x').addEventListener('click', () => { try { localStorage.setItem(KEY, u.date); } catch (e) {} el.remove(); });
+  })();
   let tab = 'rec'; try { tab = localStorage.getItem('naming-tab') || 'rec'; } catch (e) {}
   if (!['rec', 'find', 'mine', 'saved'].includes(tab)) tab = 'rec';
   setTab(tab);

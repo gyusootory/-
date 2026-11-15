@@ -587,6 +587,13 @@ table.vs td:nth-child(2) { color: var(--ink) }
 }
 
 @media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease both } @keyframes rise { from { transform: translateY(6px); opacity: .4 } } }
+/* 상단 한 줄 공지 */
+.notice { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 8px 6px 8px 12px; border-radius: 12px; background: var(--gold-soft); border: 1px solid rgb(201 168 106 / .45); color: var(--ink); font-size: 13px }
+.notice p { margin: 0; flex: 1; min-width: 0; line-height: 1.45 }
+.nb-tag { flex: none; font: 700 11px var(--f-body); padding: 2px 7px; border-radius: 6px; background: var(--ink); color: var(--accent-ink) }
+.nb-h { font-family: var(--f-display); margin-left: 2px }
+.nb-x { flex: none; width: 32px; height: 32px; border: 0; background: none; color: var(--muted); font-size: 14px; border-radius: 8px; cursor: pointer }
+.nb-x:hover { background: rgb(0 0 0 / .06) }
 </style>
 
 <div class="wrap">

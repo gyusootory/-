@@ -36,7 +36,7 @@
 ## 한자 추가하는 법 (업데이트 절차)
 1. `tools/hanja_source.txt`의 해당 소리 줄에 `한자훈` 추가 (예: `현 … 玹옥돌`)
 2. `tools/meaning_source.txt`에 `玹:옥돌처럼 은은한 광채` 처럼 뜻 풀이 한 줄 추가
-3. `tools/hanja_updates.json`에 날짜와 글자 추가 → 기존 사용자에게 **'새로 추가된 한자' 안내가 1번** 표시됨 (처음 온 사람에게는 안 보임)
+3. `tools/hanja_updates.json`에 날짜와 글자 추가 → 앱 상단에 **한 줄 공지**(가장 최근 날짜분)가 표시되고, 사용자가 ✕를 누르면 그 업데이트 공지는 다시 안 보임
 4. `python3 tools/build_data.py <unihan.db>` → `python3 tools/bundle.py`
 5. 관리자 화면 '없는 한자 제보'에서 해당 글자가 자동으로 **✅ 추가됨**으로 바뀜
 
