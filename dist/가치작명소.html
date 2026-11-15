@@ -1563,8 +1563,10 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     const f = id => $('#' + p + id);
     const v = f('bdate').value; if (!v) return null;
     const pd = parseDate(v);
-    if (!pd) return { error: '생년월일을 숫자 8자리로 입력해 주세요 (예: 2026.03.21 → 20260321)' };
+    if (!pd) return { error: '날짜를 확인해 주세요 (1900~2050년, 예: 20260321)' };
     let [y, m, d] = pd;
+    // 양력은 그 달에 있는 날짜인지 확인 (예: 2월 30일 → 오류)
+    if (f('cal').value !== 'lunar' && new Date(y, m - 1, d).getDate() !== d) return { error: `${m}월에는 ${d}일이 없어요. 날짜를 확인해 주세요` };
     if (f('cal').value === 'lunar') {
       const c = new KoreanLunarCalendar();
       if (!c.setLunarDate(y, m, d, f('leap').checked)) return { error: '음력 날짜를 확인해 주세요 (1000~2050년, 해당 월의 일수).' };
@@ -1683,7 +1685,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     const parts = [['수리', P.suri, 40], ['자원오행', P.ja, 25], ['발음오행', P.sound, 15], ['음양', P.yinyang, 10], ['삼원오행', P.sam, 10]];
     const gy = ev.gyeok.map(g => `<tr><th>${g.key}</th><td>${g.age}</td><td class="num">${g.num}</td>
         <td><span class="pill g${g.grade}">${N.GRADE_KO[g.grade]}</span></td><td>${g.name} — ${g.desc}</td></tr>`).join('');
-    const alts = (item.alts || []).map(a => `<li><b>${a.given.map(g => g.ch).join('')}</b> ${a.given.map(g => g.hun + ' ' + g.eum).join(', ')} <span class="num">${a.ev.total}점</span></li>`).join('');
+    const alts = (item.alts || []).map(a => `<li><b>${a.given.map(g => g.ch).join('')}</b> ${esc(a.given.map(g => g.hun + ' ' + g.eum).join(', '))} <span class="num">${a.ev.total}점</span></li>`).join('');
     return `<article class="card">
       <header class="chead">
         ${rank ? `<span class="rank">${rank}</span>` : ''}
@@ -1781,7 +1783,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
   function fillHangSel() {
     const s = $('#hangEum').value.trim();
     const list = s ? N.candidates(s) : [];
-    $('#hangSel').innerHTML = '<option value="">항렬자 없음</option>' + list.map(h => `<option value="${h.ch}">${h.ch} (${h.hun} ${h.eum}, ${h.strokes}획)</option>`).join('');
+    $('#hangSel').innerHTML = '<option value="">항렬자 없음</option>' + list.map(h => `<option value="${esc(h.ch)}">${esc(h.ch)} (${esc(h.hun)} ${h.eum}, ${h.strokes}획)</option>`).join('');
     if (list.length) $('#hangSel').value = list[0].ch;
     $('#hangHint').textContent = s && !list.length ? `‘${s}’ 음의 한자가 데이터에 없습니다.` : '';
   }
@@ -2177,9 +2179,20 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     if (findList.length && $('#wantName').value && surname('f-')) showFind(); // 이미 결과가 있으면 다시 계산
   });
   $('#hangEum').addEventListener('input', fillHangSel);
+  // 생년월일이 틀렸으면 칸 아래에 이유를 보여 주고 결과를 만들지 않음
+  function birthOk(p) {
+    const inp = $('#' + p + 'bdate'), fld = inp.closest('.field'), old = fld.querySelector('.ferr.bad'); if (old) old.remove();
+    const b = readBirth(p); if (!b || !b.error) return true;
+    fld.insertAdjacentHTML('beforeend', `<small class="ferr bad">${esc(b.error)}</small>`);
+    fld.classList.remove('miss'); void fld.offsetWidth; fld.classList.add('miss');
+    if (mobile.matches && !p) setCollapsed(false);
+    inp.focus({ preventScroll: true }); fld.scrollIntoView({ behavior: 'smooth', block: 'center' }); toast(b.error);
+    return false;
+  }
+  ['', 'm-', 'f-'].forEach(p => $('#' + p + 'bdate').addEventListener('input', () => { const o = $('#' + p + 'bdate').closest('.field').querySelector('.ferr.bad'); if (o) o.remove(); }));
   $('#recForm').addEventListener('submit', e => {
     e.preventDefault();
-    if (!validate($('#recForm'))) return;
+    if (!validate($('#recForm')) || !birthOk('')) return;
     showRecs(true); $('#fsum').hidden = false;
     T('recommend', { gender: $('#gender').value, has_time: !!$('#btime').value && !$('#tunknown').checked,
       lunar: $('#cal').value === 'lunar', hangyeol: !!$('#hangSel').value, candidates: pool.length });
@@ -2188,7 +2201,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
   $('#moreBtn').addEventListener('click', () => goRecPage(recPage + 1));
   $('#findForm').addEventListener('submit', e => {
     e.preventDefault();
-    if (!validate($('#findForm'))) return;
+    if (!validate($('#findForm')) || ($('#useSaju').checked && !birthOk('f-'))) return;
     showFind();
     // 성씨는 빼고 이름 글자만 기록 (인기 이름 통계용)
     T('find', { name: $('#wantName').value.replace(/\s/g, '').slice(0, 2), saju: $('#useSaju').checked, combos: findList.length });
@@ -2198,7 +2211,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
   ['m-', 'c-'].forEach(p => $('#' + p + 'name').addEventListener('input', () => renderHanjaFields(p)));
   $('#mineForm').addEventListener('submit', e => {
     e.preventDefault();
-    if (!validate($('#mineForm'))) return;
+    if (!validate($('#mineForm')) || !birthOk('m-')) return;
     showMine();
     if (mobile.matches) $('#mineMeta').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
