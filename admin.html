@@ -12,8 +12,8 @@
 <style>
 /* 관리자 화면: 위에서부터 요약 숫자 → 추이 차트 → 세부 표 순서로 훑어보는 구조 */
 :root {
-  --bg: #f3f2ee; --surface: #ffffff; --sunk: #eceae4; --ink: #141a26; --muted: #6a7080; --line: #e2dfd7;
-  --accent: #b8954f; --accent-ink: #ffffff; --seal: #a8382c; --grid: #eceae4; --gold: #8a6a2f; --band: #121826; --band-ink: #efe8d8;
+  --bg: #f3f2ee; --surface: #ffffff; --sunk: #eceae4; --ink: #141a26; --muted: #5f6573; --line: #e2dfd7;
+  --accent: #b8954f; --accent-ink: #ffffff; --seal: #a8382c; --grid: #eceae4; --gold: #7d5f27; --band: #121826; --band-ink: #efe8d8;
   --good: #3c7a5a; --bad: #a8382c;
   --f-display: "Noto Serif KR", "Nanum Myeongjo", serif;
   --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
@@ -22,10 +22,10 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0d1118; --surface: #151b26; --sunk: #0a0e14; --ink: #ece6da; --muted: #9aa0ad; --line: #252d3a;
-  --accent: #d6b978; --accent-ink: #121826; --seal: #d9705f; --grid: #222a36; --gold: #d6b978; --band: #0a0e15; --good: #74c49b; --bad: #ec8a7c; color-scheme: dark } }
+  --accent: #d6b978; --accent-ink: #121826; --seal: #d9705f; --on-seal: #1d1210; --grid: #222a36; --gold: #d6b978; --band: #0a0e15; --good: #74c49b; --bad: #ec8a7c; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0d1118; --surface: #151b26; --sunk: #0a0e14; --ink: #ece6da; --muted: #9aa0ad; --line: #252d3a;
-  --accent: #d6b978; --accent-ink: #121826; --seal: #d9705f; --grid: #222a36; --gold: #d6b978; --band: #0a0e15; --good: #74c49b; --bad: #ec8a7c; color-scheme: dark }
+  --accent: #d6b978; --accent-ink: #121826; --seal: #d9705f; --on-seal: #1d1210; --grid: #222a36; --gold: #d6b978; --band: #0a0e15; --good: #74c49b; --bad: #ec8a7c; color-scheme: dark }
 * { box-sizing: border-box }
 [hidden] { display: none !important }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body);
@@ -102,7 +102,7 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunk); p
 .rep tr.added td, .rep tr.done td, .rep tr.had td { opacity: .62 } .rep tr.added td:first-child, .rep tr.done td:first-child, .rep tr.had td:first-child { opacity: 1 }
 .st { font-size: 12px; font-weight: 700; white-space: nowrap } .st.had { color: var(--muted) } .st.ok { color: var(--good) } .st.wait { color: var(--seal) }
 .mini { font: 500 11.5px var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 3px 8px; cursor: pointer; white-space: nowrap }
-#repSummary { display: block; margin-top: 4px; color: var(--ink); font-weight: 600 } .rep td.c { font-weight: 700 } .badge-new { font: 700 10px var(--f-body); color: #fff; background: var(--seal); border-radius: 999px; padding: 1px 6px; margin-left: 4px }
+#repSummary { display: block; margin-top: 4px; color: var(--ink); font-weight: 600 } .rep td.c { font-weight: 700 } .badge-new { font: 700 10px var(--f-body); color: var(--on-seal, #fff); background: var(--seal); border-radius: 999px; padding: 1px 6px; margin-left: 4px }
 .statrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px } .statrow div { background: var(--bg); border-radius: 12px; padding: 10px 12px } .statrow b { display: block; font: 700 22px var(--f-display) } .statrow span { font-size: 12px; color: var(--muted) }
 @media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
 .kpi { background: var(--surface); border: 0; box-shadow: 0 1px 2px rgb(20 26 38 / .04), 0 8px 28px rgb(20 26 38 / .06); border-radius: 16px; padding: 14px 16px; display: grid; gap: 2px; min-width: 0 }

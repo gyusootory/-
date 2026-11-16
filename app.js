@@ -207,7 +207,7 @@
     if (f('cal').value !== 'lunar' && new Date(y, m - 1, d).getDate() !== d) return { error: `${m}월에는 ${d}일이 없어요. 날짜를 확인해 주세요` };
     if (f('cal').value === 'lunar') {
       const c = new KoreanLunarCalendar();
-      if (!c.setLunarDate(y, m, d, f('leap').checked)) return { error: '음력 날짜를 확인해 주세요 (1000~2050년, 해당 월의 일수).' };
+      if (!c.setLunarDate(y, m, d, f('leap').checked)) return { error: '음력 날짜를 확인해 주세요. 그해에 그 윤달이 있는지, 그 달이 며칠까지인지 확인해 주세요.' };
       const s = c.getSolarCalendar(); y = s.year; m = s.month; d = s.day;
     }
     const tUnknown = f('tunknown').checked, t = f('btime').value;
@@ -718,7 +718,7 @@
     const msg = fbText.value.trim().slice(0, 500);
     if (msg.length < 2) { toast('의견을 적어 주세요'); fbText.focus(); return; }
     const btn = $('#fbSend'); btn.disabled = true; btn.textContent = '보내는 중…';
-    const ok = window.gachiSend ? await window.gachiSend('feedback', { msg, tab: tab }) : false;
+    const ok = window.gachiSend ? await window.gachiSend('feedback', { msg, tab: (document.querySelector('[role=tab][aria-selected=true]') || {}).dataset?.tab || '' }) : false;
     btn.disabled = false; btn.textContent = '보내기';
     if (ok) { fbText.value = ''; $('#fbCount').textContent = '0 / 500'; fbClose(); toast('소중한 의견 고마워요! 꼭 읽어 볼게요'); }
     else toast('지금은 보낼 수 없어요. 인터넷 연결을 확인하고 다시 시도해 주세요');
@@ -800,7 +800,7 @@
   function setTab(t) {
     document.querySelectorAll('[role=tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
     document.querySelectorAll('[role=tabpanel]').forEach(p => (p.hidden = p.id !== 'p-' + t));
-    try { localStorage.setItem('naming-tab', t); } catch (e) {}
+    // (탭 기억 안 함: 항상 이름 추천으로 시작)
     if (t === 'saved') renderSaved();
   }
   document.querySelectorAll('[role=tab]').forEach(b => b.addEventListener('click', () => { setTab(b.dataset.tab); window.scrollTo(0, 0); T('tab', { tab: b.dataset.tab }); }));
@@ -918,7 +918,7 @@
         mergeExtra(rows); renderNotice();
       }).catch(() => {});
   })();
-  let tab = 'rec'; try { tab = localStorage.getItem('naming-tab') || 'rec'; } catch (e) {}
+  let tab = 'rec';   // 앱을 열면 항상 '이름 추천' 탭부터 (마지막 탭을 기억하지 않음)
   if (!['rec', 'find', 'mine', 'saved'].includes(tab)) tab = 'rec';
   setTab(tab);
   renderSaved();

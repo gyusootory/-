@@ -4,18 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="성명학 기반 무료 작명 앱. 아이 생일을 넣으면 이름을 추천하고, 원하는 이름에 맞는 한자를 찾아 드립니다.">
-<meta name="naver-site-verification" content="c8cba1559b47315a016eaf5cb67dd53322ebc7e0">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="가치작명소">
 <meta property="og:title" content="가치작명소 — 평생 부를 이름, 성명학 기반으로 가치 있게 지어 드립니다">
 <meta property="og:description" content="유료 작명 앱 대신 무료로! ① 아이 생일을 넣으면 이름을 추천하고 ② 원하는 이름에 맞는 한자를 찾아 드려요. 회원가입 없이 바로 써 보세요.">
-<meta property="og:url" content="https://gachi-naming.web.app/">
-<meta property="og:image" content="https://gachi-naming.web.app/og.png?v=20261116a">
+<meta property="og:image" content="https://gyusootory.github.io/gachi-naming/og.png?v=20261114e">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#121826">
-<link rel="canonical" href="https://gachi-naming.web.app/">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="favicon-48.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -23,11 +20,13 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="가치작명소">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>가치작명소 — 무료 아기 이름 작명 · 성명학 이름 추천</title>
+<title>가치작명소</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<!-- 글꼴: 화면을 막지 않고 뒤에서 받기(먼저 기본 글꼴로 보이고, 받으면 바뀜) · 명조 700은 600으로 대신해 용량 절약 -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"></noscript>
 <style>
 /* 디자인: '먹과 금박' — 먹빛 남색 머리띠 + 백자빛 바탕 + 샴페인 골드 포인트. 장식은 덜고 여백·명조 글씨로 품격을 냄 */
 :root {
@@ -36,11 +35,11 @@
   --sunk: #eceae4;        /* 눌린 칸 */
   --tile: #f7f6f2;        /* 한자 타일·입력칸 */
   --ink: #141a26;         /* 먹빛 남색 (아이콘 바탕색) */
-  --muted: #6a7080;
+  --muted: #5f6573;        /* 보조 글씨 (옅은 바탕에서도 대비 4.5 이상) */
   --line: #e2dfd7;
   --accent: #141a26;      /* 주 버튼 = 먹색 */
   --accent-ink: #f4ecdc;  /* 먹색 위 글씨 = 상아색 */
-  --gold: #8a6a2f;        /* 글씨용 금색 (흰 바탕 대비 확보) */
+  --gold: #7d5f27;        /* 글씨용 금색 (흰 바탕 대비 확보) */
   --gold-hi: #c9a86a;     /* 장식용 밝은 금색 */
   --gold-soft: #f8f3e7;   /* 금빛이 도는 옅은 바탕 */
   --band: #121826; --band-ink: #efe8d8; --band-muted: #a39b8a;
@@ -56,14 +55,14 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0d1118; --surface: #151b26; --sunk: #0a0e14; --tile: #1b2230; --ink: #ece6da; --muted: #9aa0ad; --line: #252d3a;
   --accent: #d6b978; --accent-ink: #121826; --gold: #d6b978; --gold-hi: #e6cf98; --gold-soft: #1d2230;
-  --band: #0a0e15; --band-ink: #efe8d8; --band-muted: #8f8877; --seal: #d9705f; --req-bg: #2a1d1b; --req-ring: rgb(217 112 95 / .25);
+  --band: #0a0e15; --band-ink: #efe8d8; --band-muted: #8f8877; --seal: #d9705f; --on-seal: #1d1210; --req-bg: #2a1d1b; --req-ring: rgb(217 112 95 / .25);
   --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 28px rgb(0 0 0 / .25);
   --wood: #74c49b; --fire: #ec8a7c; --earth: #ddb86a; --metal: #b4bac6; --water: #86b2ea;
   --good: #74c49b; --half: #ddb86a; --bad: #ec8a7c; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0d1118; --surface: #151b26; --sunk: #0a0e14; --tile: #1b2230; --ink: #ece6da; --muted: #9aa0ad; --line: #252d3a;
   --accent: #d6b978; --accent-ink: #121826; --gold: #d6b978; --gold-hi: #e6cf98; --gold-soft: #1d2230;
-  --band: #0a0e15; --band-ink: #efe8d8; --band-muted: #8f8877; --seal: #d9705f; --req-bg: #2a1d1b; --req-ring: rgb(217 112 95 / .25);
+  --band: #0a0e15; --band-ink: #efe8d8; --band-muted: #8f8877; --seal: #d9705f; --on-seal: #1d1210; --req-bg: #2a1d1b; --req-ring: rgb(217 112 95 / .25);
   --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 28px rgb(0 0 0 / .25);
   --wood: #74c49b; --fire: #ec8a7c; --earth: #ddb86a; --metal: #b4bac6; --water: #86b2ea;
   --good: #74c49b; --half: #ddb86a; --bad: #ec8a7c; color-scheme: dark }
@@ -101,7 +100,7 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0 }
 .panel h2, .sec h2 { font: 600 12px var(--f-body); letter-spacing: .12em; color: var(--muted) }
 .field { display: grid; gap: 5px }
 .field label, .lbl { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 5px; flex-wrap: wrap }
-.req-badge { font-style: normal; font-size: 10.5px; font-weight: 700; line-height: 1; color: #fff; background: var(--seal); border-radius: 4px; padding: 3px 5px; letter-spacing: .02em }
+.req-badge { font-style: normal; font-size: 10.5px; font-weight: 700; line-height: 1; color: var(--on-seal, #fff); background: var(--seal); border-radius: 4px; padding: 3px 5px; letter-spacing: .02em }
 .opt { font-size: 11px; font-weight: 500; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; line-height: 1.3 }
 .reqnote { margin: 0; font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
 /* 아직 비어 있는 필수 칸: 붉은 테두리 + 옅은 붉은 바탕 */
@@ -136,7 +135,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-v
 .pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px }
 .pillar { display: grid; justify-items: center; gap: 2px; background: var(--bg); border-radius: 6px; padding: 8px 2px }
 .pillar.me { outline: 1.5px solid var(--accent) }
-.pillar.ghost { opacity: .55 }
+.pillar.ghost .gz { opacity: .45 }   /* 시간 모름 기둥: ? 글자만 흐리게, 설명 글씨는 또렷하게 */
 .plabel { font-size: 11px; color: var(--muted) }
 .gz { font-family: var(--f-display); font-size: 28px; line-height: 1.15 }
 .pko { font-size: 12px; color: var(--muted) }
@@ -502,7 +501,7 @@ summary { color: var(--gold); font-weight: 600 }
 .act.save { background: transparent; color: var(--ink); border-color: var(--line) }
 .act.save.on { background: var(--gold-soft); color: var(--gold); border-color: var(--gold-hi) }
 .act.del { color: var(--bad) }
-.cnt { font-style: normal; font: 700 10.5px var(--f-body); background: var(--seal); color: #fff; border-radius: 999px; padding: 1px 6px; margin-left: 3px; vertical-align: 1px }
+.cnt { font-style: normal; font: 700 10.5px var(--f-body); background: var(--seal); color: var(--on-seal, #fff); border-radius: 999px; padding: 1px 6px; margin-left: 3px; vertical-align: 1px }
 .grid.one { grid-template-columns: minmax(0, 1fr) }
 .sdate { font-size: 12px; color: var(--muted) }
 .scard .chars .ch { padding-bottom: 12px }
@@ -1582,7 +1581,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     if (f('cal').value !== 'lunar' && new Date(y, m - 1, d).getDate() !== d) return { error: `${m}월에는 ${d}일이 없어요. 날짜를 확인해 주세요` };
     if (f('cal').value === 'lunar') {
       const c = new KoreanLunarCalendar();
-      if (!c.setLunarDate(y, m, d, f('leap').checked)) return { error: '음력 날짜를 확인해 주세요 (1000~2050년, 해당 월의 일수).' };
+      if (!c.setLunarDate(y, m, d, f('leap').checked)) return { error: '음력 날짜를 확인해 주세요. 그해에 그 윤달이 있는지, 그 달이 며칠까지인지 확인해 주세요.' };
       const s = c.getSolarCalendar(); y = s.year; m = s.month; d = s.day;
     }
     const tUnknown = f('tunknown').checked, t = f('btime').value;
@@ -2093,7 +2092,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     const msg = fbText.value.trim().slice(0, 500);
     if (msg.length < 2) { toast('의견을 적어 주세요'); fbText.focus(); return; }
     const btn = $('#fbSend'); btn.disabled = true; btn.textContent = '보내는 중…';
-    const ok = window.gachiSend ? await window.gachiSend('feedback', { msg, tab: tab }) : false;
+    const ok = window.gachiSend ? await window.gachiSend('feedback', { msg, tab: (document.querySelector('[role=tab][aria-selected=true]') || {}).dataset?.tab || '' }) : false;
     btn.disabled = false; btn.textContent = '보내기';
     if (ok) { fbText.value = ''; $('#fbCount').textContent = '0 / 500'; fbClose(); toast('소중한 의견 고마워요! 꼭 읽어 볼게요'); }
     else toast('지금은 보낼 수 없어요. 인터넷 연결을 확인하고 다시 시도해 주세요');
@@ -2175,7 +2174,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
   function setTab(t) {
     document.querySelectorAll('[role=tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
     document.querySelectorAll('[role=tabpanel]').forEach(p => (p.hidden = p.id !== 'p-' + t));
-    try { localStorage.setItem('naming-tab', t); } catch (e) {}
+    // (탭 기억 안 함: 항상 이름 추천으로 시작)
     if (t === 'saved') renderSaved();
   }
   document.querySelectorAll('[role=tab]').forEach(b => b.addEventListener('click', () => { setTab(b.dataset.tab); window.scrollTo(0, 0); T('tab', { tab: b.dataset.tab }); }));
@@ -2293,7 +2292,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
         mergeExtra(rows); renderNotice();
       }).catch(() => {});
   })();
-  let tab = 'rec'; try { tab = localStorage.getItem('naming-tab') || 'rec'; } catch (e) {}
+  let tab = 'rec';   // 앱을 열면 항상 '이름 추천' 탭부터 (마지막 탭을 기억하지 않음)
   if (!['rec', 'find', 'mine', 'saved'].includes(tab)) tab = 'rec';
   setTab(tab);
   renderSaved();
