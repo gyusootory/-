@@ -388,7 +388,6 @@
   function renderSaved() {
     document.querySelectorAll('.cnt').forEach(c => { c.textContent = saved.length || ''; c.hidden = !saved.length; });
     const out = $('#savedOut'); if (!out) return;
-    renderVoteCta();
     $('#savedMeta').textContent = saved.length ? `${saved.length}개 · 최근 저장한 순서 · 점수는 저장할 때의 사주 기준` : '';
     if (!saved.length) {
       out.innerHTML = '<div class="empty"><span class="empty-seal" aria-hidden="true">藏</span><p>추천 카드의 <b>♡ 저장</b>을 누르면 여기에 모여요 <small>(이 휴대폰·브라우저에 보관돼요)</small></p></div>';
@@ -717,119 +716,6 @@
     T('hanja_report', Object.assign({ eum, hanja, hun, where: $('#reportForm').dataset.where || '' }, forced ? { force: 1 } : {}));
     $('#reportBox').hidden = true; toast('제보해 주셔서 고마워요! 확인 후 추가할게요');
   });
-  // ---------- 가족 투표 (저장한 후보를 링크로 보내 가족이 ♥ 투표) ----------
-  // 서버(Supabase) 함수 3개만 씀: vote_create · vote_get · vote_toggle (supabase/family_vote.sql)
-  const VC = window.GACHI_CONFIG || {};
-  const voteOn = !!(VC.supabaseUrl && VC.supabaseAnonKey) && location.protocol === 'https:';
-  async function rpc(fn, args) {
-    const r = await fetch(VC.supabaseUrl.replace(/\/$/, '') + '/rest/v1/rpc/' + fn, { method: 'POST',
-      headers: Object.assign({ apikey: VC.supabaseAnonKey, 'Content-Type': 'application/json' }, /^eyJ/.test(VC.supabaseAnonKey) ? { Authorization: 'Bearer ' + VC.supabaseAnonKey } : {}),
-      body: JSON.stringify(args) });
-    if (!r.ok) throw new Error('vote ' + r.status);
-    return r.status === 204 ? null : r.json();
-  }
-  const MYV = 'gachi-votes', VOTER = 'gachi-voter';
-  const myVotes = () => { try { return JSON.parse(localStorage.getItem(MYV) || '[]'); } catch (e) { return []; } };
-  const addMyVote = v => { try { localStorage.setItem(MYV, JSON.stringify([v, ...myVotes().filter(x => x.id !== v.id)].slice(0, 10))); } catch (e) {} };
-  const voteUrl = id => location.origin + location.pathname.replace(/index\.html$/, '') + '?vote=' + id;
-  const rid22 = () => { const a = new Uint8Array(16); crypto.getRandomValues(a); return btoa(String.fromCharCode(...a)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
-  // 서버에 투표 기능(SQL)이 아직 준비되지 않았으면 버튼을 숨김 (한 번만 확인)
-  let voteReady = null;
-  function probeVote() {
-    if (!voteOn || voteReady !== null) return; voteReady = 'checking';
-    rpc('vote_get', { p_id: 'probe_probe_probe_0' }).then(() => { voteReady = true; renderVoteCta(); }).catch(() => { voteReady = false; renderVoteCta(); });
-  }
-  function renderVoteCta() {
-    probeVote();
-    $('#voteCta').hidden = !(voteOn && voteReady === true && saved.length);
-    const mine = myVotes();
-    $('#voteMine').hidden = !(voteOn && voteReady === true && mine.length);
-    $('#voteMine').innerHTML = mine.length ? '내가 만든 투표: ' + mine.map(v => `<button type="button" data-vopen="${esc(v.id)}">${esc(v.title || '이름 후보 투표')} · ${v.n}개</button>`).join('') : '';
-  }
-  async function sendVoteLink(id, title) {
-    const url = voteUrl(id), text = `${title || '아기 이름 후보'}에 투표해 주세요! 마음에 드는 이름에 ♥를 눌러 주세요 (가치작명소)`;
-    if (navigator.share) { try { await navigator.share({ title: title || '가족 투표', text, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
-    try { await navigator.clipboard.writeText(text + '\n' + url); toast('투표 링크를 복사했어요! 카톡에 붙여넣기 하세요'); } catch (e) { showShareBox(text + '\n' + url); }
-  }
-  $('#voteMakeOpen').addEventListener('click', () => {
-    const list = saved.slice().sort((a, b) => b.savedAt - a.savedAt).slice(0, 30);
-    $('#vmList').innerHTML = list.map(r => `<label><input type="checkbox" value="${esc(r.key)}" checked><b>${esc(r.hz)}</b> ${esc(r.ko)}<span>${r.score}점</span></label>`).join('');
-    $('#voteMakeBox').hidden = false; T('vote_make_open');
-  });
-  $('#vmClose').addEventListener('click', () => ($('#voteMakeBox').hidden = true));
-  $('#voteMakeBox').addEventListener('click', e => { if (e.target.id === 'voteMakeBox') $('#voteMakeBox').hidden = true; });
-  $('#voteMakeForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    const keys = [...document.querySelectorAll('#vmList input:checked')].map(i => i.value);
-    if (!keys.length) { toast('투표할 이름을 1개 이상 골라 주세요'); return; }
-    const title = $('#vmName').value.trim().slice(0, 30);
-    // 올리는 정보: 이름·한자·점수·등급·뜻풀이·글자별 훈음 (생년월일 등은 올리지 않음)
-    const names = keys.map(k => saved.find(r => r.key === k)).filter(Boolean).map(r => ({ k: r.hz.slice(0, 12), ko: r.ko, hz: r.hz, s: r.score, g: r.grade, m: String(r.meaning || '').slice(0, 80), gv: r.given.map(g => [g.ch, g.hun, g.eum]) }));
-    const btn = $('#vmGo'); btn.disabled = true; btn.textContent = '만드는 중…';
-    try {
-      const id = rid22(); await rpc('vote_create', { p_id: id, p_title: title, p_names: names });
-      addMyVote({ id, title, n: names.length, at: Date.now() }); $('#voteMakeBox').hidden = true; renderVoteCta();
-      T('vote_create', { n: names.length }); await sendVoteLink(id, title);
-    } catch (x) { toast('지금은 투표판을 만들 수 없어요. 잠시 후 다시 시도해 주세요'); }
-    finally { btn.disabled = false; btn.textContent = '링크 만들고 보내기'; }
-  });
-  // 투표 화면
-  let vId = null, vData = null, vTimer = null;
-  const voter = () => { try { return localStorage.getItem(VOTER) || ''; } catch (e) { return ''; } };
-  function renderVoterBar() {
-    const me = voter(), opts = ['엄마', '아빠', '할머니', '할아버지', '이모', '삼촌'];
-    $('#vvMe').innerHTML = `<span>나는</span>${opts.map(o => `<button type="button" class="chip" data-voter="${o}" aria-pressed="${me === o}">${o}</button>`).join('')}
-      <input type="text" id="vvMeIn" maxlength="12" placeholder="직접 입력" value="${opts.includes(me) ? '' : esc(me)}">`;
-  }
-  function renderVote() {
-    if (!vData) { $('#vvList').innerHTML = '<p class="muted">투표판을 찾을 수 없어요. 링크가 틀렸거나 기간(180일)이 지나 지워졌을 수 있어요.</p>'; $('#vvMeta').textContent = ''; return; }
-    const me = voter(), byKey = {};
-    vData.marks.forEach(m => (byKey[m.k] = byKey[m.k] || []).push(m.v));
-    const people = new Set(vData.marks.map(m => m.v));
-    $('#vvTitle').textContent = vData.title || '이름 후보 투표';
-    $('#vvMeta').textContent = `후보 ${vData.names.length}개 · ${people.size}명 참여` + (me ? ` · ‘${me}’(으)로 투표 중` : ' · 아래에서 나를 골라 주세요');
-    const list = vData.names.map((n, i) => ({ ...n, i, who: byKey[n.k] || [] })).sort((a, b) => b.who.length - a.who.length || a.i - b.i);
-    const max = list.length ? list[0].who.length : 0;
-    $('#vvList').innerHTML = list.map((n, r) => `<div class="vv-item${max && n.who.length === max ? ' top' : ''}">
-      <span class="vv-rank">${n.who.length ? r + 1 : '·'}</span>
-      <div class="vv-name"><b>${esc(n.hz)}</b><span>${esc(n.ko)} · ${esc(String(n.s))}점 ${esc(n.g || '')}</span>
-        <p>${(n.gv || []).map(g => `${esc(g[0])} ${esc(g[1])} ${esc(g[2])}`).join(' · ')}${n.m ? '<br>“' + esc(n.m) + '”' : ''}</p>
-        ${n.who.length ? `<div class="vv-who">${n.who.map(w => `<i>♥ ${esc(w)}</i>`).join('')}</div>` : ''}</div>
-      <button type="button" class="vv-heart" data-vk="${esc(n.k)}" aria-pressed="${!!me && n.who.includes(me)}" aria-label="${esc(n.ko)}에 하트"><span>${me && n.who.includes(me) ? '♥' : '♡'}</span>${n.who.length}</button>
-    </div>`).join('');
-  }
-  async function loadVote() {
-    try { vData = await rpc('vote_get', { p_id: vId }); } catch (e) { if (!vData) $('#vvList').innerHTML = '<p class="muted">불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.</p>'; return; }
-    renderVote();
-  }
-  function openVote(id) {
-    vId = id; vData = null; $('#voteView').hidden = false; document.body.style.overflow = 'hidden';
-    renderVoterBar(); $('#vvList').innerHTML = '<p class="muted">불러오는 중…</p>'; loadVote(); T('vote_open');
-    clearInterval(vTimer); vTimer = setInterval(() => { if (!document.hidden) loadVote(); }, 20000);   // 20초마다 다른 가족의 투표 반영
-  }
-  function closeVote() {
-    $('#voteView').hidden = true; document.body.style.overflow = ''; clearInterval(vTimer); vId = null;
-    if (/[?&]vote=/.test(location.search)) history.replaceState(null, '', location.pathname);
-  }
-  $('#vvClose').addEventListener('click', closeVote);
-  $('#vvApp').addEventListener('click', closeVote);
-  $('#vvReload').addEventListener('click', loadVote);
-  $('#vvShare').addEventListener('click', () => vId && sendVoteLink(vId, vData && vData.title));
-  document.addEventListener('click', e => { const b = e.target.closest('[data-vopen]'); if (b) openVote(b.dataset.vopen); });
-  $('#vvMe').addEventListener('click', e => { const b = e.target.closest('[data-voter]'); if (!b) return; try { localStorage.setItem(VOTER, b.dataset.voter); } catch (x) {} renderVoterBar(); renderVote(); });
-  $('#vvMe').addEventListener('change', e => { if (e.target.id !== 'vvMeIn') return; const v = e.target.value.trim().slice(0, 12); if (!v) return; try { localStorage.setItem(VOTER, v); } catch (x) {} renderVoterBar(); renderVote(); });
-  $('#vvList').addEventListener('click', async e => {
-    const b = e.target.closest('[data-vk]'); if (!b || !vData) return;
-    const me = voter(); if (!me) { toast('먼저 위에서 ‘나는 누구’인지 골라 주세요'); $('#vvMe').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
-    const k = b.dataset.vk, on = !vData.marks.some(m => m.k === k && m.v === me);
-    // 화면 먼저 바꾸고(빠르게) 서버에 반영
-    vData.marks = on ? [...vData.marks, { v: me, k }] : vData.marks.filter(m => !(m.k === k && m.v === me)); renderVote();
-    try { const ok = await rpc('vote_toggle', { p_id: vId, p_voter: me, p_key: k, p_on: on }); if (ok === false) toast('이 투표판은 참여 인원이 가득 찼어요'); if (on) T('vote_mark'); }
-    catch (x) { toast('반영하지 못했어요. 인터넷 연결을 확인해 주세요'); }
-    loadVote();
-  });
-  (function voteFromLink() { const m = location.search.match(/[?&]vote=([A-Za-z0-9_-]{16,32})/); if (m && voteOn) openVote(m[1]); })();
-
   // ---------- 의견 남기기 ----------
   const fbText = $('#fbText');
   $('#fbOpen').addEventListener('click', () => { $('#fbBox').hidden = false; setTimeout(() => fbText.focus(), 50); T('feedback_open'); });
