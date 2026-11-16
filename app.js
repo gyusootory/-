@@ -139,11 +139,11 @@
   }
   // 한자 검색 선택칸: 그 소리로 읽는 한자 중에서 뜻·한자로 검색
   function hanjaCfg(syl) {
-    const items = N.candidates(syl).map(h => ({ value: h.ch, ch: h.ch, hun: h.hun, eum: h.eum, strokes: h.strokes, mean: h.mean }));
+    const items = N.candidates(syl).map(h => ({ value: h.ch, ch: h.ch, hun: h.hun, eum: h.eum, strokes: h.strokes, mean: h.mean, inm: h.inm }));
     const none = { value: '__none', none: true };
     return {
       search: q => { q = q.trim().replace(/\(.*$/, '').trim(); const hit = q ? items.filter(h => h.ch === q || h.hun.includes(q) || h.mean.includes(q) || (h.hun + ' ' + h.eum).includes(q)) : items; return [...hit, none]; },
-      html: it => it.none ? '<em class="hnone">목록에 없어요 · 고르면 제보할 수 있어요</em>' : `<b class="hzc">${it.ch}</b><span class="hd">${esc(it.hun)} ${it.eum} · ${it.strokes}획</span>`,
+      html: it => it.none ? '<em class="hnone">목록에 없어요 · 고르면 제보할 수 있어요</em>' : `<b class="hzc">${it.ch}</b><span class="hd">${esc(it.hun)} ${it.eum} · ${it.strokes}획${it.inm === false ? ' · <em class="hno">인명용 확인 필요</em>' : ''}</span>`,
       label: it => it.none ? '목록에 없어요' : `${it.ch} (${it.hun} ${it.eum})`,
       byValue: v => v === '__none' ? none : items.find(h => h.value === v),
       exact: (q, hit) => hit.find(h => !h.none && h.ch === q),
@@ -305,6 +305,13 @@
   });
 
   // ---------- 이름 카드 ----------
+  // 대법원 인명용 한자 여부 (출생신고에 쓸 수 있는 글자인지)
+  function inmLine(given) {
+    const no = given.filter(g => g.inm === false);
+    return no.length
+      ? `<p class="inm no"><span aria-hidden="true">⚠</span> ${no.map(g => `${g.ch}(${esc(g.hun)} ${g.eum})`).join(', ')}: 대법원 인명용 한자 목록에서 확인되지 않았어요 · 출생신고 전 꼭 확인하세요</p>`
+      : `<p class="inm ok"><span aria-hidden="true">✓</span> 모두 대법원 인명용 한자예요 <small>(2024년 6월 기준)</small></p>`;
+  }
   function nameCard(item, rank, sur, from) {
     const { given, ev } = item;
     const fullKo = sur.ko + given.map(g => g.ko).join('');
@@ -312,7 +319,7 @@
     const key = fullH;
     // 저장 버튼을 눌렀을 때 쓸 정보 (점수는 이 순간의 사주 기준)
     cardInfo.set(key, { key, ko: fullKo, hz: fullH, sur: { ko: sur.ko, hanja: sur.hanja }, from: from || 'rec',
-      given: given.map(g => ({ ch: g.ch, ko: g.ko, eum: g.eum, hun: g.hun, mean: g.mean, strokes: g.strokes, el: g.el })),
+      given: given.map(g => ({ ch: g.ch, ko: g.ko, eum: g.eum, hun: g.hun, mean: g.mean, strokes: g.strokes, el: g.el, inm: g.inm })),
       score: Math.round(ev.total), grade: ev.grade, meaning: nameMeaning(given), share: cardText(fullKo, fullH, given, ev) });
     const isSaved = saved.some(x => x.key === key);
     const chars = [
@@ -338,6 +345,7 @@
         <ul class="mlist">${given.map(g => `<li><b>${g.ch}</b><span class="mh">${esc(g.hun)} ${g.eum}</span><span class="mk">${esc(g.mean)}</span></li>`).join('')}</ul>
       </div>
       <ul class="parts">${parts.map(([k, v, m]) => `<li><span>${k}</span><span class="pt"><i style="width:${v / m * 100}%"></i></span><span class="num">${v}/${m}</span></li>`).join('')}</ul>
+      ${inmLine(given)}
       ${ev.warn.length ? `<p class="warn">${ev.warn.map(esc).join(' · ')}</p>` : ''}
       <details class="dt"><summary><span class="dt-ic" aria-hidden="true">鑑</span><span class="dt-tx"><b class="dt-open">상세 감명 보기</b><b class="dt-close">상세 감명 접기</b><small>81수리 · 음양 · 오행 풀이</small></span><span class="dt-chev" aria-hidden="true"></span></summary>
         <h4>원형이정 4격 (81수리)</h4>
@@ -616,6 +624,7 @@
       ].join('');
     };
     // 나란히 비교 표
+    const inmCell = gv => { const no = gv.filter(x => x.inm === false); return no.length ? `<span class="inm no">⚠ ${no.map(x => x.ch).join('')} 확인 필요</span>` : '<span class="inm ok">✓ 모두 인명용</span>'; };
     let vs = '';
     if (cev) {
       const diff = r1(cev.total - ev.total);
@@ -631,6 +640,7 @@
           ${row('총점', `<b class="big">${r1(ev.total)}</b> ${ev.grade}`, `<b class="big">${r1(cev.total)}</b> ${cev.grade}`, ev.total, cev.total)}
           ${P.map((k, n) => row(PK[n], `${ev.parts[k]}/${PM[n]}`, `${cev.parts[k]}/${PM[n]}`, ev.parts[k], cev.parts[k])).join('')}
           ${['원격', '형격', '이격', '정격'].map((k, n) => row(k, g(ev, n), g(cev, n), ev.gyeok[n].grade, cev.gyeok[n].grade)).join('')}
+          ${row('인명용 한자', inmCell(me.given), inmCell(cand.given), me.given.every(x => x.inm !== false) ? 1 : 0, cand.given.every(x => x.inm !== false) ? 1 : 0)}
           ${row('같은 사주 후보 중', rankOf(ev.total).txt, rankOf(cev.total).txt, -rankOf(ev.total).pos, -rankOf(cev.total).pos)}
         </tbody></table></div>
         <div class="vs2"><div><h5>지금 이름</h5><ul class="sumry">${summary(ev)}</ul></div><div><h5>개명할 이름</h5><ul class="sumry">${summary(cev)}</ul></div></div>

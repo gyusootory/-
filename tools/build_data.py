@@ -45,6 +45,19 @@ def info(ch):
     won = NUM.get(ch) or FIX.get(ch) or (rad_strokes(r) + res if res > 0 else tot)
     return r, won, tot
 
+# 대법원 인명용 한자 목록 (tools/inmyeong.txt) · 같은 글자의 다른 코드(예: 姬/姫)는 Unihan 이체자 정보로 함께 인정
+INM_RAW = set(''.join(l.strip() for l in open(os.path.join(ROOT, 'tools/inmyeong.txt'), encoding='utf-8') if not l.startswith('#')))
+def variants(ch):
+    row = con.execute('select kZVariant,kCompatibilityVariant,kSemanticVariant,kTraditionalVariant from unihan where character=?', (ch,)).fetchone() or ()
+    out = set()
+    for v in row:
+        for t in (v or '').split():
+            t = t.split('<')[0]
+            if t.startswith('U+'): out.add(chr(int(t[2:], 16)))
+    return out
+def inmyeong(ch):
+    return ch in INM_RAW or any(v in INM_RAW for v in variants(ch))
+
 MEAN = {}
 for line in open(os.path.join(ROOT,'tools/meaning_source.txt'), encoding='utf-8'):
     if line.startswith('#') or not line.strip(): continue
@@ -61,7 +74,7 @@ for line in open(os.path.join(ROOT,'tools/hanja_source.txt'), encoding='utf-8'):
         el = OVR.get(ch) or ELEM.get(r)
         if not el: print('미지정 오행:', ch, r, file=sys.stderr)
         if ch not in MEAN: print('풀이 없음:', ch, file=sys.stderr)
-        out.append([ch, eum, hun, won, el or '土', r, MEAN.get(ch, hun)])
+        out.append([ch, eum, hun, won, el or '土', r, MEAN.get(ch, hun), 1 if inmyeong(ch) else 0])
 
 sur = []
 for line in open(os.path.join(ROOT,'tools/surname_source.txt'), encoding='utf-8'):
@@ -73,7 +86,7 @@ for line in open(os.path.join(ROOT,'tools/surname_source.txt'), encoding='utf-8'
         sur.append([p[0], h, ws, els])
 
 js = '// 자동 생성 파일 (tools/build_data.py) — 직접 수정하지 마세요\n'
-js += '// HANJA: [한자, 음, 훈, 원획수, 자원오행, 강희부수번호]\n'
+js += '// HANJA: [한자, 음, 훈, 원획수, 자원오행, 강희부수번호, 풀이, 대법원 인명용(1/0)]\n'
 js += 'const HANJA = ' + json.dumps(out, ensure_ascii=False, separators=(',',':')) + ';\n'
 js += '// SURNAMES: [한글, 한자, [글자별 원획], [글자별 자원오행]]\n'
 js += 'const SURNAMES = ' + json.dumps(sur, ensure_ascii=False, separators=(',',':')) + ';\n'
@@ -86,7 +99,7 @@ for u in ups:
 js += '// HANJA_UPDATES: 한자 추가 안내 [{date, chars:[[한자, 음, 훈]]}] (마지막 항목이 최신)\n'
 js += 'const HANJA_UPDATES = ' + json.dumps([{'date': u['date'], 'chars': [[c, byc[c][1], byc[c][2]] for c in u['chars']]} for u in ups], ensure_ascii=False, separators=(',',':')) + ';\n'
 open(os.path.join(ROOT,'hanja-data.js'),'w',encoding='utf-8').write(js)
-print(len(out), 'hanja,', len(sur), 'surnames')
+print(len(out), 'hanja,', len(sur), 'surnames · 인명용 확인 안 됨:', [h[0] for h in out if not h[7]])
 
 # ---------- 관리자 화면용: 한자 한 글자를 넣으면 원획·부수·자원오행·소리를 자동으로 채우는 사전 ----------
 # 한국 소리(kHangul)가 있는 한자만 담음. 형식: "한자 부수번호 원획 소리들" 을 줄바꿈으로 연결
@@ -99,7 +112,7 @@ for ch, rs, tot, hg in con.execute("select character,kRSKangXi,kTotalStrokes,kHa
         continue
     won = NUM.get(ch) or FIX.get(ch) or (rad_strokes(r) + res if res > 0 else t)
     sounds = ''.join(dict.fromkeys(s.split(':')[0] for s in hg.split()))
-    lines.append(f'{ch}{r},{won},{sounds}')
+    lines.append(f'{ch}{r},{won},{sounds},{1 if inmyeong(ch) else 0}')
 el_r = {}
 for r, e in ELEM.items(): el_r.setdefault(e, []).append(r)
 adm = '// 자동 생성 파일 (tools/build_data.py) — 관리자 화면 전용 한자 사전\n'

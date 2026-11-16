@@ -608,6 +608,13 @@ table.vs td:nth-child(2) { color: var(--ink) }
 }
 
 @media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease both } @keyframes rise { from { transform: translateY(6px); opacity: .4 } } }
+/* 대법원 인명용 한자 표시 */
+.inm { margin: 0; font-size: 12.5px; font-weight: 600; display: flex; gap: 6px; align-items: baseline; line-height: 1.5 }
+.inm small { font-weight: 400; color: var(--muted) }
+.inm.ok { color: var(--good) } .inm.no { color: var(--seal) }
+.hno { font-style: normal; color: var(--seal); font-weight: 600 }
+td .inm { font-size: 12px; display: inline }
+
 /* 상단 한 줄 공지 */
 .notice { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; padding: 8px 6px 8px 12px; border-radius: 12px; background: var(--gold-soft); border: 1px solid rgb(201 168 106 / .45); color: var(--ink); font-size: 13px }
 .notice p { margin: 0; flex: 1; min-width: 0; line-height: 1.45 }
@@ -874,6 +881,7 @@ table.vs td:nth-child(2) { color: var(--ink) }
       <ul>
         <li><b>korean-lunar-calendar</b> 0.4.0 — 음력·양력 변환 (한국천문연구원 기준 데이터) · MIT License</li>
         <li><b>Unicode Unihan Database</b> — 한자 부수·획수 자료 · Unicode License v3</li>
+        <li><b>Korean-Name-Hanja-Charset</b> (rutopio) — 대법원 인명용 한자 목록(대법원 전자가족관계등록시스템 수집, 2024년 6월 확대분 포함) · MIT License</li>
         <li><b>앱 아이콘</b> — Higgsfield(GPT Image)로 생성</li>
         <li><b>Noto Serif KR · IBM Plex Sans KR · IBM Plex Mono</b> 글꼴 — SIL Open Font License 1.1</li>
       </ul>

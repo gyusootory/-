@@ -240,7 +240,7 @@
   function index(HANJA) {
     BY_READ = {}; BY_CHAR = {};
     HANJA.forEach(r => {
-      const h = { ch: r[0], eum: r[1], hun: r[2], strokes: r[3], el: r[4], mean: r[6] || r[2] };
+      const h = { ch: r[0], eum: r[1], hun: r[2], strokes: r[3], el: r[4], mean: r[6] || r[2], inm: r[7] !== 0 };   // inm: 대법원 인명용 (관리자 추가분은 추가할 때 확인했으므로 true)
       BY_CHAR[h.ch] = h;
       const keys = new Set([h.eum, dooeum(h.eum)]);
       keys.forEach(k => (BY_READ[k] = BY_READ[k] || []).push(h));
@@ -337,7 +337,7 @@
   // 한 한글 이름에 대해 가능한 모든 한자 조합을 평가해 점수순 정렬
   function rankHanja(sur, nameSyl, sj, fixed, strict) {
     const lists = nameSyl.map((s, i) => (fixed && fixed[i]) ? [fixed[i]]
-      : candidates(s).filter(h => !strict || !(AWKWARD.has(h.ch) || BULYONG.has(h.ch) || OLDSTYLE.has(h.ch))));
+      : candidates(s).filter(h => !strict || !(AWKWARD.has(h.ch) || BULYONG.has(h.ch) || OLDSTYLE.has(h.ch) || !h.inm)));   // 자동 추천에서는 인명용 확인 안 된 글자 제외
     if (lists.some(l => !l.length)) return [];
     const out = [];
     const rec = (i, acc) => {

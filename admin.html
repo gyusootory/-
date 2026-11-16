@@ -65,6 +65,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .addgrid .auto input[readonly], .addgrid .auto select:disabled { background: var(--sunk); border-style: dashed; color: var(--ink); opacity: 1; pointer-events: none }
 .dictbtn { display: inline-flex; align-items: center; gap: 2px; font: 600 12px var(--f-body); color: var(--ink); border: 1px solid var(--accent); border-radius: 7px; padding: 3px 8px; margin-right: 4px; text-decoration: none; cursor: pointer }
 .dictbtn[aria-disabled="true"] { opacity: .45; pointer-events: none }
+.inm-ok { color: var(--good) } .inm-no { color: var(--seal) }
 .linkbtn { border: 0; background: none; padding: 0; font: inherit; color: var(--muted); text-decoration: underline; cursor: pointer }
 .schip { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 1px 7px; margin-left: 4px; font: 600 12px var(--f-body); cursor: pointer }
 .schip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
@@ -619,7 +620,7 @@ td.r, th.r { text-align: right }
   // 한자 사전(관리자 전용): 글자 → [부수, 원획, 소리들]
   let DICT = null;
   const dictGet = ch => {
-    if (!DICT) { DICT = new Map(); if (typeof HZ_DICT !== 'undefined') HZ_DICT.split('\n').forEach(l => { const c = String.fromCodePoint(l.codePointAt(0)), rest = l.slice(c.length).split(','); DICT.set(c, [+rest[0], +rest[1], rest[2] || '']); }); }
+    if (!DICT) { DICT = new Map(); if (typeof HZ_DICT !== 'undefined') HZ_DICT.split('\n').forEach(l => { const c = String.fromCodePoint(l.codePointAt(0)), rest = l.slice(c.length).split(','); DICT.set(c, [+rest[0], +rest[1], rest[2] || '', rest[3] === '1']); }); }
     return DICT.get(ch);
   };
   const isHz = c => /[㐀-鿿豈-﫿]/.test(c);
@@ -647,7 +648,8 @@ td.r, th.r { text-align: right }
     $('#aElem').value = (typeof HZ_ELEM_OVR !== 'undefined' && HZ_ELEM_OVR[ch]) || (typeof HZ_ELEM_BY_RAD !== 'undefined' && HZ_ELEM_BY_RAD[d[0]]) || '';
     const sounds = [...d[2]], want = $('#addForm').dataset.eum || '';
     $('#aEum').value = sounds.includes(want) ? want : (sounds[0] || '');
-    $('#aChHint').textContent = `부수 ${d[0]}번 · 원획 ${d[1]}획` + ($('#aElem').value ? '' : ' · 오행은 직접 골라 주세요');
+    $('#aChHint').innerHTML = `부수 ${d[0]}번 · 원획 ${d[1]}획` + ($('#aElem').value ? '' : ' · 오행은 직접 골라 주세요')
+      + (d[3] ? ' · <b class="inm-ok">✓ 대법원 인명용</b>' : ' · <b class="inm-no">⚠ 인명용 목록에 없음 (출생신고에 못 쓸 수 있어요)</b>');
     if (!$('#aElem').value && $('#aEum').readOnly) lockAuto(false);
     // 소리가 여러 개인 글자(예: 羅 나·라)는 눌러서 고름
     if (sounds.length > 1) $('#aEumHint').innerHTML = '소리 고르기:' + sounds.map(x => `<button type="button" class="schip" data-snd="${x}" aria-pressed="${x === $('#aEum').value}">${x}</button>`).join('');
@@ -675,6 +677,7 @@ td.r, th.r { text-align: right }
     if (!(row.strokes >= 1 && row.strokes <= 64)) return bad('원획을 확인해 주세요');
     if (!row.elem) return bad('자원오행을 골라 주세요');
     if (HANJA.some(x => x[0] === row.ch && x[1] === row.eum)) return bad('이미 앱에 있는 한자예요');
+    if (d && !d[3] && !confirm(`${row.ch}는 대법원 인명용 한자 목록에서 확인되지 않아요.\n출생신고에 못 쓸 수 있는 글자예요. 그래도 추가할까요?`)) return bad('추가를 취소했어요 (인명용 아님)');
     if (demo) { msg.textContent = '예시 모드라 저장하지 않았어요 (실제 로그인 후에는 바로 추가돼요)'; msg.className = 'amsg ok'; return; }
     if (EXTRA_OK === false) { $('#addSetup').hidden = false; return bad('먼저 위 안내대로 설정을 한 번 해 주세요'); }
     $('#aSave').disabled = true;
