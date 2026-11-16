@@ -7,7 +7,7 @@
 (function () {
   'use strict';
   const C = window.GACHI_CONFIG || {};
-  const on = !!(C.supabaseUrl && C.supabaseAnonKey) && location.protocol === 'https:' && !/claude|anthropic/.test(location.hostname);
+  const on = !!(C.supabaseUrl && C.supabaseAnonKey) && location.protocol === 'https:' && !/claude|anthropic/.test(location.hostname) && !/--/.test(location.hostname);   // --: Firebase 테스트 주소는 통계에서 제외
   const get = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const set = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
   const rid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36);

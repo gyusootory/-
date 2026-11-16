@@ -1,0 +1,36 @@
+# 새 기능 미리 보기: 실제 주소(gachi-naming.web.app)는 그대로 두고, 테스트 전용 주소에만 올림
+# 실행: GitHub → Actions → "Firebase 테스트 주소" → Run workflow (또는 Claude가 실행)
+# 저장소의 docs 폴더는 건드리지 않고, GitHub 작업 컴퓨터 안에서만 최신 코드로 앱 파일을 만들어 올림
+name: Firebase 테스트 주소
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: firebase-preview
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 최신 코드로 앱 파일 만들기 (작업 컴퓨터 안에서만)
+        run: python3 tools/bundle.py
+
+      - name: 테스트 주소에 올리기 (7일 뒤 자동 만료)
+        id: deploy
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: test
+          expires: 7d
+          projectId: gachi-naming
+
+      - name: 테스트 주소 알려 주기
+        run: |
+          echo "테스트 주소: ${{ steps.deploy.outputs.details_url }}"
+          echo "## 테스트 주소" >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.deploy.outputs.details_url }}" >> "$GITHUB_STEP_SUMMARY"
