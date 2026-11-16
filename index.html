@@ -615,6 +615,40 @@ table.vs td:nth-child(2) { color: var(--ink) }
 .hno { font-style: normal; color: var(--seal); font-weight: 600 }
 td .inm { font-size: 12px; display: inline }
 
+/* 가족 투표 */
+.vote-cta { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 14px 16px; border-radius: 16px; background: var(--gold-soft); border: 1px solid rgb(201 168 106 / .45) }
+.vote-cta[hidden], .vote-mine[hidden] { display: none }
+.vote-cta b { display: block; font-size: 15px } .vote-cta small { color: var(--muted); font-size: 12.5px }
+.vote-mine { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; color: var(--muted) }
+.vote-mine button { font: 600 12.5px var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 5px 11px; cursor: pointer }
+.modal { position: fixed; inset: 0; z-index: 50; background: rgb(10 14 20 / .5); display: grid; place-items: center; padding: 16px }
+.modal[hidden] { display: none }
+.modal .sb { background: var(--surface); color: var(--ink); border-radius: 20px; padding: 20px; width: min(100%, 440px); max-height: calc(100dvh - 32px); overflow: auto; display: grid; gap: 12px }
+.modal h3 { font: 600 20px var(--f-display); margin: 0 } .modal p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.6 } .modal .rp-note { font-size: 12px }
+.vm-list { display: grid; gap: 6px; max-height: 38vh; overflow: auto; padding: 2px }
+.vm-list label { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; font-size: 14px; cursor: pointer }
+.vm-list label b { font: 600 18px var(--f-display) } .vm-list label span { color: var(--muted); font-size: 12.5px; margin-left: auto }
+#voteView { position: fixed; inset: 0; z-index: 48; background: var(--bg); overflow: auto; padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)) }
+#voteView[hidden] { display: none }
+.vv-wrap { max-width: 640px; margin: 0 auto; display: grid; gap: 14px }
+.vv-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start }
+.vv-head small { color: var(--gold); font-weight: 700; font-size: 12px; letter-spacing: .04em }
+.vv-head h2 { margin: 2px 0 2px; font: 600 24px var(--f-display) } .vv-head p { margin: 0; color: var(--muted); font-size: 13px }
+.vv-me { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); font-size: 13.5px }
+.vv-me .chip { font: 600 13px var(--f-body); border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 999px; padding: 6px 12px; cursor: pointer }
+.vv-me .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+.vv-me input { font: 15px var(--f-body); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; width: 8.5em; background: var(--bg); color: var(--ink) }
+.vv-list { display: grid; gap: 10px }
+.vv-item { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line) }
+.vv-item.top { border-color: var(--gold-hi); box-shadow: 0 0 0 1px var(--gold-hi) inset }
+.vv-rank { font: 700 13px var(--f-body); color: var(--muted); width: 1.6em; text-align: center }
+.vv-name b { font: 600 24px var(--f-display); letter-spacing: .04em; display: block } .vv-name span { font-size: 13px; color: var(--muted) }
+.vv-name p { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.5 }
+.vv-who { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px } .vv-who i { font-style: normal; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--gold-soft); color: var(--ink) }
+.vv-heart { display: grid; justify-items: center; gap: 2px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 14px; padding: 8px 12px; min-width: 56px; cursor: pointer; font: 700 13px var(--f-body) }
+.vv-heart span { font-size: 22px; line-height: 1 } .vv-heart[aria-pressed="true"] { background: var(--seal); border-color: var(--seal); color: var(--on-seal, #fff) }
+.vv-act { justify-content: center }
+
 /* 상단 한 줄 공지 */
 .notice { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; padding: 8px 6px 8px 12px; border-radius: 12px; background: var(--gold-soft); border: 1px solid rgb(201 168 106 / .45); color: var(--ink); font-size: 13px }
 .notice p { margin: 0; flex: 1; min-width: 0; line-height: 1.45 }
@@ -783,6 +817,11 @@ td .inm { font-size: 12px; display: inline }
     </div>
     <section class="sec">
       <div class="sechead"><div><h3>저장한 이름</h3><p id="savedMeta"></p></div></div>
+      <div class="vote-cta" id="voteCta" hidden>
+        <div><b>가족과 함께 고르기</b><small>저장한 후보를 링크로 보내면 가족이 마음에 드는 이름에 ♥를 눌러요</small></div>
+        <button class="act" type="button" id="voteMakeOpen">투표 링크 만들기</button>
+      </div>
+      <div class="vote-mine" id="voteMine" hidden></div>
       <div class="cards" id="savedOut"></div>
     </section>
   </div>
@@ -919,6 +958,27 @@ td .inm { font-size: 12px; display: inline }
     <p class="rp-note">익명으로 전달돼요. 이름·전화번호 같은 개인정보는 적지 말아 주세요.</p>
     <div class="cact"><button class="act" type="submit" id="fbSend">보내기</button><button class="act ghost" type="button" id="fbClose">닫기</button></div>
   </form>
+</div>
+<div id="voteMakeBox" class="modal" hidden>
+  <form class="sb" id="voteMakeForm" role="dialog" aria-modal="true" aria-labelledby="vmTitle" novalidate>
+    <h3 id="vmTitle">가족 투표 만들기</h3>
+    <p>후보를 고르고 링크를 보내면, 받은 가족이 마음에 드는 이름에 ♥를 눌러요. 누가 어떤 이름을 골랐는지 함께 보여요.</p>
+    <div class="field"><label for="vmName">투표판 이름 <span class="opt">선택</span></label><input type="text" id="vmName" maxlength="30" placeholder="예: 우리 둘째 이름 후보"></div>
+    <div class="vm-list" id="vmList"></div>
+    <p class="rp-note">생년월일은 보내지 않아요. 이름·한자·점수·뜻풀이만 올라가며, 링크를 아는 사람만 볼 수 있어요. 180일 뒤 자동으로 지워져요.</p>
+    <div class="cact"><button class="act" type="submit" id="vmGo">링크 만들고 보내기</button><button class="act ghost" type="button" id="vmClose">닫기</button></div>
+  </form>
+</div>
+<div id="voteView" hidden>
+  <div class="vv-wrap">
+    <header class="vv-head">
+      <div><small>가치작명소 · 가족 투표</small><h2 id="vvTitle">이름 후보 투표</h2><p id="vvMeta"></p></div>
+      <button class="nb-x vv-close" type="button" id="vvClose" aria-label="투표 화면 닫기">✕</button>
+    </header>
+    <div class="vv-me" id="vvMe"></div>
+    <div class="vv-list" id="vvList"><p class="muted">불러오는 중…</p></div>
+    <div class="cact vv-act"><button class="act" type="button" id="vvShare">이 투표 링크 보내기</button><button class="act ghost" type="button" id="vvReload">새로고침</button><button class="act ghost" type="button" id="vvApp">가치작명소 둘러보기</button></div>
+  </div>
 </div>
 <div id="shareBox" hidden>
   <div class="sb" role="dialog" aria-modal="true" aria-labelledby="sbTitle">
