@@ -1,9 +1,13 @@
 # 새 기능 미리 보기: 실제 주소(gachi-naming.web.app)는 그대로 두고, 테스트 전용 주소에만 올림
-# 실행: GitHub → Actions → "Firebase 테스트 주소" → Run workflow (또는 Claude가 실행)
+# 실행: 원본 코드를 올리면 자동 · 또는 GitHub → Actions → "Firebase 테스트 주소" → Run workflow
 # 저장소의 docs 폴더는 건드리지 않고, GitHub 작업 컴퓨터 안에서만 최신 코드로 앱 파일을 만들어 올림
 name: Firebase 테스트 주소
 
 on:
+  # 앱 원본 코드가 바뀌어 올라오면 테스트 주소가 자동으로 새로 만들어짐 (실제 주소는 docs가 바뀔 때만)
+  push:
+    branches: [claude/blissful-meitner-p9vir1]
+    paths: ['*.js', '*.html', 'tools/**', 'supabase/**', '.github/workflows/firebase-preview.yml']
   workflow_dispatch:
 
 concurrency:
