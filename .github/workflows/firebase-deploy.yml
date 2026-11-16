@@ -1,0 +1,36 @@
+# GitHub에 올리면(docs 폴더가 바뀌면) Firebase Hosting(gachi-naming.web.app)에 자동 배포
+# 필요한 것: 저장소 Settings → Secrets and variables → Actions 에
+#   FIREBASE_SERVICE_ACCOUNT  (Firebase 서비스 계정 JSON 키 전체 내용)
+# 이 값이 없으면 배포 단계는 건너뛰고 안내만 남김
+name: Firebase 자동 배포
+
+on:
+  push:
+    branches: [claude/blissful-meitner-p9vir1, main]
+    paths: ['docs/**', 'firebase.json', '.firebaserc', '.github/workflows/firebase-deploy.yml']
+  workflow_dispatch:   # Actions 탭에서 'Run workflow'로 직접 실행도 가능
+
+concurrency:
+  group: firebase-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      HAS_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 배포 열쇠 확인
+        if: env.HAS_KEY != 'true'
+        run: echo "::warning::FIREBASE_SERVICE_ACCOUNT 비밀값이 없어 배포를 건너뜁니다. 저장소 Settings → Secrets and variables → Actions 에 추가해 주세요."
+
+      - name: Firebase Hosting 배포
+        if: env.HAS_KEY == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: gachi-naming

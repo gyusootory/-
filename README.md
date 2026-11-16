@@ -85,3 +85,8 @@
 ## 한계
 - 수록 한자는 552자입니다. 출생신고 전 대법원 인명용 한자 여부를 꼭 확인하세요.
 - 자원오행·81수리 일부 판단은 유파마다 다릅니다. 결과는 참고용입니다.
+
+## Firebase 자동 배포
+- `docs/` 폴더가 바뀐 채로 GitHub에 올라가면 `.github/workflows/firebase-deploy.yml`이 **gachi-naming.web.app**에 자동 배포합니다.
+- 처음 한 번: 저장소 Settings → Secrets and variables → Actions → `FIREBASE_SERVICE_ACCOUNT`에 Firebase 서비스 계정 JSON 키 전체를 붙여넣기
+- 설정(`firebase.json`): 공개 폴더 `docs`, html·js는 항상 최신 확인(no-cache), 이미지는 하루 보관
