@@ -1,5 +1,6 @@
 # 이름 한자 데이터 생성기: Unihan(강희자전 부수·획수)으로 원획수를 계산해 hanja-data.js를 만듭니다.
-# 사용법: python3 tools/build_data.py <unihan.db 경로>
+# 사용법: python3 tools/build_data.py <unihan.db 경로> [moji.db 경로]
+#   moji.db(@mandel59/mojidata, 최신 Unihan 포함)를 주면, 옛 unihan.db에 부수 정보가 없는 희귀 인명용 한자(2024 추가분 등)도 관리자 사전에 넣음
 import sqlite3, sys, json, os
 
 DB = sys.argv[1]
@@ -46,7 +47,13 @@ def info(ch):
     return r, won, tot
 
 # 대법원 인명용 한자 목록 (tools/inmyeong.txt) · 같은 글자의 다른 코드(예: 姬/姫)는 Unihan 이체자 정보로 함께 인정
-INM_RAW = set(''.join(l.strip() for l in open(os.path.join(ROOT, 'tools/inmyeong.txt'), encoding='utf-8') if not l.startswith('#')))
+INM_SND, INM_HUN = {}, {}   # 인명용 한자 → 소리 목록 / 소리별 훈 (tools/inmyeong.tsv)
+for l in open(os.path.join(ROOT, 'tools/inmyeong.tsv'), encoding='utf-8'):
+    if l.startswith('#') or not l.strip(): continue
+    c, snd, hn = (l.rstrip('\n').split('\t') + ['', ''])[:3]
+    INM_SND[c] = [x for x in snd.split(',') if x]
+    INM_HUN[c] = dict(x.split(':', 1) for x in hn.split('|') if ':' in x)
+INM_RAW = set(INM_SND)
 def variants(ch):
     row = con.execute('select kZVariant,kCompatibilityVariant,kSemanticVariant,kTraditionalVariant from unihan where character=?', (ch,)).fetchone() or ()
     out = set()
@@ -104,15 +111,31 @@ print(len(out), 'hanja,', len(sur), 'surnames · 인명용 확인 안 됨:', [h[
 # ---------- 관리자 화면용: 한자 한 글자를 넣으면 원획·부수·자원오행·소리를 자동으로 채우는 사전 ----------
 # 한국 소리(kHangul)가 있는 한자만 담음. 형식: "한자 부수번호 원획 소리들" 을 줄바꿈으로 연결
 lines = []
-for ch, rs, tot, hg in con.execute("select character,kRSKangXi,kTotalStrokes,kHangul from unihan where kRSKangXi is not null and kHangul is not null and kHangul<>''"):
+# 한국 소리(kHangul)가 있는 한자 + 대법원 인명용 한자 전부 (인명용은 대법원 소리·참고용 훈까지)
+# 최신 Unihan(moji.db)의 kRSUnicode로 부수 정보 보충
+RS2 = {}
+if len(sys.argv) > 2 and os.path.exists(sys.argv[2]):
+    m = sqlite3.connect(sys.argv[2])
+    for u, v in m.execute("select UCS,value from unihan where property='kRSUnicode'"):
+        if u in INM_RAW: RS2[u] = v
+    TS2 = dict(m.execute("select UCS,value from unihan where property='kTotalStrokes'"))
+want = {r[0]: r for r in con.execute("select character,kRSKangXi,kTotalStrokes,kHangul from unihan where kRSKangXi is not null and ((kHangul is not null and kHangul<>'') or character in (%s))" % ','.join('?' * len(INM_RAW)), tuple(INM_RAW))}
+for c in INM_RAW:   # 옛 DB에 부수가 없거나 아예 없는 인명용 한자 → 최신 Unihan으로 보충
+    if c in RS2 and (c not in want or not want[c][1]):
+        old = want.get(c, (c, '', '', ''))
+        want[c] = (c, RS2[c].replace("'", ''), old[2] or TS2.get(c, ''), old[3])
+for ch, (c0, rs, tot, hg) in sorted(want.items()):
     try:
         r, res = rs.split()[0].split('.'); r, res = int(r.rstrip("'")), int(res)
-        t = int(tot.split()[0])
+        t = int((tot or '0').split()[0])
     except Exception:
         continue
     won = NUM.get(ch) or FIX.get(ch) or (rad_strokes(r) + res if res > 0 else t)
-    sounds = ''.join(dict.fromkeys(s.split(':')[0] for s in hg.split()))
-    lines.append(f'{ch}{r},{won},{sounds},{1 if inmyeong(ch) else 0}')
+    if not won: continue
+    common = list(dict.fromkeys(s.split(':')[0] for s in (hg or '').split()))   # Unihan의 흔히 쓰는 소리를 앞에
+    snds = list(dict.fromkeys(common + INM_SND.get(ch, []))) if ch in INM_SND else common
+    hun = '|'.join(f'{x}:{INM_HUN.get(ch, {})[x]}' for x in snds if x in INM_HUN.get(ch, {}))
+    lines.append(f'{ch}{r},{won},{"".join(snds)},{1 if inmyeong(ch) else 0},{hun}')
 el_r = {}
 for r, e in ELEM.items(): el_r.setdefault(e, []).append(r)
 adm = '// 자동 생성 파일 (tools/build_data.py) — 관리자 화면 전용 한자 사전\n'

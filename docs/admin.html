@@ -196,11 +196,11 @@ td.r, th.r { text-align: right }
 
     <section class="card" id="addCard">
       <h2>한자 추가 · 앱 공지</h2>
-      <p class="sub">한자 한 글자를 넣으면 <b>획수·오행·소리가 자동으로</b> 채워져요 · ‘앱에 추가’를 누르면 앱 한자 목록에 바로 들어가고, 앱 상단에 <b>‘추가된 한자’ 공지가 자동으로</b> 떠요</p>
+      <p class="sub">한자 한 글자를 넣으면 <b>소리·획수·오행·뜻이 자동으로</b> 채워져요 (뜻은 사전 추천이니 한 번 확인해 주세요) · ‘앱에 추가’를 누르면 앱 한자 목록에 바로 들어가고, 앱 상단에 <b>‘추가된 한자’ 공지가 자동으로</b> 떠요</p>
       <p class="setup-note" id="addSetup" hidden></p>
       <form id="addForm" class="addgrid" novalidate autocomplete="off">
         <div class="field"><label for="aCh">한자</label><input id="aCh" maxlength="2" placeholder="例 羅"><small id="aChHint"></small></div>
-        <div class="field"><label for="aHun">뜻(훈) <span class="need">직접 입력</span></label><input id="aHun" maxlength="12" placeholder="예: 빛날"><small><a class="dictbtn" id="aDict" target="_blank" rel="noopener" aria-disabled="true">📖 사전에서 뜻 확인</a></small></div>
+        <div class="field"><label for="aHun">뜻(훈) <span class="need" id="aHunTag">직접 입력</span></label><input id="aHun" maxlength="12" placeholder="예: 빛날"><small><a class="dictbtn" id="aDict" target="_blank" rel="noopener" aria-disabled="true">📖 사전에서 뜻 확인</a></small></div>
         <div class="field af auto"><label for="aEum">소리(음) <span class="autotag">자동</span></label><input id="aEum" maxlength="1" readonly tabindex="-1"><small id="aEumHint"></small></div>
         <div class="field af auto"><label for="aStrokes">원획 <span class="autotag">자동</span></label><input id="aStrokes" type="number" min="1" max="64" inputmode="numeric" readonly tabindex="-1"><small>&nbsp;</small></div>
         <div class="field af auto"><label for="aElem">자원오행 <span class="autotag">자동</span></label><select id="aElem" disabled><option value="">—</option><option>木</option><option>火</option><option>土</option><option>金</option><option>水</option></select><small><button type="button" class="linkbtn" id="aUnlock">자동값 직접 고치기</button></small></div>
@@ -620,7 +620,7 @@ td.r, th.r { text-align: right }
   // 한자 사전(관리자 전용): 글자 → [부수, 원획, 소리들]
   let DICT = null;
   const dictGet = ch => {
-    if (!DICT) { DICT = new Map(); if (typeof HZ_DICT !== 'undefined') HZ_DICT.split('\n').forEach(l => { const c = String.fromCodePoint(l.codePointAt(0)), rest = l.slice(c.length).split(','); DICT.set(c, [+rest[0], +rest[1], rest[2] || '', rest[3] === '1']); }); }
+    if (!DICT) { DICT = new Map(); if (typeof HZ_DICT !== 'undefined') HZ_DICT.split('\n').forEach(l => { const c = String.fromCodePoint(l.codePointAt(0)), rest = l.slice(c.length).split(','); DICT.set(c, [+rest[0], +rest[1], rest[2] || '', rest[3] === '1', Object.fromEntries(rest.slice(4).join(',').split('|').filter(x => x.includes(':')).map(x => x.split(':')))]); }); }   // DICT 값: [부수, 원획, 소리들, 인명용, {소리: 사전 훈}]
     return DICT.get(ch);
   };
   const isHz = c => /[㐀-鿿豈-﫿]/.test(c);
@@ -641,13 +641,23 @@ td.r, th.r { text-align: right }
     else { dl.removeAttribute('href'); dl.setAttribute('aria-disabled', 'true'); }
     // 한자를 바꾸면 자동값을 모두 새로 채움 (이전 글자의 값이 남지 않게)
     $('#aEum').value = ''; $('#aStrokes').value = ''; $('#aElem').value = '';
-    if (!ch) return;
+    const clearAutoHun = () => { if ($('#aHun').dataset.auto === '1') { $('#aHun').value = ''; $('#aHun').dataset.auto = ''; $('#aHunTag').textContent = '직접 입력'; $('#aHunTag').className = 'need'; } };
+    if (!ch) { clearAutoHun(); return; }
     const d = dictGet(ch);
+    if (!d) clearAutoHun();
     if (!d) { $('#aChHint').textContent = '사전에 없는 글자예요 · 소리·획수·오행을 직접 넣어 주세요'; if ($('#aEum').readOnly) lockAuto(false); return; }
     $('#aStrokes').value = d[1];
     $('#aElem').value = (typeof HZ_ELEM_OVR !== 'undefined' && HZ_ELEM_OVR[ch]) || (typeof HZ_ELEM_BY_RAD !== 'undefined' && HZ_ELEM_BY_RAD[d[0]]) || '';
     const sounds = [...d[2]], want = $('#addForm').dataset.eum || '';
     $('#aEum').value = sounds.includes(want) ? want : (sounds[0] || '');
+    // 뜻(훈): 사전에 있으면 미리 채움(참고용) · 관리자가 직접 고친 값은 덮어쓰지 않음
+    const hunIn = $('#aHun'), dh = (d[4] || {})[$('#aEum').value] || '';
+    // 다른 한자로 바뀌었으면(이전 글자에 적은 훈) 새 글자 기준으로 다시 채움 · 사전에 훈이 없으면 제보에서 받은 훈은 남겨 둠
+    const otherCh = hunIn.dataset.forCh && hunIn.dataset.forCh !== ch;
+    if (!hunIn.value || hunIn.dataset.auto === '1' || (otherCh && (dh || hunIn.dataset.forCh))) { hunIn.value = dh; hunIn.dataset.auto = dh ? '1' : ''; }
+    hunIn.dataset.forCh = ch;
+    $('#aHunTag').textContent = hunIn.dataset.auto === '1' ? '사전 추천 · 확인' : '직접 입력';
+    $('#aHunTag').className = hunIn.dataset.auto === '1' ? 'autotag' : 'need';
     $('#aChHint').innerHTML = `부수 ${d[0]}번 · 원획 ${d[1]}획` + ($('#aElem').value ? '' : ' · 오행은 직접 골라 주세요')
       + (d[3] ? ' · <b class="inm-ok">✓ 대법원 인명용</b>' : ' · <b class="inm-no">⚠ 인명용 목록에 없음 (출생신고에 못 쓸 수 있어요)</b>');
     if (!$('#aElem').value && $('#aEum').readOnly) lockAuto(false);
@@ -660,6 +670,7 @@ td.r, th.r { text-align: right }
     const h = ch && HANJA.find(x => x[0] === ch && (!eum || x[1] === eum));
     if (h) { $('#aMsg').textContent = `이미 앱에 있어요: ${h[0]} (${h[2]} ${h[1]}) · 추가하지 않아도 돼요`; $('#aMsg').className = 'amsg bad'; }
   }
+  $('#aHun').addEventListener('input', () => { $('#aHun').dataset.auto = ''; $('#aHun').dataset.forCh = [...$('#aCh').value].find(isHz) || ''; $('#aHunTag').textContent = '직접 입력'; $('#aHunTag').className = 'need'; });
   $('#aCh').addEventListener('input', () => { $('#addForm').dataset.eum = ''; fillFromChar(); });
   $('#aUnlock').addEventListener('click', () => lockAuto(!$('#aEum').readOnly));
   $('#aEumHint').addEventListener('click', e => { const b = e.target.closest('[data-snd]'); if (!b) return; $('#addForm').dataset.eum = b.dataset.snd; fillFromChar(); });
@@ -684,7 +695,7 @@ td.r, th.r { text-align: right }
     try {
       await api('hanja_extra', { method: 'POST', body: JSON.stringify(row), headers: { Prefer: 'return=minimal' } });
       await loadExtra(); render(lastRows, lastSince);
-      $('#addForm').reset(); $('#aNotice').checked = true; $('#aChHint').textContent = ''; $('#aEumHint').textContent = ''; $('#addForm').dataset.eum = ''; if (!$('#aEum').readOnly) lockAuto(true);
+      $('#addForm').reset(); $('#aHun').dataset.auto = ''; $('#aHun').dataset.forCh = ''; $('#aNotice').checked = true; $('#aChHint').textContent = ''; $('#aEumHint').textContent = ''; $('#addForm').dataset.eum = ''; if (!$('#aEum').readOnly) lockAuto(true);
       msg.textContent = `✅ ${row.ch}(${row.hun} ${row.eum}) 추가 완료! 사용자가 앱을 새로 열면 목록과 상단 공지에 나타나요`; msg.className = 'amsg ok';
     } catch (x) {
       if (x.message === 'auth') { ss.set(null); show('vLogin'); return; }
@@ -695,8 +706,8 @@ td.r, th.r { text-align: right }
     const a = e.target.closest('[data-add]'), del = e.target.closest('[data-del]');
     if (a) {
       const [eum, hz, hun] = a.dataset.add.split('|');
-      $('#addForm').reset(); $('#aNotice').checked = true; if (!$('#aEum').readOnly) lockAuto(true);
-      $('#addForm').dataset.eum = eum || ''; $('#aHun').value = (hun || '').replace(/\s+/g, '').replace(new RegExp(eum + '$'), '');
+      $('#addForm').reset(); $('#aHun').dataset.auto = ''; $('#aHun').dataset.forCh = ''; $('#aNotice').checked = true; if (!$('#aEum').readOnly) lockAuto(true);
+      $('#addForm').dataset.eum = eum || ''; $('#aHun').dataset.auto = ''; $('#aHun').dataset.forCh = hz || ''; $('#aHun').value = (hun || '').replace(/\s+/g, '').replace(new RegExp(eum + '$'), '');
       $('#aCh').value = hz || ''; fillFromChar(); if (!hz) $('#aEum').value = eum || '';
       $('#addCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
       setTimeout(() => $(hz ? '#aHun' : '#aCh').focus({ preventScroll: true }), 350);
