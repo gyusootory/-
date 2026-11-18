@@ -156,6 +156,15 @@ details.tbl summary { cursor: pointer; font-size: 13px; color: var(--accent) }
 .hbars .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .hbars .track { height: 10px; background: var(--sunk); border-radius: 0 4px 4px 0; overflow: hidden }
 .hbars .fill { display: block; height: 100%; background: var(--accent); border-radius: 0 4px 4px 0 }
+/* 홍보 링크 만들기 */
+.utmbox { margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 8px; font-size: 13px }
+.utmbox summary { cursor: pointer; font-weight: 600 }
+.utmform { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px }
+.utmform select, .utmform input { font: 15px var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 40px }
+.utmform input { flex: 1 1 12em; min-width: 0 } .utmform .btn { min-height: 40px; padding: 8px 14px }
+.utmout { margin: 8px 0 0; padding: 10px; border-radius: 10px; background: var(--sunk); overflow-wrap: anywhere; display: grid; gap: 6px }
+.utmout code { font-size: 12.5px } .utmout .mini { justify-self: start }
+.refdet a { color: inherit; text-decoration: underline; text-underline-offset: 2px }
 /* 유입 경로 (펼치면 세부) */
 .refs { display: grid; gap: 4px }
 .refsum { list-style: none; display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr) 3.5em 14px; gap: 10px; align-items: center; font-size: 13.5px; padding: 4px 0; cursor: pointer }
@@ -316,6 +325,14 @@ td.r, th.r { text-align: right }
         <p class="sub">방문 세션 기준</p>
         <h3>기기 · 실행 방식</h3><ul class="hbars" id="devices"></ul>
         <h3>유입 경로 <small class="muted">· 누르면 세부 경로</small></h3><div class="refs" id="refs"></div>
+        <details class="utmbox"><summary>📌 홍보 링크 만들기 <small class="muted">· 글마다 다른 링크를 쓰면 어느 글에서 왔는지 정확히 보여요</small></summary>
+          <div class="utmform">
+            <select id="utmSrc"><option value="naver_cafe">네이버 카페</option><option value="naver_blog">네이버 블로그</option><option value="instagram">인스타그램</option><option value="kakao_open">카톡 오픈채팅</option><option value="kakao_channel">카카오 채널</option><option value="youtube">유튜브</option><option value="threads">스레드</option><option value="etc_link">기타</option></select>
+            <input id="utmName" maxlength="40" placeholder="어디에 올릴지 (예: 맘스홀릭 공지글)">
+            <button type="button" class="btn" id="utmMake">링크 만들기</button>
+          </div>
+          <p class="utmout" id="utmOut" hidden></p>
+        </details>
       </section>
     </div>
 
@@ -412,7 +429,11 @@ td.r, th.r { text-align: right }
         const v = visitors[Math.floor(rnd() * visitors.length)], s = v + d.getTime() + i, t = new Date(d.getTime() + rnd() * 80000000);
         if (t > new Date()) continue;
         const base = { visitor: v, session: s, device: rnd() < .78 ? 'mobile' : 'desktop', app_mode: rnd() < .15 ? 'app' : 'web', referrer: refs[Math.floor(rnd() * refs.length)] };
-        out.push({ ...base, created_at: t.toISOString(), event: 'visit', meta: { new_visitor: !seen.has(v) } }); seen.add(v);
+        const DEMO_URL = { 'm.blog.naver.com': ['m.blog.naver.com/sweetmom_diary/223456789012', 'm.blog.naver.com/babyname_lab/223401112233', null], 'cafe.naver.com': ['cafe.naver.com/imsanbu/9876543', 'cafe.naver.com/mom79/112233', null], 'm.cafe.naver.com': ['m.cafe.naver.com/ca-fe/web/cafes/10094499/articles/8765432', null], 'instagram.com': ['instagram.com/gachi.naming', null] };
+        const du = DEMO_URL[base.referrer] ? DEMO_URL[base.referrer][Math.floor(rnd() * DEMO_URL[base.referrer].length)] : null;
+        const dutm = rnd() < .06 ? { source: rnd() < .5 ? 'naver_cafe' : 'instagram', medium: 'post', content: rnd() < .5 ? '맘스홀릭 공지글' : '프로필 링크' } : null;
+        if (dutm) base.referrer = dutm.source;
+        out.push({ ...base, created_at: t.toISOString(), event: 'visit', meta: Object.assign({ new_visitor: !seen.has(v) }, du ? { ref_url: du } : {}, dutm ? { utm: dutm } : {}) }); seen.add(v);
         if (rnd() < .62) { out.push({ ...base, created_at: t.toISOString(), event: 'recommend', meta: {} }); const pg = 1 + Math.floor(rnd() * rnd() * 7); for (let k = 2; k <= pg; k++) out.push({ ...base, created_at: t.toISOString(), event: 'more', meta: { page: k } }); }
         if (rnd() < .3) out.push({ ...base, created_at: t.toISOString(), event: 'tab', meta: { tab: ['find', 'mine', 'saved', 'rec'][Math.floor(rnd() * 4)] } });
         if (rnd() < .15) { out.push({ ...base, created_at: t.toISOString(), event: 'mine', meta: { score: Math.round(50 + rnd() * 45), cand: rnd() < .4 } }); if (rnd() < .3) out.push({ ...base, created_at: t.toISOString(), event: 'rename_go', meta: {} }); }
@@ -451,28 +472,57 @@ td.r, th.r { text-align: right }
     if (/instagram/.test(v)) return '인스타그램';
     if (/facebook|fb\.com/.test(v)) return '페이스북';
     if (/youtube|youtu\.be/.test(v)) return '유튜브';
-    if (/threads\.net|^t\.co$|twitter|x\.com/.test(v)) return 'SNS (스레드·X)';
+    if (/threads|^t\.co$|twitter|x\.com/.test(v)) return 'SNS (스레드·X)';
     if (/bing\.|yahoo\.|zum\.com|duckduckgo/.test(v)) return '기타 검색';
     return '기타 사이트';
+  };
+  // 방문 1건의 '세부 주소': 홍보 링크 > 이전 페이지 주소(경로 포함) > 사이트 이름(경로 모름)
+  const UTM_NAME = { naver_cafe: '네이버 카페', naver_blog: '네이버 블로그', instagram: '인스타그램', kakao_open: '카톡 오픈채팅', kakao_channel: '카카오 채널', youtube: '유튜브', threads: '스레드', etc_link: '기타' };
+  function urlLabel(u) {
+    const [host, ...seg] = u.split('/').filter(Boolean);
+    const H = REF_NAME[host] || host;
+    if (/blog\.naver\.com$/.test(host) && seg[0] && !/\.naver$/.test(seg[0])) return `블로그 ‘${seg[0]}’${seg[1] ? ' · 글 ' + seg[1] : ''}`;
+    if (/cafe\.naver\.com$/.test(host)) { const ci = seg.indexOf('cafes'), ai = seg.indexOf('articles');
+      if (ci >= 0) return `카페 ${seg[ci + 1] || ''}${ai >= 0 ? ' · 글 ' + (seg[ai + 1] || '') : ''}`;
+      if (seg[0]) return `카페 ‘${seg[0]}’${seg[1] ? ' · 글 ' + seg[1] : ''}`; }
+    if (/instagram\.com$/.test(host) && seg[0] && !['p', 'reel', 'stories'].includes(seg[0])) return `인스타 ‘${seg[0]}’`;
+    return `${H} /${seg.join('/')}`;
+  }
+  const refDetail = r => { const m = r.meta || {}, u = m.utm;
+    if (u && u.source && u.source !== 'share') return { k: 'utm|' + u.source + '|' + (u.content || u.campaign || ''), label: `📌 홍보 링크 · ${(UTM_NAME[u.source] || u.source)}${u.content || u.campaign ? ' · ' + (u.content || u.campaign) : ''}` };
+    if (m.ref_url) return { k: m.ref_url, label: urlLabel(m.ref_url), href: 'https://' + m.ref_url };
+    const h = r.referrer || ''; return { k: h, label: REF_NAME[h] || h || '알 수 없음', sub: REF_NAME[h] && h !== 'share' && h !== 'kakaotalk' ? h : '' };
   };
   function renderRefs(visits) {
     const el = $('#refs'), total = visits.length;
     if (!total) { el.innerHTML = '<p class="empty-note">아직 기록이 없습니다</p>'; return; }
     const ch = {};
-    visits.forEach(r => { const c = refChannel(r.referrer), d = r.referrer || ''; const g = ch[c] || (ch[c] = { n: 0, d: {} }); g.n++; g.d[d] = (g.d[d] || 0) + 1; });
+    const info = {};
+    visits.forEach(r => { const c = refChannel(r.referrer), x = refDetail(r); info[x.k] = x; const g = ch[c] || (ch[c] = { n: 0, d: {} }); g.n++; g.d[x.k] = (g.d[x.k] || 0) + 1; });
     const rows = Object.entries(ch).sort((a, b) => b[1].n - a[1].n), max = rows[0][1].n;
     const pc = (v, t) => (t ? Math.round(v / t * 100) : 0) + '%';
     el.innerHTML = rows.map(([c, g]) => {
       const det = Object.entries(g.d).sort((a, b) => b[1] - a[1]);
       const top = det.slice(0, 5), rest = det.slice(5).reduce((n, x) => n + x[1], 0);
-      const can = det.length > 1 || (det[0] && det[0][0] && (REF_NAME[det[0][0]] || det[0][0]) !== c);
+      const can = det.length > 1 || (det[0] && det[0][0] && det[0][0] !== 'share');
       const bar = `<span class="lbl" title="${esc(c)}">${esc(c)}</span><span class="track"><span class="fill" style="width:${(g.n / max * 100).toFixed(1)}%"></span></span><span class="val">${pc(g.n, total)}</span>`;
       if (!can) return `<div class="refrow"><div class="refsum">${bar}<span class="refchev"></span></div></div>`;
       return `<details class="refrow"><summary class="refsum">${bar}<span class="refchev" aria-hidden="true"></span></summary>
-        <ul class="refdet">${top.map(([d, n]) => `<li><span title="${esc(d)}">${esc(REF_NAME[d] || d || '알 수 없음')}${REF_NAME[d] && d !== 'kakaotalk' && d !== 'share' ? ` <small>${esc(d)}</small>` : ''}</span><b>${fmt(n)}회 · ${pc(n, g.n)}</b></li>`).join('')}${rest ? `<li class="etc"><span>기타 ${det.length - 5}곳</span><b>${fmt(rest)}회 · ${pc(rest, g.n)}</b></li>` : ''}</ul>
+        <ul class="refdet">${top.map(([d, n]) => { const x = info[d] || { label: d };
+          const lab = `${esc(x.label)}${x.sub ? ` <small>${esc(x.sub)}</small>` : ''}`;
+          return `<li><span title="${esc(x.href || d)}">${x.href ? `<a href="${esc(x.href)}" target="_blank" rel="noopener noreferrer">${lab}</a>` : lab}</span><b>${fmt(n)}회 · ${pc(n, g.n)}</b></li>`; }).join('')}${rest ? `<li class="etc"><span>기타 ${det.length - 5}곳</span><b>${fmt(rest)}회 · ${pc(rest, g.n)}</b></li>` : ''}</ul>
       </details>`;
     }).join('');
   }
+  // 홍보 링크 만들기: 앱 주소 + utm 표시 (방문하면 '📌 홍보 링크 · 이름'으로 집계)
+  document.addEventListener('click', async e => {
+    if (e.target.id === 'utmMake') {
+      const name = $('#utmName').value.trim().slice(0, 40); if (!name) { $('#utmName').focus(); return; }
+      const url = 'https://gachi-naming.web.app/?utm_source=' + $('#utmSrc').value + '&utm_medium=post&utm_content=' + encodeURIComponent(name);
+      $('#utmOut').hidden = false; $('#utmOut').innerHTML = `<code>${esc(url)}</code><button type="button" class="mini" id="utmCopy" data-url="${esc(url)}">링크 복사</button><small class="muted">이 링크를 글에 넣어 주세요. 누군가 이 링크로 들어오면 유입 경로에 ‘📌 홍보 링크 · ${esc(name)}’로 따로 보여요.</small>`;
+    }
+    if (e.target.id === 'utmCopy') { try { await navigator.clipboard.writeText(e.target.dataset.url); e.target.textContent = '복사했어요'; } catch (x) { prompt('아래 링크를 복사하세요', e.target.dataset.url); } }
+  });
   // 세로 막대 차트 (opt.label: 축 글자, opt.tip: 말풍선 글자, opt.aria: 화면낭독기 설명)
   function barChart(id, series, opt) {
     const el = $('#' + id);

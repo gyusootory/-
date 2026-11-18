@@ -1351,11 +1351,18 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
   const session = rid();
   const device = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
   const appMode = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true ? 'app' : 'web';
-  let referrer = '';
+  // 유입 경로: 홍보 링크(utm_*)가 있으면 그것을, 없으면 이전 페이지 주소
+  //  · 이전 페이지는 '사이트+경로'까지만 (예: m.blog.naver.com/아이디/글번호) · 물음표 뒤(검색어 등)는 저장하지 않음
+  //  · 요즘 브라우저는 다른 사이트에서 올 때 사이트 이름만 알려 주는 경우가 많아, 경로는 알려 줄 때만 기록됨
+  let referrer = '', refUrl = '', utm = null;
   try {
-    const q = new URLSearchParams(location.search).get('utm_source');
-    if (q) referrer = q.slice(0, 60);
-    else if (document.referrer) { const r = new URL(document.referrer); if (r.hostname !== location.hostname) referrer = r.hostname; }
+    const qs = new URLSearchParams(location.search);
+    ['source', 'medium', 'campaign', 'content'].forEach(k => { const v = qs.get('utm_' + k); if (v) (utm = utm || {})[k] = v.slice(0, 60); });
+    if (utm && utm.source) referrer = utm.source;
+    else if (document.referrer) {
+      const r = new URL(document.referrer);
+      if (r.hostname !== location.hostname) { referrer = r.hostname; if (r.pathname && r.pathname !== '/') refUrl = (r.hostname + r.pathname).slice(0, 160); }
+    }
   } catch (e) {}
 
   function track(event, meta) { send(event, meta); }
@@ -1374,7 +1381,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
   }
   window.gachiTrack = track;
   window.gachiSend = send;
-  track('visit', { new_visitor: isNew });
+  track('visit', Object.assign({ new_visitor: isNew }, refUrl ? { ref_url: refUrl } : {}, utm ? { utm } : {}));
   window.addEventListener('appinstalled', () => track('install'));
 })();
 
