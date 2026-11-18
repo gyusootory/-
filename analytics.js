@@ -20,17 +20,29 @@
   const session = rid();
   const device = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
   const appMode = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true ? 'app' : 'web';
-  // 유입 경로: 홍보 링크(utm_*)가 있으면 그것을, 없으면 이전 페이지 주소
-  //  · 이전 페이지는 '사이트+경로'까지만 (예: m.blog.naver.com/아이디/글번호) · 물음표 뒤(검색어 등)는 저장하지 않음
-  //  · 요즘 브라우저는 다른 사이트에서 올 때 사이트 이름만 알려 주는 경우가 많아, 경로는 알려 줄 때만 기록됨
-  let referrer = '', refUrl = '', utm = null;
+  // 유입 경로 (네이버 블로그 통계처럼 보기 위한 정보)
+  //  · 홍보 링크(utm_*)가 있으면 그것을 기록
+  //  · 검색 사이트에서 왔으면 '검색어'만 기록 (최대 40자)
+  //  · 블로그·카페 등에서 왔으면 글 주소 (사이트+경로 + 글을 가리키는 번호만: blogId·logNo·clubid·articleid 등)
+  //  · 그 밖의 주소 뒤 정보(물음표 뒤)는 저장하지 않음 · 브라우저가 주소를 알려 주지 않으면 사이트 이름만
+  let referrer = '', refUrl = '', refKw = '', utm = null;
   try {
     const qs = new URLSearchParams(location.search);
     ['source', 'medium', 'campaign', 'content'].forEach(k => { const v = qs.get('utm_' + k); if (v) (utm = utm || {})[k] = v.slice(0, 60); });
     if (utm && utm.source) referrer = utm.source;
     else if (document.referrer) {
       const r = new URL(document.referrer);
-      if (r.hostname !== location.hostname) { referrer = r.hostname; if (r.pathname && r.pathname !== '/') refUrl = (r.hostname + r.pathname).slice(0, 160); }
+      if (r.hostname !== location.hostname) {
+        referrer = r.hostname;
+        const isSearch = /(^|\.)search\.|google\.|bing\.|search\.daum|zum\.com|yahoo\.|duckduckgo/.test(r.hostname);
+        const kw = isSearch && (r.searchParams.get('query') || r.searchParams.get('q') || r.searchParams.get('p'));
+        if (kw) refKw = kw.trim().replace(/\s+/g, ' ').slice(0, 40);
+        else {
+          const keep = ['blogId', 'logNo', 'clubid', 'articleid', 'articleId', 'cafeId', 'postNo'].filter(k => r.searchParams.get(k)).map(k => k + '=' + r.searchParams.get(k)).join('&');
+          const path = r.pathname && r.pathname !== '/' ? r.pathname : '';
+          if (path || keep) refUrl = (r.hostname + path + (keep ? '?' + keep : '')).slice(0, 200);
+        }
+      }
     }
   } catch (e) {}
 
@@ -50,6 +62,6 @@
   }
   window.gachiTrack = track;
   window.gachiSend = send;
-  track('visit', Object.assign({ new_visitor: isNew }, refUrl ? { ref_url: refUrl } : {}, utm ? { utm } : {}));
+  track('visit', Object.assign({ new_visitor: isNew }, refUrl ? { ref_url: refUrl } : {}, refKw ? { ref_kw: refKw } : {}, utm ? { utm } : {}));
   window.addEventListener('appinstalled', () => track('install'));
 })();

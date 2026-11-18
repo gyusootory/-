@@ -165,23 +165,21 @@ details.tbl summary { cursor: pointer; font-size: 13px; color: var(--accent) }
 .utmout { margin: 8px 0 0; padding: 10px; border-radius: 10px; background: var(--sunk); overflow-wrap: anywhere; display: grid; gap: 6px }
 .utmout code { font-size: 12.5px } .utmout .mini { justify-self: start }
 .refdet a { color: inherit; text-decoration: underline; text-underline-offset: 2px }
-/* 유입 경로 (펼치면 세부) */
-.refs { display: grid; gap: 4px }
-.refsum { list-style: none; display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr) 3.5em 14px; gap: 10px; align-items: center; font-size: 13.5px; padding: 4px 0; cursor: pointer }
-div.refsum { cursor: default }
-.refsum::-webkit-details-marker { display: none }
-.refsum .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-.refsum .track { height: 10px; background: var(--sunk); border-radius: 0 4px 4px 0; overflow: hidden }
-.refsum .fill { display: block; height: 100%; background: var(--accent); border-radius: 0 4px 4px 0 }
-.refsum .val { text-align: right; font-variant-numeric: tabular-nums }
-details.refrow .refchev::after { content: "▾"; color: var(--muted); font-size: 11px }
-details.refrow[open] .refchev::after { content: "▴" }
-.refdet { list-style: none; margin: 2px 0 8px; padding: 8px 10px; border-radius: 10px; background: var(--sunk); display: grid; gap: 5px; font-size: 12.5px }
-.refdet li { display: flex; justify-content: space-between; gap: 10px; align-items: baseline }
-.refdet li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-.refdet li small { color: var(--muted); font-size: 11px }
-.refdet li b { flex: none; font-weight: 600; font-variant-numeric: tabular-nums }
-.refdet li.etc { color: var(--muted) }
+/* 유입 경로 (네이버 블로그 통계 방식) */
+.refs { display: grid; grid-template-columns: minmax(0, 1fr); border-top: 1px solid var(--line) }
+.rrow { border-bottom: 1px solid var(--line); min-width: 0 }
+.rsum { list-style: none; display: flex; align-items: center; gap: 10px; padding: 11px 2px; font-size: 14px; cursor: pointer }
+div.rsum { cursor: default }
+.rsum::-webkit-details-marker { display: none }
+.rsum .rl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.rp { flex: none; font-variant-numeric: tabular-nums; color: var(--muted) }
+.rc { flex: none; width: 14px; text-align: center } details.rrow .rc::after { content: "⌄"; color: var(--muted) } details.rrow[open] .rc::after { content: "⌃" }
+details.rrow[open] > .rsum .rl, details.rrow[open] > .rsum .rp { color: var(--good); font-weight: 700 }
+.rdet { list-style: none; margin: 0; padding: 0 0 0 14px; background: rgb(60 122 90 / .07) }
+.rdet li { display: flex; gap: 10px; align-items: center; padding: 10px 12px 10px 4px; border-top: 1px solid var(--line); font-size: 13.5px }
+.rdet .rt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.rdet a { color: inherit; text-decoration: none } .rdet a:hover { text-decoration: underline }
+.rdet li.dim .rt { color: var(--muted) }
 .hbars .val { text-align: right; font-family: var(--f-mono); font-size: 12.5px }
 .empty-note { font-size: 13px; color: var(--muted); margin: 0 }
 
@@ -324,7 +322,7 @@ td.r, th.r { text-align: right }
         <h2>기기 · 사용 방식 · 유입 경로</h2>
         <p class="sub">방문 세션 기준</p>
         <h3>기기 · 실행 방식</h3><ul class="hbars" id="devices"></ul>
-        <h3>유입 경로 <small class="muted">· 누르면 세부 경로</small></h3><div class="refs" id="refs"></div>
+        <h3>유입 경로 <small class="muted">· 누르면 검색어·글 주소</small></h3><div class="refs" id="refs"></div>
         <details class="utmbox"><summary>📌 홍보 링크 만들기 <small class="muted">· 글마다 다른 링크를 쓰면 어느 글에서 왔는지 정확히 보여요</small></summary>
           <div class="utmform">
             <select id="utmSrc"><option value="naver_cafe">네이버 카페</option><option value="naver_blog">네이버 블로그</option><option value="instagram">인스타그램</option><option value="kakao_open">카톡 오픈채팅</option><option value="kakao_channel">카카오 채널</option><option value="youtube">유튜브</option><option value="threads">스레드</option><option value="etc_link">기타</option></select>
@@ -429,11 +427,13 @@ td.r, th.r { text-align: right }
         const v = visitors[Math.floor(rnd() * visitors.length)], s = v + d.getTime() + i, t = new Date(d.getTime() + rnd() * 80000000);
         if (t > new Date()) continue;
         const base = { visitor: v, session: s, device: rnd() < .78 ? 'mobile' : 'desktop', app_mode: rnd() < .15 ? 'app' : 'web', referrer: refs[Math.floor(rnd() * refs.length)] };
-        const DEMO_URL = { 'm.blog.naver.com': ['m.blog.naver.com/sweetmom_diary/223456789012', 'm.blog.naver.com/babyname_lab/223401112233', null], 'cafe.naver.com': ['cafe.naver.com/imsanbu/9876543', 'cafe.naver.com/mom79/112233', null], 'm.cafe.naver.com': ['m.cafe.naver.com/ca-fe/web/cafes/10094499/articles/8765432', null], 'instagram.com': ['instagram.com/gachi.naming', null] };
+        const DEMO_URL = { 'm.blog.naver.com': ['m.blog.naver.com/sweetmom_diary/223456789012', 'm.blog.naver.com/babyname_lab/223401112233', 'm.blog.naver.com/PostView.naver?blogId=hanja_mom&logNo=223399887766', null], 'cafe.naver.com': ['cafe.naver.com/imsanbu/9876543', 'cafe.naver.com/mom79/112233', null], 'm.cafe.naver.com': ['m.cafe.naver.com/ca-fe/web/cafes/10094499/articles/8765432', null], 'instagram.com': ['instagram.com/gachi.naming', null] };
         const du = DEMO_URL[base.referrer] ? DEMO_URL[base.referrer][Math.floor(rnd() * DEMO_URL[base.referrer].length)] : null;
+        const KW = ['가치작명소', '아기이름 한자', '무료한자이름풀이', '무료 이름 사주', '무료아기이름짓기', '이름 점수 무료', '작명 무료', '아기 이름 추천'];
+        const dkw = /search/.test(base.referrer || '') ? KW[Math.floor(rnd() * rnd() * KW.length)] : null;
         const dutm = rnd() < .06 ? { source: rnd() < .5 ? 'naver_cafe' : 'instagram', medium: 'post', content: rnd() < .5 ? '맘스홀릭 공지글' : '프로필 링크' } : null;
         if (dutm) base.referrer = dutm.source;
-        out.push({ ...base, created_at: t.toISOString(), event: 'visit', meta: Object.assign({ new_visitor: !seen.has(v) }, du ? { ref_url: du } : {}, dutm ? { utm: dutm } : {}) }); seen.add(v);
+        out.push({ ...base, created_at: t.toISOString(), event: 'visit', meta: Object.assign({ new_visitor: !seen.has(v) }, du ? { ref_url: du } : {}, dkw ? { ref_kw: dkw } : {}, dutm ? { utm: dutm } : {}) }); seen.add(v);
         if (rnd() < .62) { out.push({ ...base, created_at: t.toISOString(), event: 'recommend', meta: {} }); const pg = 1 + Math.floor(rnd() * rnd() * 7); for (let k = 2; k <= pg; k++) out.push({ ...base, created_at: t.toISOString(), event: 'more', meta: { page: k } }); }
         if (rnd() < .3) out.push({ ...base, created_at: t.toISOString(), event: 'tab', meta: { tab: ['find', 'mine', 'saved', 'rec'][Math.floor(rnd() * 4)] } });
         if (rnd() < .15) { out.push({ ...base, created_at: t.toISOString(), event: 'mine', meta: { score: Math.round(50 + rnd() * 45), cand: rnd() < .4 } }); if (rnd() < .3) out.push({ ...base, created_at: t.toISOString(), event: 'rename_go', meta: {} }); }
@@ -456,62 +456,41 @@ td.r, th.r { text-align: right }
       <span class="track"><span class="fill" style="width:${(v / max * 100).toFixed(1)}%"></span></span>
       <span class="val">${opts.pct ? (total ? Math.round(v / total * 100) : 0) + '%' : fmt(v)}</span></li>`).join('');
   }
-  // 유입 경로: 큰 채널(네이버·카카오·인스타그램…)별 비중 → 누르면 세부 경로 상위 5개 + 기타
-  const REF_NAME = { 'm.search.naver.com': '네이버 검색 (모바일)', 'search.naver.com': '네이버 검색 (PC)', 'm.blog.naver.com': '네이버 블로그 (모바일)', 'blog.naver.com': '네이버 블로그',
-    'm.cafe.naver.com': '네이버 카페 (모바일)', 'cafe.naver.com': '네이버 카페', 'in.naver.com': '네이버 인플루언서', 'm.naver.com': '네이버 메인 (모바일)', 'www.naver.com': '네이버 메인', 'kin.naver.com': '네이버 지식iN', 'm.kin.naver.com': '네이버 지식iN (모바일)',
-    'www.google.com': '구글 검색', 'www.google.co.kr': '구글 검색 (한국)', 'm.search.daum.net': '다음 검색 (모바일)', 'search.daum.net': '다음 검색', 'm.daum.net': '다음 메인 (모바일)', 'cafe.daum.net': '다음 카페', 'm.cafe.daum.net': '다음 카페 (모바일)',
-    'instagram.com': '인스타그램', 'www.instagram.com': '인스타그램', 'l.instagram.com': '인스타그램 프로필·스토리 링크', 'l.facebook.com': '페이스북 링크', 'm.facebook.com': '페이스북 (모바일)', 'www.facebook.com': '페이스북',
-    'www.youtube.com': '유튜브', 'm.youtube.com': '유튜브 (모바일)', 'www.threads.net': '스레드', 'kakaotalk': '카카오톡으로 받은 링크', 'share': '앱의 공유 버튼으로 보낸 링크', 'story.kakao.com': '카카오스토리', 'pf.kakao.com': '카카오 채널', 't.co': 'X(트위터) 링크' };
-  const refChannel = v => {
-    if (!v) return '직접 방문·알 수 없음';
-    if (v === 'share') return '앱에서 보낸 공유 링크';
-    if (/kakao/.test(v)) return '카카오';
-    if (/naver/.test(v)) return '네이버';
-    if (/google\./.test(v)) return '구글';
-    if (/daum\.net/.test(v)) return '다음';
-    if (/instagram/.test(v)) return '인스타그램';
-    if (/facebook|fb\.com/.test(v)) return '페이스북';
-    if (/youtube|youtu\.be/.test(v)) return '유튜브';
-    if (/threads|^t\.co$|twitter|x\.com/.test(v)) return 'SNS (스레드·X)';
-    if (/bing\.|yahoo\.|zum\.com|duckduckgo/.test(v)) return '기타 검색';
-    return '기타 사이트';
-  };
-  // 방문 1건의 '세부 주소': 홍보 링크 > 이전 페이지 주소(경로 포함) > 사이트 이름(경로 모름)
+  // 유입 경로 (네이버 블로그 통계 방식): 경로별 비중 한 줄씩 → 누르면 검색어·글 주소 상위 5개 + 기타 (%는 전체 방문 대비)
+  const REF_CAT = { 'm.search.naver.com': '네이버 통합검색_모바일', 'search.naver.com': '네이버 통합검색_PC', 'm.blog.naver.com': '네이버 블로그_모바일', 'blog.naver.com': '네이버 블로그_PC',
+    'm.cafe.naver.com': '네이버 카페_모바일', 'cafe.naver.com': '네이버 카페_PC', 'in.naver.com': '네이버 인플루언서', 'kin.naver.com': '네이버 지식iN_PC', 'm.kin.naver.com': '네이버 지식iN_모바일',
+    'm.naver.com': '네이버 메인_모바일', 'www.naver.com': '네이버 메인_PC', 'm.search.daum.net': '다음 검색_모바일', 'search.daum.net': '다음 검색_PC', 'm.daum.net': '다음 메인_모바일', 'www.daum.net': '다음 메인_PC',
+    'cafe.daum.net': '다음 카페', 'm.cafe.daum.net': '다음 카페', 'www.google.com': '구글 검색', 'www.google.co.kr': '구글 검색', 'www.bing.com': '빙 검색', 'search.zum.com': '줌 검색',
+    'instagram.com': '인스타그램', 'www.instagram.com': '인스타그램', 'l.instagram.com': '인스타그램', 'm.facebook.com': '페이스북', 'l.facebook.com': '페이스북', 'www.facebook.com': '페이스북',
+    'www.youtube.com': '유튜브', 'm.youtube.com': '유튜브', 'www.threads.net': '스레드', 'www.threads.com': '스레드', 't.co': 'X(트위터)', 'story.kakao.com': '카카오스토리', 'pf.kakao.com': '카카오 채널' };
   const UTM_NAME = { naver_cafe: '네이버 카페', naver_blog: '네이버 블로그', instagram: '인스타그램', kakao_open: '카톡 오픈채팅', kakao_channel: '카카오 채널', youtube: '유튜브', threads: '스레드', etc_link: '기타' };
-  function urlLabel(u) {
-    const [host, ...seg] = u.split('/').filter(Boolean);
-    const H = REF_NAME[host] || host;
-    if (/blog\.naver\.com$/.test(host) && seg[0] && !/\.naver$/.test(seg[0])) return `블로그 ‘${seg[0]}’${seg[1] ? ' · 글 ' + seg[1] : ''}`;
-    if (/cafe\.naver\.com$/.test(host)) { const ci = seg.indexOf('cafes'), ai = seg.indexOf('articles');
-      if (ci >= 0) return `카페 ${seg[ci + 1] || ''}${ai >= 0 ? ' · 글 ' + (seg[ai + 1] || '') : ''}`;
-      if (seg[0]) return `카페 ‘${seg[0]}’${seg[1] ? ' · 글 ' + seg[1] : ''}`; }
-    if (/instagram\.com$/.test(host) && seg[0] && !['p', 'reel', 'stories'].includes(seg[0])) return `인스타 ‘${seg[0]}’`;
-    return `${H} /${seg.join('/')}`;
-  }
-  const refDetail = r => { const m = r.meta || {}, u = m.utm;
-    if (u && u.source && u.source !== 'share') return { k: 'utm|' + u.source + '|' + (u.content || u.campaign || ''), label: `📌 홍보 링크 · ${(UTM_NAME[u.source] || u.source)}${u.content || u.campaign ? ' · ' + (u.content || u.campaign) : ''}` };
-    if (m.ref_url) return { k: m.ref_url, label: urlLabel(m.ref_url), href: 'https://' + m.ref_url };
-    const h = r.referrer || ''; return { k: h, label: REF_NAME[h] || h || '알 수 없음', sub: REF_NAME[h] && h !== 'share' && h !== 'kakaotalk' ? h : '' };
-  };
+  const refCat = r => { const m = r.meta || {}, u = m.utm, h = r.referrer || '';
+    if (u && u.source && u.source !== 'share') return '📌 홍보 링크';
+    if (!h) return '직접 방문·알 수 없음';
+    if (h === 'share') return '앱에서 보낸 공유 링크';
+    if (h === 'kakaotalk') return '카카오톡';
+    return REF_CAT[h] || (/naver/.test(h) ? '네이버 기타' : /daum/.test(h) ? '다음 기타' : /google\./.test(h) ? '구글 검색' : /kakao/.test(h) ? '카카오 기타' : '기타 사이트'); };
+  // 세부: 검색어 > 글 주소 > (기타 사이트면) 사이트 주소 > 정보 없음
+  const refSub = r => { const m = r.meta || {}, u = m.utm, h = r.referrer || '';
+    if (u && u.source && u.source !== 'share') return { k: 'u:' + u.source + '|' + (u.content || u.campaign || ''), t: `${UTM_NAME[u.source] || u.source}${u.content || u.campaign ? ' · ' + (u.content || u.campaign) : ''}` };
+    if (m.ref_kw) return { k: 'k:' + m.ref_kw, t: m.ref_kw };
+    if (m.ref_url) return { k: m.ref_url, t: 'https://' + m.ref_url, href: 'https://' + m.ref_url };
+    if (h && !REF_CAT[h] && !['share', 'kakaotalk'].includes(h)) return { k: h, t: h, href: 'https://' + h };
+    return { k: '', t: '세부 정보 없음', dim: true }; };
   function renderRefs(visits) {
     const el = $('#refs'), total = visits.length;
     if (!total) { el.innerHTML = '<p class="empty-note">아직 기록이 없습니다</p>'; return; }
-    const ch = {};
-    const info = {};
-    visits.forEach(r => { const c = refChannel(r.referrer), x = refDetail(r); info[x.k] = x; const g = ch[c] || (ch[c] = { n: 0, d: {} }); g.n++; g.d[x.k] = (g.d[x.k] || 0) + 1; });
-    const rows = Object.entries(ch).sort((a, b) => b[1].n - a[1].n), max = rows[0][1].n;
-    const pc = (v, t) => (t ? Math.round(v / t * 100) : 0) + '%';
-    el.innerHTML = rows.map(([c, g]) => {
-      const det = Object.entries(g.d).sort((a, b) => b[1] - a[1]);
-      const top = det.slice(0, 5), rest = det.slice(5).reduce((n, x) => n + x[1], 0);
-      const can = det.length > 1 || (det[0] && det[0][0] && det[0][0] !== 'share');
-      const bar = `<span class="lbl" title="${esc(c)}">${esc(c)}</span><span class="track"><span class="fill" style="width:${(g.n / max * 100).toFixed(1)}%"></span></span><span class="val">${pc(g.n, total)}</span>`;
-      if (!can) return `<div class="refrow"><div class="refsum">${bar}<span class="refchev"></span></div></div>`;
-      return `<details class="refrow"><summary class="refsum">${bar}<span class="refchev" aria-hidden="true"></span></summary>
-        <ul class="refdet">${top.map(([d, n]) => { const x = info[d] || { label: d };
-          const lab = `${esc(x.label)}${x.sub ? ` <small>${esc(x.sub)}</small>` : ''}`;
-          return `<li><span title="${esc(x.href || d)}">${x.href ? `<a href="${esc(x.href)}" target="_blank" rel="noopener noreferrer">${lab}</a>` : lab}</span><b>${fmt(n)}회 · ${pc(n, g.n)}</b></li>`; }).join('')}${rest ? `<li class="etc"><span>기타 ${det.length - 5}곳</span><b>${fmt(rest)}회 · ${pc(rest, g.n)}</b></li>` : ''}</ul>
-      </details>`;
+    const cat = {}, info = {};
+    visits.forEach(r => { const c = refCat(r), x = refSub(r); info[x.k] = x; const g = cat[c] || (cat[c] = { n: 0, d: {} }); g.n++; g.d[x.k] = (g.d[x.k] || 0) + 1; });
+    const pc = v => (v / total * 100).toFixed(2) + '%';
+    el.innerHTML = Object.entries(cat).sort((a, b) => b[1].n - a[1].n).map(([c, g]) => {
+      const det = Object.entries(g.d).sort((a, b) => b[1] - a[1]), top = det.slice(0, 5), rest = det.slice(5).reduce((n, x) => n + x[1], 0);
+      const only = det.length === 1 && info[det[0][0]].dim;
+      const head = `<span class="rl">${esc(c)}</span><span class="rp">${pc(g.n)}</span>`;
+      if (only) return `<div class="rrow"><div class="rsum">${head}<span class="rc"></span></div></div>`;
+      return `<details class="rrow"><summary class="rsum">${head}<span class="rc" aria-hidden="true"></span></summary><ul class="rdet">${
+        top.map(([k, n]) => { const x = info[k]; return `<li class="${x.dim ? 'dim' : ''}"><span class="rt" title="${esc(x.t)}">${x.href ? `<a href="${esc(x.href)}" target="_blank" rel="noopener noreferrer">${esc(x.t)}</a>` : esc(x.t)}</span><span class="rp">${pc(n)}</span></li>`; }).join('')
+      }${rest ? `<li class="dim"><span class="rt">기타 ${det.length - 5}개</span><span class="rp">${pc(rest)}</span></li>` : ''}</ul></details>`;
     }).join('');
   }
   // 홍보 링크 만들기: 앱 주소 + utm 표시 (방문하면 '📌 홍보 링크 · 이름'으로 집계)
