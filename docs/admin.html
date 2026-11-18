@@ -156,6 +156,23 @@ details.tbl summary { cursor: pointer; font-size: 13px; color: var(--accent) }
 .hbars .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .hbars .track { height: 10px; background: var(--sunk); border-radius: 0 4px 4px 0; overflow: hidden }
 .hbars .fill { display: block; height: 100%; background: var(--accent); border-radius: 0 4px 4px 0 }
+/* 유입 경로 (펼치면 세부) */
+.refs { display: grid; gap: 4px }
+.refsum { list-style: none; display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr) 3.5em 14px; gap: 10px; align-items: center; font-size: 13.5px; padding: 4px 0; cursor: pointer }
+div.refsum { cursor: default }
+.refsum::-webkit-details-marker { display: none }
+.refsum .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.refsum .track { height: 10px; background: var(--sunk); border-radius: 0 4px 4px 0; overflow: hidden }
+.refsum .fill { display: block; height: 100%; background: var(--accent); border-radius: 0 4px 4px 0 }
+.refsum .val { text-align: right; font-variant-numeric: tabular-nums }
+details.refrow .refchev::after { content: "▾"; color: var(--muted); font-size: 11px }
+details.refrow[open] .refchev::after { content: "▴" }
+.refdet { list-style: none; margin: 2px 0 8px; padding: 8px 10px; border-radius: 10px; background: var(--sunk); display: grid; gap: 5px; font-size: 12.5px }
+.refdet li { display: flex; justify-content: space-between; gap: 10px; align-items: baseline }
+.refdet li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.refdet li small { color: var(--muted); font-size: 11px }
+.refdet li b { flex: none; font-weight: 600; font-variant-numeric: tabular-nums }
+.refdet li.etc { color: var(--muted) }
 .hbars .val { text-align: right; font-family: var(--f-mono); font-size: 12.5px }
 .empty-note { font-size: 13px; color: var(--muted); margin: 0 }
 
@@ -298,7 +315,7 @@ td.r, th.r { text-align: right }
         <h2>기기 · 사용 방식 · 유입 경로</h2>
         <p class="sub">방문 세션 기준</p>
         <h3>기기 · 실행 방식</h3><ul class="hbars" id="devices"></ul>
-        <h3>유입 경로</h3><ul class="hbars" id="refs"></ul>
+        <h3>유입 경로 <small class="muted">· 누르면 세부 경로</small></h3><div class="refs" id="refs"></div>
       </section>
     </div>
 
@@ -386,7 +403,7 @@ td.r, th.r { text-align: right }
   // 예시 데이터: 설정 전에 화면을 미리 보기 위한 가짜 기록
   function demoEvents(since) {
     const out = [], names = ['서윤', '하준', '지안', '도윤', '서아', '이준', '하윤', '시우', '지우', '은우', '수아', '유준'];
-    const refs = [null, null, null, 'kakaotalk', 'm.search.naver.com', 'instagram.com'];
+    const refs = [null, null, null, 'kakaotalk', 'kakaotalk', 'share', 'm.search.naver.com', 'm.search.naver.com', 'search.naver.com', 'm.blog.naver.com', 'cafe.naver.com', 'm.cafe.naver.com', 'in.naver.com', 'kin.naver.com', 'instagram.com', 'l.instagram.com', 'www.google.com', 'm.search.daum.net', 'www.threads.net', 'mom-community.example.com'];
     let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
     const visitors = Array.from({ length: 260 }, (_, i) => 'v' + i), seen = new Set();
     for (let d = new Date(since); d <= new Date(); d = new Date(d.getTime() + 86400000)) {
@@ -417,6 +434,44 @@ td.r, th.r { text-align: right }
     el.innerHTML = items.map(([k, v]) => `<li><span class="lbl" title="${esc(k)}">${esc(k)}</span>
       <span class="track"><span class="fill" style="width:${(v / max * 100).toFixed(1)}%"></span></span>
       <span class="val">${opts.pct ? (total ? Math.round(v / total * 100) : 0) + '%' : fmt(v)}</span></li>`).join('');
+  }
+  // 유입 경로: 큰 채널(네이버·카카오·인스타그램…)별 비중 → 누르면 세부 경로 상위 5개 + 기타
+  const REF_NAME = { 'm.search.naver.com': '네이버 검색 (모바일)', 'search.naver.com': '네이버 검색 (PC)', 'm.blog.naver.com': '네이버 블로그 (모바일)', 'blog.naver.com': '네이버 블로그',
+    'm.cafe.naver.com': '네이버 카페 (모바일)', 'cafe.naver.com': '네이버 카페', 'in.naver.com': '네이버 인플루언서', 'm.naver.com': '네이버 메인 (모바일)', 'www.naver.com': '네이버 메인', 'kin.naver.com': '네이버 지식iN', 'm.kin.naver.com': '네이버 지식iN (모바일)',
+    'www.google.com': '구글 검색', 'www.google.co.kr': '구글 검색 (한국)', 'm.search.daum.net': '다음 검색 (모바일)', 'search.daum.net': '다음 검색', 'm.daum.net': '다음 메인 (모바일)', 'cafe.daum.net': '다음 카페', 'm.cafe.daum.net': '다음 카페 (모바일)',
+    'instagram.com': '인스타그램', 'www.instagram.com': '인스타그램', 'l.instagram.com': '인스타그램 프로필·스토리 링크', 'l.facebook.com': '페이스북 링크', 'm.facebook.com': '페이스북 (모바일)', 'www.facebook.com': '페이스북',
+    'www.youtube.com': '유튜브', 'm.youtube.com': '유튜브 (모바일)', 'www.threads.net': '스레드', 'kakaotalk': '카카오톡으로 받은 링크', 'share': '앱의 공유 버튼으로 보낸 링크', 'story.kakao.com': '카카오스토리', 'pf.kakao.com': '카카오 채널', 't.co': 'X(트위터) 링크' };
+  const refChannel = v => {
+    if (!v) return '직접 방문·알 수 없음';
+    if (v === 'share') return '앱에서 보낸 공유 링크';
+    if (/kakao/.test(v)) return '카카오';
+    if (/naver/.test(v)) return '네이버';
+    if (/google\./.test(v)) return '구글';
+    if (/daum\.net/.test(v)) return '다음';
+    if (/instagram/.test(v)) return '인스타그램';
+    if (/facebook|fb\.com/.test(v)) return '페이스북';
+    if (/youtube|youtu\.be/.test(v)) return '유튜브';
+    if (/threads\.net|^t\.co$|twitter|x\.com/.test(v)) return 'SNS (스레드·X)';
+    if (/bing\.|yahoo\.|zum\.com|duckduckgo/.test(v)) return '기타 검색';
+    return '기타 사이트';
+  };
+  function renderRefs(visits) {
+    const el = $('#refs'), total = visits.length;
+    if (!total) { el.innerHTML = '<p class="empty-note">아직 기록이 없습니다</p>'; return; }
+    const ch = {};
+    visits.forEach(r => { const c = refChannel(r.referrer), d = r.referrer || ''; const g = ch[c] || (ch[c] = { n: 0, d: {} }); g.n++; g.d[d] = (g.d[d] || 0) + 1; });
+    const rows = Object.entries(ch).sort((a, b) => b[1].n - a[1].n), max = rows[0][1].n;
+    const pc = (v, t) => (t ? Math.round(v / t * 100) : 0) + '%';
+    el.innerHTML = rows.map(([c, g]) => {
+      const det = Object.entries(g.d).sort((a, b) => b[1] - a[1]);
+      const top = det.slice(0, 5), rest = det.slice(5).reduce((n, x) => n + x[1], 0);
+      const can = det.length > 1 || (det[0] && det[0][0] && (REF_NAME[det[0][0]] || det[0][0]) !== c);
+      const bar = `<span class="lbl" title="${esc(c)}">${esc(c)}</span><span class="track"><span class="fill" style="width:${(g.n / max * 100).toFixed(1)}%"></span></span><span class="val">${pc(g.n, total)}</span>`;
+      if (!can) return `<div class="refrow"><div class="refsum">${bar}<span class="refchev"></span></div></div>`;
+      return `<details class="refrow"><summary class="refsum">${bar}<span class="refchev" aria-hidden="true"></span></summary>
+        <ul class="refdet">${top.map(([d, n]) => `<li><span title="${esc(d)}">${esc(REF_NAME[d] || d || '알 수 없음')}${REF_NAME[d] && d !== 'kakaotalk' && d !== 'share' ? ` <small>${esc(d)}</small>` : ''}</span><b>${fmt(n)}회 · ${pc(n, g.n)}</b></li>`).join('')}${rest ? `<li class="etc"><span>기타 ${det.length - 5}곳</span><b>${fmt(rest)}회 · ${pc(rest, g.n)}</b></li>` : ''}</ul>
+      </details>`;
+    }).join('');
   }
   // 세로 막대 차트 (opt.label: 축 글자, opt.tip: 말풍선 글자, opt.aria: 화면낭독기 설명)
   function barChart(id, series, opt) {
@@ -552,7 +607,7 @@ td.r, th.r { text-align: right }
     hbars($('#topNames'), Object.entries(nm).sort((a, b) => b[1] - a[1]).slice(0, 10));
     const per = (key, map) => { const o = {}; visits.forEach(r => { const k = map(r[key]); o[k] = (o[k] || 0) + 1; }); return Object.entries(o).sort((a, b) => b[1] - a[1]); };
     hbars($('#devices'), [...per('device', v => v === 'mobile' ? '휴대폰' : 'PC'), ...per('app_mode', v => v === 'app' ? '홈 화면 앱으로 실행' : '브라우저로 실행')], visits.length, { pct: true, max: visits.length });
-    hbars($('#refs'), per('referrer', v => v ? ({ kakaotalk: '카카오톡', share: '공유 링크(앱에서 보낸 것)' }[v] || v) : '직접 방문·알 수 없음').slice(0, 6), visits.length, { pct: true, max: visits.length });
+    renderRefs(visits);
 
     // 최근 이용 기록: 세션(한 번의 방문)별로 묶어 한 줄씩, 펼치면 행동 순서
     const KST = o => new Intl.DateTimeFormat('ko-KR', Object.assign({ timeZone: 'Asia/Seoul' }, o));
