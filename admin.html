@@ -81,22 +81,30 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .cnt-badge { font: 600 12px var(--f-body); color: var(--muted); margin-left: 4px }
 #fbList { max-height: 520px; overflow: auto }
 
-/* 최근 이용 기록 (세션별) */
-#recent { display: grid; gap: 6px; max-height: 720px; overflow: auto }
-.sess { border: 1px solid var(--line); border-radius: 12px; background: var(--surface) }
-.sess summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 10px 12px; font-size: 13px }
+/* 최근 이용 기록 (세션별): 한 줄 요약 · 펼치면 상세 */
+#recent { display: grid; grid-template-columns: minmax(0, 1fr); max-height: 640px; overflow: auto; border-top: 1px solid var(--line) }
+.sess { border-bottom: 1px solid var(--line); min-width: 0 }
+.sess summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 7px 4px; font-size: 13px; white-space: nowrap; min-height: 34px }
 .sess summary::-webkit-details-marker { display: none }
-.sess summary::after { content: "▾"; grid-column: 2; grid-row: 1; color: var(--muted); justify-self: end }
+.sess summary::after { content: "▾"; color: var(--muted); font-size: 11px; flex: none }
 .sess[open] summary::after { content: "▴" }
-.s-time { font-weight: 700 } .s-who { grid-column: 1 / -1; color: var(--muted) } .s-new { color: var(--good) }
-.s-dur { grid-column: 1 / -1; color: var(--muted); font-size: 12px }
-.s-chips { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px }
-.sc { font-style: normal; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--sunk); color: var(--ink) }
+.sess[open] summary { background: var(--sunk) }
+.sess.hot .s-brief { color: var(--seal); font-weight: 600 }
+.s-time { flex: none; font-weight: 600; font-size: 12.5px; color: var(--ink) }
+.s-ic { flex: none; font-size: 13px }
+.s-nv { flex: none; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 6px; background: var(--sunk); color: var(--muted) }
+.s-nv.new { background: rgb(60 122 90 / .15); color: var(--good) }
+.s-brief { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--ink) }
+.s-dur { flex: none; color: var(--muted); font-size: 12px }
+.s-detail { padding: 6px 8px 12px; display: grid; gap: 8px; background: var(--sunk) }
+.s-who { margin: 0; font-size: 12.5px; color: var(--muted) }
+.s-chips { display: flex; flex-wrap: wrap; gap: 4px }
+.sc { font-style: normal; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--surface); color: var(--ink) }
 .sc.hot { background: var(--seal); color: var(--on-seal, #fff) } .sc.dim { color: var(--muted); font-weight: 500 }
-.s-steps { margin: 0; padding: 4px 12px 12px 34px; display: grid; gap: 4px; font-size: 12.5px; border-top: 1px solid var(--line) }
-.s-steps li { display: grid; grid-template-columns: 64px 110px 1fr; gap: 8px; padding-top: 4px }
+.s-steps { margin: 0; padding: 0 0 0 20px; display: grid; gap: 3px; font-size: 12.5px }
+.s-steps li { display: grid; grid-template-columns: 66px 112px 1fr; gap: 8px }
 .s-steps li .num { color: var(--muted) } .s-steps li span:last-child { color: var(--muted); overflow-wrap: anywhere }
-@media (max-width: 600px) { .s-steps { padding-left: 26px } .s-steps li { grid-template-columns: 58px 1fr } .s-steps li span:last-child { grid-column: 2 } }
+@media (max-width: 600px) { .s-steps { padding-left: 4px } .s-steps li { display: flex; flex-wrap: wrap; gap: 0 8px } .s-steps li .num { flex: none } }
 
 /* 로그인·설정 */
 .narrow { max-width: 420px; margin: 24px auto 0; width: 100% }
@@ -548,7 +556,7 @@ td.r, th.r { text-align: right }
 
     // 최근 이용 기록: 세션(한 번의 방문)별로 묶어 한 줄씩, 펼치면 행동 순서
     const KST = o => new Intl.DateTimeFormat('ko-KR', Object.assign({ timeZone: 'Asia/Seoul' }, o));
-    const fT = KST({ month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }), fS = KST({ hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const fT = KST({ month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }), fS = KST({ hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
     const TABK = { rec: '이름 추천', find: '한자 찾기', mine: '이름 비교', saved: '저장' };
     const infoOf = r => { const m = r.meta || {};
       return r.event === 'feedback' ? `“${String(m.msg || '').slice(0, 60)}${String(m.msg || '').length > 60 ? '…' : ''}”`
@@ -564,6 +572,7 @@ td.r, th.r { text-align: right }
     const list = [...sess.values()].map(g => { g.ev.sort((a, b) => a.created_at < b.created_at ? -1 : 1); g.start = g.ev[0].created_at; g.end = g.ev[g.ev.length - 1].created_at; return g; })
       .sort((a, b) => (a.end < b.end ? 1 : -1)).slice(0, 100);
     const dur = g => { const sec = Math.round((new Date(g.end) - new Date(g.start)) / 1000); return sec < 60 ? `${sec}초` : sec < 3600 ? `${Math.floor(sec / 60)}분 ${sec % 60}초` : `${Math.floor(sec / 3600)}시간 ${Math.floor(sec % 3600 / 60)}분`; };
+    const SHORT = { recommend: '추천', more: '다음', find: '한자찾기', mine: '비교', save_name: '저장', share_name: '이름공유', share_app: '앱공유', copy_name: '복사', detail_open: '감명', hanja_report: '제보', feedback: '의견' };
     const KEYEV = ['recommend', 'more', 'find', 'mine', 'save_name', 'share_name', 'share_app', 'copy_name', 'detail_open', 'hanja_report', 'feedback'];
     $('#sessNum').textContent = sess.size ? `${fmt(list.length)}개${sess.size > 100 ? ` / 전체 ${fmt(sess.size)}개` : ''}` : '';
     $('#recent').innerHTML = list.length ? list.map(g => {
@@ -571,12 +580,20 @@ td.r, th.r { text-align: right }
       const cnt = {}; g.ev.forEach(r => { if (KEYEV.includes(r.event)) cnt[r.event] = (cnt[r.event] || 0) + 1; });
       const chips = Object.entries(cnt).map(([e, n]) => `<i class="sc${e === 'feedback' || e === 'hanja_report' ? ' hot' : ''}">${esc(LABEL[e] || e)}${n > 1 ? ' ' + n : ''}</i>`).join('') || '<i class="sc dim">둘러보기만</i>';
       const ref = g.ref ? ({ kakaotalk: '카카오톡', share: '공유 링크' }[g.ref] || g.ref) : '';
-      return `<details class="sess"><summary>
-          <span class="s-time num">${esc(fT.format(new Date(g.start)))}</span>
-          <span class="s-who">${g.device === 'mobile' ? '📱 휴대폰' : '💻 PC'}${g.app === 'app' ? ' · 홈 화면 앱' : ''} · ${isNew ? '<b class="s-new">첫 방문</b>' : `재방문${visitCount[g.visitor] > 1 ? ` (기간 중 ${visitCount[g.visitor]}회)` : ''}`}${ref ? ' · ' + esc(ref) : ''}</span>
-          <span class="s-dur">${dur(g)} · 행동 ${g.ev.length}개</span>
-          <span class="s-chips">${chips}</span></summary>
-        <ol class="s-steps">${g.ev.map(r => `<li><span class="num">${esc(fS.format(new Date(r.created_at)))}</span><b>${esc(LABEL[r.event] || r.event)}</b><span>${esc(infoOf(r))}</span></li>`).join('')}</ol>
+      const fTs = KST({ month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+      const brief = Object.entries(cnt).map(([e, n]) => (SHORT[e] || LABEL[e] || e) + (n > 1 ? n : '')).join('·') || '둘러보기';
+      const hot = cnt.feedback || cnt.hanja_report;
+      return `<details class="sess${hot ? ' hot' : ''}"><summary>
+          <span class="s-time num">${esc(fTs.format(new Date(g.start)))}</span>
+          <span class="s-ic" title="${g.device === 'mobile' ? '휴대폰' : 'PC'}">${g.device === 'mobile' ? '📱' : '💻'}</span>
+          <span class="s-nv${isNew ? ' new' : ''}">${isNew ? '첫' : '재'}</span>
+          <span class="s-brief">${esc(brief)}</span>
+          <span class="s-dur num">${dur(g)}</span></summary>
+        <div class="s-detail">
+          <p class="s-who">${g.device === 'mobile' ? '휴대폰' : 'PC'}${g.app === 'app' ? ' · 홈 화면 앱' : ''} · ${isNew ? '첫 방문' : `재방문${visitCount[g.visitor] > 1 ? ` (기간 중 ${visitCount[g.visitor]}회)` : ''}`}${ref ? ' · 유입: ' + esc(ref) : ''} · 행동 ${g.ev.length}개 · ${dur(g)}</p>
+          <div class="s-chips">${chips}</div>
+          <ol class="s-steps">${g.ev.map(r => `<li><span class="num">${esc(fS.format(new Date(r.created_at)))}</span><b>${esc(LABEL[r.event] || r.event)}</b><span>${esc(infoOf(r))}</span></li>`).join('')}</ol>
+        </div>
       </details>`; }).join('') : '<p class="empty-note">아직 기록이 없습니다. 앱에 한 번 들어가 보면 여기에 나타납니다.</p>';
   }
 
