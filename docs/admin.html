@@ -156,15 +156,6 @@ details.tbl summary { cursor: pointer; font-size: 13px; color: var(--accent) }
 .hbars .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .hbars .track { height: 10px; background: var(--sunk); border-radius: 0 4px 4px 0; overflow: hidden }
 .hbars .fill { display: block; height: 100%; background: var(--accent); border-radius: 0 4px 4px 0 }
-/* 홍보 링크 만들기 */
-.utmbox { margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 8px; font-size: 13px }
-.utmbox summary { cursor: pointer; font-weight: 600 }
-.utmform { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px }
-.utmform select, .utmform input { font: 15px var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 40px }
-.utmform input { flex: 1 1 12em; min-width: 0 } .utmform .btn { min-height: 40px; padding: 8px 14px }
-.utmout { margin: 8px 0 0; padding: 10px; border-radius: 10px; background: var(--sunk); overflow-wrap: anywhere; display: grid; gap: 6px }
-.utmout code { font-size: 12.5px } .utmout .mini { justify-self: start }
-.refdet a { color: inherit; text-decoration: underline; text-underline-offset: 2px }
 /* 유입 경로 (네이버 블로그 통계 방식) */
 .refs { display: grid; grid-template-columns: minmax(0, 1fr); border-top: 1px solid var(--line) }
 .rrow { border-bottom: 1px solid var(--line); min-width: 0 }
@@ -323,14 +314,6 @@ td.r, th.r { text-align: right }
         <p class="sub">방문 세션 기준</p>
         <h3>기기 · 실행 방식</h3><ul class="hbars" id="devices"></ul>
         <h3>유입 경로 <small class="muted">· 누르면 검색어·글 주소</small></h3><div class="refs" id="refs"></div>
-        <details class="utmbox"><summary>📌 홍보 링크 만들기 <small class="muted">· 글마다 다른 링크를 쓰면 어느 글에서 왔는지 정확히 보여요</small></summary>
-          <div class="utmform">
-            <select id="utmSrc"><option value="naver_cafe">네이버 카페</option><option value="naver_blog">네이버 블로그</option><option value="instagram">인스타그램</option><option value="kakao_open">카톡 오픈채팅</option><option value="kakao_channel">카카오 채널</option><option value="youtube">유튜브</option><option value="threads">스레드</option><option value="etc_link">기타</option></select>
-            <input id="utmName" maxlength="40" placeholder="어디에 올릴지 (예: 맘스홀릭 공지글)">
-            <button type="button" class="btn" id="utmMake">링크 만들기</button>
-          </div>
-          <p class="utmout" id="utmOut" hidden></p>
-        </details>
       </section>
     </div>
 
@@ -476,7 +459,9 @@ td.r, th.r { text-align: right }
     if (m.ref_kw) return { k: 'k:' + m.ref_kw, t: m.ref_kw };
     if (m.ref_url) return { k: m.ref_url, t: 'https://' + m.ref_url, href: 'https://' + m.ref_url };
     if (h && !REF_CAT[h] && !['share', 'kakaotalk'].includes(h)) return { k: h, t: h, href: 'https://' + h };
-    return { k: '', t: '세부 정보 없음', dim: true }; };
+    // 글 주소·검색어 기록은 2026-11-18 22:44(한국 시간)부터 · 그 전 방문은 사이트 이름만 있음
+    if (r.created_at < '2026-11-18T13:44:00Z') return { k: '~old', t: '주소 기록 시작 전 방문 (11/18 22:44 이전)', dim: true };
+    return { k: '~none', t: '주소가 넘어오지 않음 (브라우저·앱이 숨김)', dim: true }; };
   function renderRefs(visits) {
     const el = $('#refs'), total = visits.length;
     if (!total) { el.innerHTML = '<p class="empty-note">아직 기록이 없습니다</p>'; return; }
@@ -485,7 +470,7 @@ td.r, th.r { text-align: right }
     const pc = v => (v / total * 100).toFixed(2) + '%';
     el.innerHTML = Object.entries(cat).sort((a, b) => b[1].n - a[1].n).map(([c, g]) => {
       const det = Object.entries(g.d).sort((a, b) => b[1] - a[1]), top = det.slice(0, 5), rest = det.slice(5).reduce((n, x) => n + x[1], 0);
-      const only = det.length === 1 && info[det[0][0]].dim;
+      const only = det.length === 1 && info[det[0][0]].dim && !/^(네이버|다음)/.test(c);
       const head = `<span class="rl">${esc(c)}</span><span class="rp">${pc(g.n)}</span>`;
       if (only) return `<div class="rrow"><div class="rsum">${head}<span class="rc"></span></div></div>`;
       return `<details class="rrow"><summary class="rsum">${head}<span class="rc" aria-hidden="true"></span></summary><ul class="rdet">${
@@ -493,15 +478,6 @@ td.r, th.r { text-align: right }
       }${rest ? `<li class="dim"><span class="rt">기타 ${det.length - 5}개</span><span class="rp">${pc(rest)}</span></li>` : ''}</ul></details>`;
     }).join('');
   }
-  // 홍보 링크 만들기: 앱 주소 + utm 표시 (방문하면 '📌 홍보 링크 · 이름'으로 집계)
-  document.addEventListener('click', async e => {
-    if (e.target.id === 'utmMake') {
-      const name = $('#utmName').value.trim().slice(0, 40); if (!name) { $('#utmName').focus(); return; }
-      const url = 'https://gachi-naming.web.app/?utm_source=' + $('#utmSrc').value + '&utm_medium=post&utm_content=' + encodeURIComponent(name);
-      $('#utmOut').hidden = false; $('#utmOut').innerHTML = `<code>${esc(url)}</code><button type="button" class="mini" id="utmCopy" data-url="${esc(url)}">링크 복사</button><small class="muted">이 링크를 글에 넣어 주세요. 누군가 이 링크로 들어오면 유입 경로에 ‘📌 홍보 링크 · ${esc(name)}’로 따로 보여요.</small>`;
-    }
-    if (e.target.id === 'utmCopy') { try { await navigator.clipboard.writeText(e.target.dataset.url); e.target.textContent = '복사했어요'; } catch (x) { prompt('아래 링크를 복사하세요', e.target.dataset.url); } }
-  });
   // 세로 막대 차트 (opt.label: 축 글자, opt.tip: 말풍선 글자, opt.aria: 화면낭독기 설명)
   function barChart(id, series, opt) {
     const el = $('#' + id);
