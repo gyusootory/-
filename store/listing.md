@@ -53,7 +53,7 @@
 - 휴대전화 스크린샷 1080×1920 (5장): `store/screenshots/01.png ~ 05.png`
 
 ## 정책 관련 입력값
-- 개인정보처리방침 URL: https://gyusootory.github.io/gachi-naming/privacy.html
+- 개인정보처리방침 URL: https://gachi-naming.web.app/privacy.html
 - 광고 포함: 아니요
 - 앱 액세스 권한: 로그인 없이 모든 기능 사용 가능
 - 데이터 보안 섹션: 개인정보 수집 없음 / ‘앱 활동(앱 상호작용)’을 익명 분석 목적으로 수집, 전송 시 암호화(HTTPS), 사용자와 연결되지 않음
