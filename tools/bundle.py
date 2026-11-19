@@ -5,7 +5,7 @@
 import os, re, json, hashlib, shutil, zipfile, base64
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 D = os.path.join(R, 'docs'); os.makedirs(D, exist_ok=True); os.makedirs(os.path.join(R, 'dist'), exist_ok=True)
-SITE = 'https://gyusootory.github.io/gachi-naming/'
+SITE = 'https://gachi-naming.web.app/'  # 검색·공유 기준 주소(네이버 서치어드바이저 등록 주소). og:url·og:image·canonical 모두 이 주소
 src = open(os.path.join(R, 'index.html'), encoding='utf-8').read()
 
 def inline(m):
@@ -15,7 +15,7 @@ def inline(m):
     return '<script>\n' + js + '\n</script>'
 body = re.sub(r'<script src="([^"]+)"></script>', inline, src)
 
-OGV = '20261114e'  # 미리보기 이미지를 바꾸면 이 값을 바꿔 카톡·SNS가 새 이미지를 다시 읽게 함
+OGV = '20261116a'  # 미리보기 이미지를 바꾸면 이 값을 바꿔 카톡·SNS가 새 이미지를 다시 읽게 함
 OG_DESC = '유료 작명 앱 대신 무료로! ① 아이 생일을 넣으면 이름을 추천하고 ② 원하는 이름에 맞는 한자를 찾아 드려요. 회원가입 없이 바로 써 보세요.'
 DESC = '성명학 기반 무료 작명 앱. 아이 생일을 넣으면 이름을 추천하고, 원하는 이름에 맞는 한자를 찾아 드립니다.'
 head = ('<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n'
@@ -25,6 +25,7 @@ head = ('<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n'
         '<meta property="og:site_name" content="가치작명소">\n'
         '<meta property="og:title" content="가치작명소 — 평생 부를 이름, 성명학 기반으로 가치 있게 지어 드립니다">\n'
         f'<meta property="og:description" content="{OG_DESC}">\n'
+        f'<meta property="og:url" content="{SITE}">\n'
         f'<meta property="og:image" content="{SITE}og.png?v={OGV}">\n'
         '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
         '<meta name="twitter:card" content="summary_large_image">\n')
@@ -40,6 +41,7 @@ open(os.path.join(R, 'dist', '가치작명소.html'), 'w', encoding='utf-8').wri
 
 # ② 설치형 웹앱
 pwa = (head + '<meta name="theme-color" content="#121826">\n'
+       f'<link rel="canonical" href="{SITE}">\n'
        '<link rel="manifest" href="manifest.webmanifest">\n'
        '<link rel="icon" href="favicon-48.png" type="image/png">\n'
        '<link rel="apple-touch-icon" href="apple-touch-icon.png">\n'
