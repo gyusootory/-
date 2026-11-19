@@ -264,7 +264,7 @@
   const T = (e, m) => { if (window.gachiTrack) window.gachiTrack(e, m); };
 
   // ---------- 공유 ----------
-  const PUBLIC_URL = 'https://gyusootory.github.io/gachi-naming/';
+  const PUBLIC_URL = 'https://gachi-naming.web.app/';
   // 웹사이트로 올린 경우 그 주소를, 그 밖(파일·미리보기)에서는 공개 링크를 공유
   function appUrl() {
     const h = location.hostname;
