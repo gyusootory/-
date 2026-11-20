@@ -353,7 +353,6 @@ th { white-space: nowrap; font-weight: 600 } td:nth-child(2) { white-space: nowr
 
 .foot { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 4px; font-size: 12.5px; color: var(--muted) }
 .foot p { margin: 0 } .foot a { color: var(--accent) }
-.foot .cr { margin-top: 2px; font-size: 11.5px; letter-spacing: .015em; opacity: .82 }
 .guidebox + .guidebox { margin-top: 0 }
 .guidebox { margin-top: 32px; border-top: 1px solid var(--line); padding-top: 14px }
 .guidebox > summary { font-size: 15px; min-height: 44px; display: flex; align-items: center }
@@ -664,20 +663,11 @@ td .inm { font-size: 12px; display: inline }
 .nb-day li span { font-size: 12.5px; color: var(--muted) }
 .notice { gap: 8px }
 
-/* 맨 위 한 줄: 왜 만들었나요 (첫 화면에서 가장 먼저 보이는 제작 배경) */
-.whyline { display: flex; align-items: flex-start; gap: 11px; margin: 14px 0 0; font-size: 14.5px; line-height: 1.62; color: var(--ink) }
-.whyline .wl-seal { flex: none; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; margin-top: -2px;
-  border: 1.5px solid var(--seal); color: var(--seal); font: 600 14px/1 var(--f-display) }
-.whyline > span:last-child { min-width: 0; max-width: 88ch }
-.whyline b { font-weight: 600; color: var(--gold) }
-@media (max-width: 760px) { .whyline { font-size: 13px; line-height: 1.6; gap: 9px; margin-top: 11px } .whyline .wl-seal { width: 24px; height: 24px; font-size: 12px; border-radius: 7px } }
-
 /* 앱 소개 + 이름 짓기 자료 링크 (본문 끝) */
 .about { margin-top: 36px; padding-top: 22px; border-top: 1px solid var(--line) }
 .about h2 { font: 600 20px var(--f-display); letter-spacing: .01em; color: var(--ink) }
 .about p { margin: 10px 0 0; max-width: 68ch; font-size: 14.5px; line-height: 1.8; color: var(--ink) }
 .about p b { font-weight: 600; color: var(--gold) }
-.about h3 { margin: 20px 0 0; font: 600 16px var(--f-display); letter-spacing: .01em; color: var(--ink) }
 .aboutlinks { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px }
 .aboutlinks a { display: grid; gap: 3px; padding: 14px 16px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line);
   box-shadow: var(--shadow); text-decoration: none; color: var(--ink); transition: border-color .18s, transform .18s }
@@ -686,7 +676,6 @@ td .inm { font-size: 12px; display: inline }
 .aboutlinks b::after { content: " →"; color: var(--gold) }
 .aboutlinks span { font-size: 12.5px; color: var(--muted); line-height: 1.5 }
 @media (max-width: 760px) { .about { margin-top: 28px } .about h2 { font-size: 18px } .about p { font-size: 14px; line-height: 1.78 } .aboutlinks { grid-template-columns: minmax(0, 1fr); gap: 8px } }
-@media (max-width: 760px) { .about h3 { font-size: 15px; margin-top: 16px } }
 </style>
 </head>
 
@@ -712,9 +701,6 @@ td .inm { font-size: 12px; display: inline }
     </nav>
     </div>
   </header>
-
-  <!-- 왜 만들었나요: 첫 화면 맨 위에 한 줄로 먼저, 자세한 배경은 아래 소개에서 -->
-  <p class="whyline"><span class="wl-seal" aria-hidden="true">토</span><span><b>예비 아빠 토리아빠가 만든 무료 작명소.</b> 우리 아기 이름을 지으려다 쓸 만한 곳이 없어 직접 만들었습니다.</span></p>
 
   <!-- 탭 ①: 생년월일시로 이름 추천 -->
   <div class="grid" role="tabpanel" id="p-rec" aria-labelledby="t-rec">
@@ -897,10 +883,8 @@ td .inm { font-size: 12px; display: inline }
   </div>
 
   <section class="about" aria-labelledby="aboutH">
-    <h2 id="aboutH">왜 만들었나요</h2>
-    <p>곧 태어날 우리 아기 이름을 직접 짓고 싶어 여러 곳을 찾아봤지만, 사주·오행·81수리까지 한 번에 보여 주면서 광고나 결제 없이 바로 쓸 수 있는 무료 작명 서비스는 없었습니다. 그래서 예비 아빠 <b>토리아빠</b>가 직접 만들었습니다. 쓰다가 답답한 곳이 있으면 ‘의견 남기기’로 알려 주세요.</p>
-    <h3>가치작명소는 이런 앱입니다</h3>
-    <p>성씨와 아이 생년월일시를 넣으면 사주에서 부족한 기운과 소리·획수를 함께 살펴 이름 후보를 골라 드리고, 마음에 드는 이름이 있으면 그 소리에 맞는 인명용 한자를 뜻과 획수까지 보여 드립니다. 이미 짓고 있는 이름이 궁금하면 ‘이름 비교’에서 한자별 점수와 81수리 풀이를 볼 수 있습니다. 회원가입도, 설치도, 결제도 없습니다. 입력한 생년월일과 성씨는 기기 안에서만 계산되고 서버로 보내지 않습니다. 이름은 한 번 정하면 오래 부르는 말이니 점수는 참고로 삼고, 마지막은 가족이 소리 내어 불러 보며 정하세요.</p>
+    <h2 id="aboutH">가치작명소는 이런 앱입니다</h2>
+    <p>가치작명소는 아기 이름을 짓는 부모를 위해 만든 <b>무료 웹앱</b>입니다. 성씨와 아이 생년월일시를 넣으면 사주에서 부족한 기운과 소리·획수를 함께 살펴 이름 후보를 골라 드리고, 마음에 드는 이름이 있으면 그 소리에 맞는 인명용 한자를 뜻과 획수까지 보여 드립니다. 이미 짓고 있는 이름이 궁금하면 ‘이름 비교’에서 한자별 점수와 81수리 풀이를 볼 수 있습니다. 회원가입도, 설치도, 결제도 없습니다. 입력한 생년월일과 성씨는 기기 안에서만 계산되고 서버로 보내지 않습니다. 이름은 한 번 정하면 오래 부르는 말이니 점수는 참고로 삼고, 마지막은 가족이 소리 내어 불러 보며 정하세요.</p>
     <ul class="aboutlinks">
       <li><a href="guide.html"><b>아기 이름 작명 가이드</b><span>소리·사주·획수를 어떤 순서로 볼지</span></a></li>
       <li><a href="suri81.html"><b>81수리 길흉표</b><span>원·형·이·정격 81가지 수리 뜻</span></a></li>
@@ -963,7 +947,6 @@ td .inm { font-size: 12px; display: inline }
     <p><b>가치작명소</b> · 결과는 성명학 이론에 따른 참고용이며, 출생신고 전 대법원 인명용 한자 여부를 꼭 확인하세요.</p>
     <p><a href="privacy.html">개인정보처리방침</a> · 입력한 생년월일과 성씨는 이 기기 안에서만 계산되고 저장·전송되지 않습니다.</p>
     <p><a href="guide.html">작명 가이드</a> · <a href="suri81.html">81수리 길흉표</a> · <a href="hanja.html">인명용 한자</a> · <a href="faq.html">자주 묻는 질문</a></p>
-    <p class="cr">© 2026 가치작명소 · 제작자 토리아빠 · All rights reserved.</p>
     <a class="adm" href="admin.html" aria-label="관리자" title="관리자" rel="nofollow"><img src="icon-96.png" alt="" width="24" height="24"></a>
   </footer>
 </div>
@@ -2363,9 +2346,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
       <button type="button" class="nb-x" aria-label="공지 닫기">✕</button>
       <div class="nb-week" id="nbWeek" hidden><p class="nb-sum">최근 1주일 동안 추가된 한자 ${total}자 · 한자 찾기 · 이름 비교에서 바로 고를 수 있어요</p>${
         week.map(x => `<div class="nb-day"><h4>${md(x)}</h4><ul>${g[x].map(chip).join('')}</ul></div>`).join('')}</div>`;
-    // 맨 위 '왜 만들었나요' 한 줄이 있으면 그 아래에 붙인다(첫 화면 맨 위는 제작 배경에 양보)
-    const anchor = document.querySelector('.whyline') || document.querySelector('.mast');
-    if (anchor) anchor.after(el);
+    document.querySelector('.mast').after(el);
     const more = el.querySelector('.nb-more');
     more.addEventListener('click', () => { const open = more.getAttribute('aria-expanded') !== 'true'; more.setAttribute('aria-expanded', open); el.querySelector('.nb-week').hidden = !open; if (open) T('notice_more'); });
     el.querySelector('.nb-x').addEventListener('click', () => { try { localStorage.setItem(KEY, sig); } catch (e) {} el.remove(); });

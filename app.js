@@ -911,9 +911,7 @@
       <button type="button" class="nb-x" aria-label="공지 닫기">✕</button>
       <div class="nb-week" id="nbWeek" hidden><p class="nb-sum">최근 1주일 동안 추가된 한자 ${total}자 · 한자 찾기 · 이름 비교에서 바로 고를 수 있어요</p>${
         week.map(x => `<div class="nb-day"><h4>${md(x)}</h4><ul>${g[x].map(chip).join('')}</ul></div>`).join('')}</div>`;
-    // 맨 위 '왜 만들었나요' 한 줄이 있으면 그 아래에 붙인다(첫 화면 맨 위는 제작 배경에 양보)
-    const anchor = document.querySelector('.whyline') || document.querySelector('.mast');
-    if (anchor) anchor.after(el);
+    document.querySelector('.mast').after(el);
     const more = el.querySelector('.nb-more');
     more.addEventListener('click', () => { const open = more.getAttribute('aria-expanded') !== 'true'; more.setAttribute('aria-expanded', open); el.querySelector('.nb-week').hidden = !open; if (open) T('notice_more'); });
     el.querySelector('.nb-x').addEventListener('click', () => { try { localStorage.setItem(KEY, sig); } catch (e) {} el.remove(); });
