@@ -665,12 +665,12 @@ td .inm { font-size: 12px; display: inline }
 .notice { gap: 8px }
 
 /* 맨 위 한 줄: 왜 만들었나요 (첫 화면에서 가장 먼저 보이는 제작 배경) */
-.whyline { display: flex; align-items: flex-start; gap: 10px; margin: 12px 0 0; font-size: 12.8px; line-height: 1.62; color: var(--ink) }
-.whyline .wl-seal { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; margin-top: -2px;
-  border: 1.5px solid var(--seal); color: var(--seal); font: 600 13px/1 var(--f-display) }
-.whyline > span:last-child { min-width: 0 }
+.whyline { display: flex; align-items: flex-start; gap: 11px; margin: 14px 0 0; font-size: 14.5px; line-height: 1.62; color: var(--ink) }
+.whyline .wl-seal { flex: none; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; margin-top: -2px;
+  border: 1.5px solid var(--seal); color: var(--seal); font: 600 14px/1 var(--f-display) }
+.whyline > span:last-child { min-width: 0; max-width: 88ch }
 .whyline b { font-weight: 600; color: var(--gold) }
-@media (max-width: 760px) { .whyline { font-size: 12.5px; line-height: 1.58; gap: 9px } .whyline .wl-seal { width: 24px; height: 24px; font-size: 12px; border-radius: 7px } }
+@media (max-width: 760px) { .whyline { font-size: 13px; line-height: 1.6; gap: 9px; margin-top: 11px } .whyline .wl-seal { width: 24px; height: 24px; font-size: 12px; border-radius: 7px } }
 
 /* 앱 소개 + 이름 짓기 자료 링크 (본문 끝) */
 .about { margin-top: 36px; padding-top: 22px; border-top: 1px solid var(--line) }
