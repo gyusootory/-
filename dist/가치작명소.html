@@ -626,6 +626,17 @@ table.vs td:nth-child(2) { color: var(--ink) }
 }
 
 @media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease both } @keyframes rise { from { transform: translateY(6px); opacity: .4 } } }
+/* 원하는 이름 조건 (이름 추천) */
+.cond { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: block }
+.cond > summary { cursor: pointer; font-size: 14px; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
+.cond > summary::-webkit-details-marker { display: none }
+.cond > summary::after { content: "⌄"; margin-left: auto; color: var(--muted) } .cond[open] > summary::after { content: "⌃" }
+.cond[open] > summary { margin-bottom: 10px }
+.cond .row + .row { margin-top: 10px } .cond small { display: block; margin-top: 8px; font-size: 12px }
+.cond-sum { font-size: 12px; font-weight: 600; color: var(--gold) }
+.hext { font-style: normal; color: var(--gold); font-weight: 600 }
+.inm.ext { color: var(--muted); font-weight: 500 }
+
 /* 대법원 인명용 한자 표시 */
 .inm { margin: 0; font-size: 12.5px; font-weight: 600; display: flex; gap: 6px; align-items: baseline; line-height: 1.5 }
 .inm small { font-weight: 400; color: var(--muted) }
@@ -652,6 +663,43 @@ td .inm { font-size: 12px; display: inline }
 .nb-day li b { font: 600 20px var(--f-display); color: var(--ink) }
 .nb-day li span { font-size: 12.5px; color: var(--muted) }
 .notice { gap: 8px }
+
+/* ═════════ 글자 위계 (최종) ═════════
+   한 곳에서 모든 글자 크기·줄간격을 정함 · 휴대폰 / PC
+   제목1 앱 이름 24/30 · 제목2 결과 섹션 20/24 · 제목3 탭 소개·가이드 17/18 · 제목4 소제목 15
+   본문1 이름 풀이 15.5/16 · 본문2 설명 14 · 라벨 13.5 · 보조 12.5 · 최소 11 (10px 이하 없음) */
+.brand h1 { font-size: 30px; line-height: 1.2 }
+.sechead h3 { font-size: 24px; line-height: 1.3; letter-spacing: .01em }
+.sechead p, #recMeta, #findMeta, #mineMeta, #savedMeta { font-size: 12.5px; line-height: 1.5; margin-top: 4px }
+.intro-t { font-size: 18px; line-height: 1.4 }
+.intro-s { font-size: 12.5px }
+.guide h3 { font-size: 18px; line-height: 1.3; margin-bottom: 8px }
+.guide p, .guide li, .guide div { line-height: 1.65 }
+.cand h4, .dt h4 { font-size: 15px; font-weight: 700; line-height: 1.4 }
+.cmp h4 { font-size: 17px; line-height: 1.3 }
+.msent { font-size: 16px; line-height: 1.65 }
+.check, .info-pop p, .notice p, .modal p, #reportBox p, #fbBox p { font-size: 14px; line-height: 1.6 }
+.info-pop .ex, .info-pop .tip { font-size: 12.5px; line-height: 1.6 }
+.field label, .lbl { font-size: 13.5px; line-height: 1.4 }
+.mlist { font-size: 13px; line-height: 1.55 }
+.hs, .reqnote, .foot, .facts, .alts, .cond small, .inm, .s-who { font-size: 12.5px; line-height: 1.55 }
+.parts { font-size: 12px }
+.parts li { grid-template-columns: 62px 1fr 56px }
+.parts .num { white-space: nowrap }
+/* 최소 11px */
+.num { font-size: .92em }
+.req-badge, .plabel, .pill, .el small, .score small, .hm, .opt, .nb-tag, .parts .num, .inm small, .rank { font-size: 11px }
+.panel.collapsed .plabel { font-size: 11px }
+@media (max-width: 760px) {
+  .brand h1 { font-size: 24px }
+  .sechead h3 { font-size: 20px }
+  .intro-t { font-size: 17px }
+  .guide h3 { font-size: 17px }
+  .msent { font-size: 15.5px }
+  .parts li { font-size: 11px; grid-template-columns: 1fr }
+  .parts .num { font-size: 11px }
+}
+@media (max-width: 370px) { .intro-t { font-size: 16px } .intro-s { font-size: 11.5px } }
 </style>
 
 <div class="wrap">
@@ -722,6 +770,18 @@ td .inm { font-size: 12px; display: inline }
       </div>
       <div class="field"><label for="hangSel">항렬자 한자</label><select id="hangSel"></select><small class="muted" id="hangHint"></small></div>
       <label class="check"><input type="checkbox" id="allowOne"> 외자 이름 포함</label>
+      <details class="cond" id="recCond">
+        <summary>원하는 이름 조건 <span class="opt">선택</span> <span class="cond-sum" id="condSum"></span></summary>
+        <div class="row">
+          <div class="field"><label for="cFirst">첫 글자</label><input type="text" id="cFirst" maxlength="1" placeholder="예: 서" autocomplete="off"></div>
+          <div class="field"><label for="cLast">끝 글자</label><input type="text" id="cLast" maxlength="1" placeholder="예: 윤" autocomplete="off"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="cBat">받침</label><select id="cBat"><option value="">상관없음</option><option value="none">받침 없는 이름만</option><option value="last">끝 글자만 받침 없음</option></select></div>
+          <div class="field"><label for="cStyle">이름 스타일</label><select id="cStyle"><option value="pop">인기 이름 위주</option><option value="new">인기 + 새로운 이름</option></select></div>
+        </div>
+        <small class="muted">‘새로운 이름’은 이름에 잘 쓰는 글자를 조합해 흔하지 않은 이름까지 함께 찾아요</small>
+      </details>
       <button class="btn" type="submit">이름 추천 받기</button>
       </div>
       <div id="sajuOut" class="sajuout"></div>
@@ -822,6 +882,17 @@ td .inm { font-size: 12px; display: inline }
         <div class="field" data-req><label for="wantName">이름 (성 제외) <em class="req-badge">필수</em></label><input type="text" id="wantName" maxlength="2" placeholder="예: 서윤" required></div>
       </div>
       <label class="check"><input type="checkbox" id="useSaju"> 생년월일시(사주)도 반영하기 <span class="opt">선택</span></label>
+      <div class="info-row">
+        <label class="check"><input type="checkbox" id="useExt"> 인명용 한자 전체에서 찾기 <span class="opt">약 9,000자</span></label>
+        <button type="button" class="info-btn" aria-expanded="false" aria-controls="extInfo" aria-label="인명용 한자 전체에서 찾기가 무엇인지 보기">i</button>
+      </div>
+      <div class="info-pop" id="extInfo" role="note" hidden>
+        <b>인명용 한자 전체에서 찾기란?</b>
+        <p>가치작명소는 평소 이름에 많이 쓰고 뜻이 좋은 <b>엄선 한자 약 570자</b>로 조합을 만들어요.
+        이걸 켜면 대법원이 이름에 쓸 수 있도록 정한 <b>인명용 한자 전체(약 9,000자)</b>까지 넓혀서 찾아요.</p>
+        <p class="ex">예) ‘희’ 엄선 한자 8자 → 인명용 전체 <b>35자</b><br><span>엄선 한자에 없는 소리(예: ‘교’)는 켜지 않아도 자동으로 넓혀서 찾아요.</span></p>
+        <p class="tip">✓ 원하는 한자가 목록에 없을 때 켜 보세요. 넓혀서 찾은 한자는 <b>‘사전 뜻’</b>으로 표시되고, 뜻이 이름에 어울리는지 한 번 더 확인하시는 게 좋아요.</p>
+      </div>
       <div class="fbody" id="f-birth" hidden>
       <div class="row">
         <div class="field"><label for="f-cal">달력</label><select id="f-cal"><option value="solar">양력</option><option value="lunar">음력</option></select></div>
@@ -1200,7 +1271,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
   }
 
   // ---------- 한자 DB 색인 ----------
-  let BY_READ = null, BY_CHAR = null;
+  let BY_READ = null, BY_CHAR = null, EXT_READ = {}, EXT_ROWS = null;
   function index(HANJA) {
     BY_READ = {}; BY_CHAR = {};
     HANJA.forEach(r => {
@@ -1209,8 +1280,19 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
       const keys = new Set([h.eum, dooeum(h.eum)]);
       keys.forEach(k => (BY_READ[k] = BY_READ[k] || []).push(h));
     });
+    if (EXT_ROWS) indexExt(EXT_ROWS);
   }
-  const candidates = syl => (BY_READ[syl] || []);
+  // 인명용 한자 확장 사전 (hanja-ext.js): 직접 찾을 때만 씀 · 자동 추천에는 쓰지 않음
+  function indexExt(rows) {
+    EXT_ROWS = rows; EXT_READ = {};
+    rows.forEach(r => {
+      if ((BY_READ[r[1]] || []).some(x => x.ch === r[0])) return;
+      const h = { ch: r[0], eum: r[1], hun: r[2], strokes: r[3], el: r[4], mean: `‘${r[2]}’의 뜻`, inm: true, ext: true };
+      if (!BY_CHAR[h.ch]) BY_CHAR[h.ch] = h;
+      new Set([h.eum, dooeum(h.eum)]).forEach(k => (EXT_READ[k] = EXT_READ[k] || []).push(h));
+    });
+  }
+  const candidates = (syl, ext) => ext ? [...(BY_READ[syl] || []), ...(EXT_READ[syl] || [])] : (BY_READ[syl] || []);
 
   // 뜻이 이름에 어색한 글자(어조사·사물 등): 자동 추천에서 제외, 직접 찾기에서는 감점
   const AWKWARD = new Set('哉可那奈由唯汝如細勢歲兒阿斗島男南台認印授持枝宅鳴菜茶多栗汎'.split(''));
@@ -1299,9 +1381,9 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
   }
 
   // 한 한글 이름에 대해 가능한 모든 한자 조합을 평가해 점수순 정렬
-  function rankHanja(sur, nameSyl, sj, fixed, strict) {
+  function rankHanja(sur, nameSyl, sj, fixed, strict, ext) {
     const lists = nameSyl.map((s, i) => (fixed && fixed[i]) ? [fixed[i]]
-      : candidates(s).filter(h => !strict || !(AWKWARD.has(h.ch) || BULYONG.has(h.ch) || OLDSTYLE.has(h.ch) || !h.inm)));   // 자동 추천에서는 인명용 확인 안 된 글자 제외
+      : candidates(s, ext && !strict).filter(h => !strict || !(AWKWARD.has(h.ch) || BULYONG.has(h.ch) || OLDSTYLE.has(h.ch) || !h.inm)));   // 자동 추천에서는 인명용 확인 안 된 글자 제외
     if (lists.some(l => !l.length)) return [];
     const out = [];
     const rec = (i, acc) => {
@@ -1318,7 +1400,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
   }
 
   root.Naming = { STEMS, BRANCHES, ELS, EL_KO, GEN, CTRL, CHO_NAME, relation, suri, GRADE_KO, numEl,
-    decompose, dooeum, soundEl, jdn, sunLongitude, saju, index, candidates, evaluate, rankHanja,
+    decompose, dooeum, soundEl, jdn, sunLongitude, saju, index, indexExt, candidates, evaluate, rankHanja,
     byChar: c => BY_CHAR && BY_CHAR[c] };
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -1420,6 +1502,33 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     F: '서아 하윤 지안 이서 서윤 하은 지우 아윤 수아 윤서 지아 서연 하린 채원 지유 다은 예린 소율 시아 유나 서하 예은 연우 수빈 나은 채윤 민서 지원 서은 예서 윤아 하율 가은 아린 소은 지민 유진 세아 은서 다인 수연 지윤 서현 예원 채은 하연 유주 소윤 다현 서영 민지 수민 혜원 지혜 예진 가윤 나윤 서진 아인 유하 연서 수현 다연 하진 지은 채아 은채 이현 시은 예나 주아 세은 효주 연아 수진 해인 소연 가희 은지 정원 서희 다온 윤하 소희 채린 혜인 예지 아현 지수 하영 서율 리아 미소 보은 선아 은솔'.split(' '),
   };
   NAMES.U = [...new Set([...NAMES.M, ...NAMES.F])];
+  // ---------- 새로운 이름 후보: 이름에 잘 쓰는 앞·뒤 글자 조합 (인기 이름에 없는 것만) ----------
+  // 어색하거나 다른 낱말로 들리는 조합은 빼고(NG), 두 글자 모두 엄선 한자가 있어야 추천 대상이 됨
+  const SYL = {
+    M: { a: '도 시 하 지 은 서 예 주 유 우 선 건 민 현 준 태 승 재 정 윤 진 성 규 한 수 영 경 범 해 강'.split(' '), b: '윤 준 우 호 진 민 현 율 원 훈 겸 결 찬 혁 성 재 빈 환 후 담 람 석'.split(' ') },
+    F: { a: '서 하 지 수 윤 채 예 다 소 유 시 나 은 가 연 세 민 혜 리 주 해 효 온'.split(' '), b: '아 윤 은 연 서 린 우 원 하 율 희 현 나 빈 담 솔 슬 주 영'.split(' ') },
+  };
+  const ONE = { M: '준 혁 결 율 건 찬 훈 윤 겸 현 담 온'.split(' '), F: '윤 린 솔 결 율 은 연 하 현 담 온 슬'.split(' ') };
+  // 흔한 낱말과 같거나 뜻이 좋지 않게 들리는 조합 (사람이 하나씩 검토해 제외)
+  const NG = new Set(('시민 서민 이민 예민 주민 유민 우민 도민 선민 해석 지석 범람 유람 주담 건담 민담 진담 한담 재담 강담 성담 수담 경겸 건겸 강겸 예결 선결 준결 재결 영결 해결 수결 '
+    + '서재 현재 수재 주재 건재 강재 우환 예후 정후 선후 태후 유후 우호 경호 강진 해진 승진 지진 선진 이성 건성 서성 우성 도우 유훈 유원 유우 주석 주성 주준 수준 수율 '
+    + '한우 선원 진원 민원 경우 하아 지서 수은 수하 채우 소아 소진 소경 소주 유아 유린 시린 가서 가담 연하 세율 해경 효율 민담 지경 다진 하원 다원 연원 세우 리우 '
+    + '해서 수경 유희 연주 해주 가나 나서 수세 재해 정사 수유 유수 주유 시도 우유 세수 하수 수도 지도 도수 지하 하지 유서 재수 가지 주지 이유 소유 지주 원수 해우 도해 소서 수주 가주 로우 하우 다우 수서 나우 가우 수우 주우 효우 소우 라우 온우 로우 강우 수원 도성').split(' '));
+  const GEN = { M: [], F: [] };
+  ['M', 'F'].forEach(g => {
+    const pop = new Set(NAMES[g]), seen = new Set();
+    SYL[g].a.forEach(x => SYL[g].b.forEach(y => { const n = x + y; if (x !== y && !NG.has(n) && !pop.has(n) && !seen.has(n)) { seen.add(n); GEN[g].push(n); } }));
+    ONE[g].forEach(n => { if (!pop.has(n)) GEN[g].push(n); });
+  });
+  GEN.U = [...new Set([...GEN.M, ...GEN.F])].filter(n => !NAMES.U.includes(n));
+  const hasBat = c => (c.charCodeAt(0) - 0xAC00) % 28 !== 0;
+  // 이름 추천 조건 (첫 글자·끝 글자·받침) 읽기
+  function recCond() {
+    const one = v => (String(v).match(/[가-힣]/) || [''])[0];
+    return { first: one($('#cFirst').value), last: one($('#cLast').value), bat: $('#cBat').value, style: $('#cStyle').value };
+  }
+  const condOk = (c, n) => (!c.first || n[0] === c.first) && (!c.last || n[n.length - 1] === c.last)
+    && (c.bat !== 'none' || ![...n].some(hasBat)) && (c.bat !== 'last' || !hasBat(n[n.length - 1]));
 
   // ---------- 성씨 선택 ----------
   const surSel = $('#sur');
@@ -1534,16 +1643,22 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     if (sel.value) { const it = cfg.byValue(sel.value); if (it) inp.value = cfg.label(it); }
   }
   // 한자 검색 선택칸: 그 소리로 읽는 한자 중에서 뜻·한자로 검색
-  function hanjaCfg(syl) {
-    const items = N.candidates(syl).map(h => ({ value: h.ch, ch: h.ch, hun: h.hun, eum: h.eum, strokes: h.strokes, mean: h.mean, inm: h.inm }));
+  function hanjaCfg(syl, sel) {
+    // 엄선 한자 먼저, 그 뒤에 인명용 확장 한자(불러온 경우) · 확장 한자는 고를 수 있게 숨은 선택칸에도 그때그때 추가
+    const getItems = () => {
+      const list = N.candidates(syl, true).map(h => ({ value: h.ch, ch: h.ch, hun: h.hun, eum: h.eum, strokes: h.strokes, mean: h.mean, inm: h.inm, ext: h.ext }));
+      if (sel) list.forEach(it => { if (it.ext && ![...sel.options].some(o => o.value === it.value)) sel.insertBefore(new Option(it.value, it.value), sel.querySelector('option[value="__none"]')); });
+      return list;
+    };
     const none = { value: '__none', none: true };
+    const baseN = N.candidates(syl).length;
     return {
-      search: q => { q = q.trim().replace(/\(.*$/, '').trim(); const hit = q ? items.filter(h => h.ch === q || h.hun.includes(q) || h.mean.includes(q) || (h.hun + ' ' + h.eum).includes(q)) : items; return [...hit, none]; },
-      html: it => it.none ? '<em class="hnone">목록에 없어요 · 고르면 제보할 수 있어요</em>' : `<b class="hzc">${it.ch}</b><span class="hd">${esc(it.hun)} ${it.eum} · ${it.strokes}획${it.inm === false ? ' · <em class="hno">인명용 확인 필요</em>' : ''}</span>`,
+      search: q => { const items = getItems(); q = q.trim().replace(/\(.*$/, '').trim(); const hit = q ? items.filter(h => h.ch === q || h.hun.includes(q) || h.mean.includes(q) || (h.hun + ' ' + h.eum).includes(q)) : items; return [...hit, none]; },
+      html: it => it.none ? '<em class="hnone">목록에 없어요 · 고르면 제보할 수 있어요</em>' : `<b class="hzc">${it.ch}</b><span class="hd">${esc(it.hun)} ${it.eum} · ${it.strokes}획${it.inm === false ? ' · <em class="hno">인명용 확인 필요</em>' : ''}${it.ext ? ' · <em class="hext">사전 뜻</em>' : ''}</span>`,
       label: it => it.none ? '목록에 없어요' : `${it.ch} (${it.hun} ${it.eum})`,
-      byValue: v => v === '__none' ? none : items.find(h => h.value === v),
+      byValue: v => v === '__none' ? none : getItems().find(h => h.value === v),
       exact: (q, hit) => hit.find(h => !h.none && h.ch === q),
-      placeholder: `‘${syl}’ 한자 검색 (뜻·한자)`, hint: `‘${syl}’(으)로 읽는 한자 ${items.length}자 · 뜻으로 검색해 보세요`, none: '찾는 한자가 없어요',
+      placeholder: `‘${syl}’ 한자 검색 (뜻·한자)`, get hint() { const n = N.candidates(syl, true).length - baseN; return `‘${syl}’(으)로 읽는 한자 ${baseN}자${n > 0 ? ` + 인명용 ${n}자` : ''} · 뜻으로 검색해 보세요`; }, none: '찾는 한자가 없어요',
     };
   }
   document.querySelectorAll('.sursel').forEach(sel => makeCombo(sel));
@@ -1700,13 +1815,28 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     const b = e.target.closest('[data-share]'); if (b) share(b.dataset.share);
   });
 
+  // ---------- 인명용 한자 확장 사전 (hanja-ext.js, 약 6,800자·소리): 필요할 때 한 번만 불러옴 ----------
+  let extP = null, extReady = false;
+  function loadExt() {
+    if (extP) return extP;
+    extP = new Promise(res => {
+      if (window.HANJA_EXT) { N.indexExt(window.HANJA_EXT); extReady = true; return res(true); }
+      const s = document.createElement('script'); s.src = 'hanja-ext.js'; s.async = true;
+      s.onload = () => { if (window.HANJA_EXT) { N.indexExt(window.HANJA_EXT); extReady = true; } res(!!window.HANJA_EXT); };
+      s.onerror = () => { extP = null; res(false); };
+      document.head.appendChild(s);
+    });
+    return extP;
+  }
+
   // ---------- 이름 카드 ----------
   // 대법원 인명용 한자 여부 (출생신고에 쓸 수 있는 글자인지)
   function inmLine(given) {
     const no = given.filter(g => g.inm === false);
-    return no.length
+    return (no.length
       ? `<p class="inm no"><span aria-hidden="true">⚠</span> ${no.map(g => `${g.ch}(${esc(g.hun)} ${g.eum})`).join(', ')}: 대법원 인명용 한자 목록에서 확인되지 않았어요 · 출생신고 전 꼭 확인하세요</p>`
-      : `<p class="inm ok"><span aria-hidden="true">✓</span> 모두 대법원 인명용 한자예요 <small>(2024년 6월 기준)</small></p>`;
+      : `<p class="inm ok"><span aria-hidden="true">✓</span> 모두 대법원 인명용 한자예요 <small>(2024년 6월 기준)</small></p>`)
+      + (given.some(g => g.ext) ? `<p class="inm ext"><span aria-hidden="true">ⓘ</span> ${given.filter(g => g.ext).map(g => g.ch).join(', ')}: 인명용 전체에서 찾은 한자라 뜻은 사전 기준이에요</p>` : '');
   }
   function nameCard(item, rank, sur, from) {
     const { given, ev } = item;
@@ -1829,24 +1959,42 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     if (list.length) $('#hangSel').value = list[0].ch;
     $('#hangHint').textContent = s && !list.length ? `‘${s}’ 음의 한자가 데이터에 없습니다.` : '';
   }
+  let poolNote = '';
   function buildPool(sj) {
     const sur = surname();
     const gender = $('#gender').value;
-    let names = NAMES[gender].filter(n => n.length === 2 || $('#allowOne').checked);
+    const c = recCond(), condOn = !!(c.first || c.last || c.bat);
+    const len = n => n.length === 2 || $('#allowOne').checked;
+    const popular = NAMES[gender].filter(len), newer = (GEN[gender] || []).filter(len);
+    let names = (c.style === 'new' ? popular.concat(newer) : popular).filter(n => condOk(c, n));
+    let widened = false;
+    // 조건에 맞는 인기 이름이 적으면 새로운 이름까지 자동으로 넓힘
+    if (c.style !== 'new' && condOn && names.length < 20) { names = names.concat(newer.filter(n => condOk(c, n))); widened = true; }
     const hs = hangSpec();
     let fixed = null;
     if (hs) {
       const other = new Set();
-      NAMES[gender].forEach(n => { if (n.length === 2) other.add(n[1 - hs.pos]); });
+      const src = c.style === 'new' || widened ? NAMES[gender].concat(GEN[gender] || []) : NAMES[gender];
+      src.forEach(n => { if (n.length === 2) other.add(n[1 - hs.pos]); });
       // 입력한 소리(예: 律 → '율')를 그대로 이름에 사용
       const say = $('#hangEum').value.trim() || hs.h.eum;
-      names = [...other].filter(o => o !== say).map(o => hs.pos === 0 ? say + o : o + say);
+      names = [...other].filter(o => o !== say).map(o => hs.pos === 0 ? say + o : o + say).filter(n => !NG.has(n) && condOk(c, n));
       fixed = hs.pos === 0 ? [hs.h, null] : [null, hs.h];
     }
+    const parts = [c.first && `첫 글자 ‘${c.first}’`, c.last && `끝 글자 ‘${c.last}’`, c.bat === 'none' && '받침 없음', c.bat === 'last' && '끝 받침 없음', c.style === 'new' && '새로운 이름 포함'].filter(Boolean);
+    poolNote = (parts.length ? ' · 조건: ' + parts.join(', ') : '') + (widened ? ' · 조건에 맞는 인기 이름이 적어 새로운 이름까지 넓혔어요' : '');
+    // '인기 이름 위주'인데 조건 때문에 자동으로 넓힌 경우: 인기 이름을 먼저, 새로운 이름은 그 뒤에 (각각 점수순)
+    const popSet = new Set(NAMES[gender]);
     pool = names.map(n => {
       const r = N.rankHanja(sur, n.split(''), sj, fixed, true);
-      return r.length ? { hangul: n, ...r[0], alts: r.slice(1, 4) } : null;
-    }).filter(Boolean).sort((a, b) => b.ev.total - a.ev.total);
+      return r.length ? { hangul: n, ...r[0], alts: r.slice(1, 4), pop: popSet.has(n) } : null;
+    }).filter(Boolean).sort((a, b) => (widened && !hs ? (b.pop - a.pop) : 0) || b.ev.total - a.ev.total);
+    // 다양하게: 같은 첫 글자로 시작하는 이름은 앞쪽에 2개까지만, 나머지는 뒤로 (항렬자로 첫 글자가 고정된 경우 제외)
+    if (!(hs && hs.pos === 0) && !c.first) {
+      const cnt = {}, front = [], back = [];
+      pool.forEach(x => { const k = x.hangul[0]; (cnt[k] = (cnt[k] || 0) + 1) <= 2 ? front.push(x) : back.push(x); });
+      pool = front.concat(back);
+    }
   }
   // 점수 높은 순으로 5개씩 페이지 넘기기 (같은 조건이면 언제나 같은 순서)
   // 기본은 점수 상위 20개(5개씩 4페이지)만 보여 주고, 원하는 사람만 나머지 후보를 열어 봄
@@ -1858,7 +2006,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     const pages = Math.ceil(view.length / PAGE);
     recPage = Math.max(0, Math.min(recPage, pages - 1));
     const from = recPage * PAGE, list = view.slice(from, from + PAGE), last = recPage >= pages - 1;
-    $('#recMeta').textContent = showAll ? `전체 후보 ${pool.length}개 · ${from + 1}~${from + list.length}위` : `점수 상위 ${view.length}개만 골랐어요 · ${from + 1}~${from + list.length}위`;
+    $('#recMeta').textContent = (showAll ? `전체 후보 ${pool.length}개 · ${from + 1}~${from + list.length}위` : `점수 상위 ${view.length}개만 골랐어요 · ${from + 1}~${from + list.length}위`) + poolNote;
     let html = list.map((x, k) => nameCard(x, from + k + 1, surname(), 'rec')).join('');
     if (last) html += endCard();
     $('#recOut').innerHTML = html;
@@ -1916,7 +2064,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     renderSaju(sj);
     if (!sj || sj.error) { $('#recOut').innerHTML = '<p class="muted">생년월일을 먼저 입력해 주세요.</p>'; return; }
     if (rebuild) { buildPool(sj); recPage = 0; showAll = false; }
-    if (!pool.length) { $('#recOut').innerHTML = '<p class="muted">조건에 맞는 이름이 없습니다. 항렬자나 성별 조건을 바꿔 보세요.</p>'; $('#recPager').hidden = true; $('#moreBtn').hidden = true; return; }
+    if (!pool.length) { $('#recOut').innerHTML = `<p class="muted">조건에 맞는 이름이 없어요.${poolNote ? ` (${esc(poolNote.replace(/^ · /, '').replace(/ · 조건에 맞는 인기 이름이.*$/, ''))})` : ''} 원하는 이름 조건이나 항렬자를 바꿔 보세요.</p>`; $('#recMeta').textContent = ''; $('#recPager').hidden = true; $('#moreBtn').hidden = true; return; }
     renderRecPage();
   }
 
@@ -1936,14 +2084,19 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     $('#f-sajuOut').hidden = !use;
     if (use) renderSaju(sj, 'f-');
     const syl = raw.split('');
-    const missing = syl.filter(s => !N.candidates(s).length);
-    const cand = syl.map(s => `<div class="cand"><h4>‘${s}’ 후보 한자 <span class="muted">${N.candidates(s).length}자</span></h4>
-        <ul>${N.candidates(s).map(h => `<li>${elTag(h.el)}<b>${h.ch}</b> ${esc(h.hun)} ${h.eum} <span class="num">${h.strokes}획</span><small class="ck">${esc(h.mean)}</small></li>`).join('') || '<li class="muted">데이터에 없는 음입니다</li>'}</ul></div>`).join('');
+    // 인명용 전체: 직접 켰거나, 엄선 한자에 없는 소리라 자동으로 넓힌 경우
+    const autoExt = !$('#useExt').checked && extReady && syl.some(s => !N.candidates(s).length && N.candidates(s, true).length);
+    const ext = ($('#useExt').checked || autoExt) && extReady;
+    const missing = syl.filter(s => !N.candidates(s, ext).length);
+    const cand = syl.map(s => { const all = N.candidates(s, ext), base = all.filter(h => !h.ext), more = all.filter(h => h.ext);
+      return `<div class="cand"><h4>‘${s}’ 후보 한자 <span class="muted">${base.length}자${more.length ? ` + 인명용 ${more.length}자` : ''}</span></h4>
+        <ul>${base.concat(more.slice(0, 40)).map(h => `<li>${elTag(h.el)}<b>${h.ch}</b> ${esc(h.hun)} ${h.eum} <span class="num">${h.strokes}획</span><small class="ck">${h.ext ? '사전 뜻' : esc(h.mean)}</small></li>`).join('') || '<li class="muted">데이터에 없는 음입니다</li>'}${more.length > 40 ? `<li class="muted">외 ${more.length - 40}자 (아래 결과에는 모두 반영)</li>` : ''}</ul></div>`; }).join('');
     $('#candOut').innerHTML = cand;
     if (missing.length) { out.innerHTML = `<p class="rp-inline"><button type="button" class="rp-link" data-report="${missing[0]}" data-where="find">‘${missing[0]}’ 한자 제보하기</button> · 알려 주시면 추가할게요</p><p class="err">‘${missing.join(', ')}’ 음의 이름용 한자가 데이터에 없어 한자 조합을 만들 수 없습니다.</p>`; $('#findMore').hidden = true; $('#findMeta').textContent = ''; return; }
-    findList = N.rankHanja(surname('f-'), syl, sj && !sj.error ? sj : null, null);
+    findList = N.rankHanja(surname('f-'), syl, sj && !sj.error ? sj : null, null, false, ext);
     findShown = 0; out.innerHTML = '';
-    $('#findMeta').textContent = `${surname('f-').ko}${raw} · 가능한 한자 조합 ${findList.length}개를 점수순으로 정렬했습니다${sj && !sj.error ? ' (사주 반영)' : ' (사주 미반영)'}.`;
+    $('#findMeta').textContent = `${surname('f-').ko}${raw} · 가능한 한자 조합 ${findList.length.toLocaleString('ko-KR')}개를 점수순으로 정렬했습니다${sj && !sj.error ? ' (사주 반영)' : ' (사주 미반영)'}${ext ? ' · 인명용 한자 전체에서 찾음' : ''}.`
+      + (autoExt ? ' 엄선 한자에 없는 소리라 인명용 전체로 넓혀서 찾았어요.' : '');
     moreFind();
   }
   function moreFind() {
@@ -1969,7 +2122,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
         <select id="${p}hz${i}"><option value="">한자 선택</option>${N.candidates(s).map(h => `<option value="${h.ch}">${h.ch}</option>`).join('')}<option value="__none">목록에 없어요</option></select></div>`).join('');
     box.querySelectorAll('select').forEach((sel, i) => {
       if (raw[i] === prevRaw[i] && prev[i]) sel.value = prev[i];
-      makeCombo(sel, hanjaCfg(raw[i]));
+      makeCombo(sel, hanjaCfg(raw[i], sel));
     });
     markNeed();
   }
@@ -2199,7 +2352,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     const b = e.target.closest('.info-btn'); if (!b) return;
     const pop = document.getElementById(b.getAttribute('aria-controls'));
     const open = pop.hidden; pop.hidden = !open; b.setAttribute('aria-expanded', String(open));
-    if (open) T('info_open', { topic: 'longitude' });
+    if (open) T('info_open', { topic: b.getAttribute('aria-controls') === 'extInfo' ? 'ext' : 'longitude' });
   });
 
   // ---------- 탭 ----------
@@ -2208,6 +2361,7 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     document.querySelectorAll('[role=tabpanel]').forEach(p => (p.hidden = p.id !== 'p-' + t));
     // (탭 기억 안 함: 항상 이름 추천으로 시작)
     if (t === 'saved') renderSaved();
+    if (t === 'find' || t === 'mine') loadExt();   // 한자 찾기·이름 비교를 열면 인명용 확장 사전을 미리 받아 둠
   }
   document.querySelectorAll('[role=tab]').forEach(b => b.addEventListener('click', () => { setTab(b.dataset.tab); window.scrollTo(0, 0); T('tab', { tab: b.dataset.tab }); }));
   document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('.card details') && e.target.open) T('detail_open'); }, true);
@@ -2243,9 +2397,10 @@ const HANJA_UPDATES = [{"date":"2026-11-14","chars":[["玹","현","옥돌"],["�
     if (mobile.matches) { setCollapsed(true); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
   $('#moreBtn').addEventListener('click', () => goRecPage(recPage + 1));
-  $('#findForm').addEventListener('submit', e => {
+  $('#findForm').addEventListener('submit', async e => {
     e.preventDefault();
     if (!validate($('#findForm')) || ($('#useSaju').checked && !birthOk('f-'))) return;
+    if (!extReady) { const btn = $('#findForm button[type=submit]'), t = btn.textContent; btn.disabled = true; btn.textContent = '한자 불러오는 중…'; await loadExt(); btn.disabled = false; btn.textContent = t; }
     showFind();
     // 성씨는 빼고 이름 글자만 기록 (인기 이름 통계용)
     T('find', { name: $('#wantName').value.replace(/\s/g, '').slice(0, 2), saju: $('#useSaju').checked, combos: findList.length });

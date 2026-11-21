@@ -645,6 +645,43 @@ td .inm { font-size: 12px; display: inline }
 .nb-day li b { font: 600 20px var(--f-display); color: var(--ink) }
 .nb-day li span { font-size: 12.5px; color: var(--muted) }
 .notice { gap: 8px }
+
+/* ═════════ 글자 위계 (최종) ═════════
+   한 곳에서 모든 글자 크기·줄간격을 정함 · 휴대폰 / PC
+   제목1 앱 이름 24/30 · 제목2 결과 섹션 20/24 · 제목3 탭 소개·가이드 17/18 · 제목4 소제목 15
+   본문1 이름 풀이 15.5/16 · 본문2 설명 14 · 라벨 13.5 · 보조 12.5 · 최소 11 (10px 이하 없음) */
+.brand h1 { font-size: 30px; line-height: 1.2 }
+.sechead h3 { font-size: 24px; line-height: 1.3; letter-spacing: .01em }
+.sechead p, #recMeta, #findMeta, #mineMeta, #savedMeta { font-size: 12.5px; line-height: 1.5; margin-top: 4px }
+.intro-t { font-size: 18px; line-height: 1.4 }
+.intro-s { font-size: 12.5px }
+.guide h3 { font-size: 18px; line-height: 1.3; margin-bottom: 8px }
+.guide p, .guide li, .guide div { line-height: 1.65 }
+.cand h4, .dt h4 { font-size: 15px; font-weight: 700; line-height: 1.4 }
+.cmp h4 { font-size: 17px; line-height: 1.3 }
+.msent { font-size: 16px; line-height: 1.65 }
+.check, .info-pop p, .notice p, .modal p, #reportBox p, #fbBox p { font-size: 14px; line-height: 1.6 }
+.info-pop .ex, .info-pop .tip { font-size: 12.5px; line-height: 1.6 }
+.field label, .lbl { font-size: 13.5px; line-height: 1.4 }
+.mlist { font-size: 13px; line-height: 1.55 }
+.hs, .reqnote, .foot, .facts, .alts, .cond small, .inm, .s-who { font-size: 12.5px; line-height: 1.55 }
+.parts { font-size: 12px }
+.parts li { grid-template-columns: 62px 1fr 56px }
+.parts .num { white-space: nowrap }
+/* 최소 11px */
+.num { font-size: .92em }
+.req-badge, .plabel, .pill, .el small, .score small, .hm, .opt, .nb-tag, .parts .num, .inm small, .rank { font-size: 11px }
+.panel.collapsed .plabel { font-size: 11px }
+@media (max-width: 760px) {
+  .brand h1 { font-size: 24px }
+  .sechead h3 { font-size: 20px }
+  .intro-t { font-size: 17px }
+  .guide h3 { font-size: 17px }
+  .msent { font-size: 15.5px }
+  .parts li { font-size: 11px; grid-template-columns: 1fr }
+  .parts .num { font-size: 11px }
+}
+@media (max-width: 370px) { .intro-t { font-size: 16px } .intro-s { font-size: 11.5px } }
 </style>
 
 <div class="wrap">
