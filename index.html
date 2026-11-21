@@ -616,11 +616,12 @@ table.vs td:nth-child(2) { color: var(--ink) }
 
 /* 원하는 이름 조건 (이름 추천) */
 .cond { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: block }
-.cond > summary { cursor: pointer; font-size: 14px; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
+.cond > summary { cursor: pointer; font-size: 16px; font-weight: 700; line-height: 1.35; list-style: none; display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
 .cond > summary::-webkit-details-marker { display: none }
 .cond > summary::after { content: "⌄"; margin-left: auto; color: var(--muted) } .cond[open] > summary::after { content: "⌃" }
 .cond[open] > summary { margin-bottom: 10px }
-.cond .row + .row { margin-top: 10px } .cond small { display: block; margin-top: 8px; font-size: 12px }
+.cond .row + .row { margin-top: 12px }
+.cond .field label { font-size: 13px; color: var(--muted) }   /* 상자 안 라벨은 상자 제목보다 한 단계 작게 */ .cond small { display: block; margin-top: 8px; font-size: 12px }
 .cond-sum { font-size: 12px; font-weight: 600; color: var(--gold) }
 .hext { font-style: normal; color: var(--gold); font-weight: 600 }
 .inm.ext { color: var(--muted); font-weight: 500 }
