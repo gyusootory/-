@@ -874,7 +874,7 @@
     const b = e.target.closest('.info-btn'); if (!b) return;
     const pop = document.getElementById(b.getAttribute('aria-controls'));
     const open = pop.hidden; pop.hidden = !open; b.setAttribute('aria-expanded', String(open));
-    if (open) T('info_open', { topic: 'longitude' });
+    if (open) T('info_open', { topic: b.getAttribute('aria-controls') === 'extInfo' ? 'ext' : 'longitude' });
   });
 
   // ---------- 탭 ----------

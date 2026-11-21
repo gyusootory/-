@@ -827,7 +827,17 @@ td .inm { font-size: 12px; display: inline }
         <div class="field" data-req><label for="wantName">이름 (성 제외) <em class="req-badge">필수</em></label><input type="text" id="wantName" maxlength="2" placeholder="예: 서윤" required></div>
       </div>
       <label class="check"><input type="checkbox" id="useSaju"> 생년월일시(사주)도 반영하기 <span class="opt">선택</span></label>
-      <label class="check"><input type="checkbox" id="useExt"> 인명용 한자 전체에서 찾기 <span class="opt">약 9,000자</span></label>
+      <div class="info-row">
+        <label class="check"><input type="checkbox" id="useExt"> 인명용 한자 전체에서 찾기 <span class="opt">약 9,000자</span></label>
+        <button type="button" class="info-btn" aria-expanded="false" aria-controls="extInfo" aria-label="인명용 한자 전체에서 찾기가 무엇인지 보기">i</button>
+      </div>
+      <div class="info-pop" id="extInfo" role="note" hidden>
+        <b>인명용 한자 전체에서 찾기란?</b>
+        <p>가치작명소는 평소 이름에 많이 쓰고 뜻이 좋은 <b>엄선 한자 약 570자</b>로 조합을 만들어요.
+        이걸 켜면 대법원이 이름에 쓸 수 있도록 정한 <b>인명용 한자 전체(약 9,000자)</b>까지 넓혀서 찾아요.</p>
+        <p class="ex">예) ‘희’ 엄선 한자 8자 → 인명용 전체 <b>35자</b><br><span>엄선 한자에 없는 소리(예: ‘교’)는 켜지 않아도 자동으로 넓혀서 찾아요.</span></p>
+        <p class="tip">✓ 원하는 한자가 목록에 없을 때 켜 보세요. 넓혀서 찾은 한자는 <b>‘사전 뜻’</b>으로 표시되고, 뜻이 이름에 어울리는지 한 번 더 확인하시는 게 좋아요.</p>
+      </div>
       <div class="fbody" id="f-birth" hidden>
       <div class="row">
         <div class="field"><label for="f-cal">달력</label><select id="f-cal"><option value="solar">양력</option><option value="lunar">음력</option></select></div>
