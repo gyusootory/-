@@ -17,7 +17,6 @@ body = re.sub(r'<script src="([^"]+)"></script>', inline, src)
 
 TITLE = '가치작명소 — 무료 사주·오행 아기 이름 작명 · 한자 이름풀이'  # 검색 제목(<title>)·og:title 공통
 body = re.sub(r'<title>[^<]*</title>', lambda _: '<title>' + TITLE + '</title>', body, count=1)  # 원본 index.html 제목을 배포용 제목으로 맞춤
-body = body.replace('</body>', '')  # </body>는 아래에서 문서 끝에 붙임 (서비스 워커 스크립트가 본문 안에 오도록)
 
 OGV = '20261116a'  # 미리보기 이미지를 바꾸면 이 값을 바꿔 카톡·SNS가 새 이미지를 다시 읽게 함
 OG_DESC = '유료 작명 앱 대신 무료로! ① 아이 생일을 넣으면 이름을 추천하고 ② 원하는 이름에 맞는 한자를 찾아 드려요. 회원가입 없이 바로 써 보세요.'
@@ -55,13 +54,10 @@ head = ('<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n'
 single = body.replace('<script src="config.js"></script>\n', '')
 logo64 = base64.b64encode(open(os.path.join(R, 'icon-96.png'), 'rb').read()).decode()
 single = single.replace('src="icon-96.png"', 'src="data:image/png;base64,' + logo64 + '"')  # 파일 하나로도 로고가 보이게
-# 단일 파일 버전: 자료 페이지 링크는 앱 주소의 실제 문서로 연결 (파일 하나만 열어도 링크가 살아 있게)
-for _slug in ['guide.html', 'suri81.html', 'hanja.html', 'faq.html']:
-    single = single.replace(f'href="{_slug}"', f'href="{SITE}{_slug}"')
 for old in ['오행작명소.html', '오행작명소-웹앱.zip']:
     p = os.path.join(R, 'dist', old)
     if os.path.exists(p): os.remove(p)
-open(os.path.join(R, 'dist', '가치작명소.html'), 'w', encoding='utf-8').write(head + single + '\n</body>\n</html>\n')
+open(os.path.join(R, 'dist', '가치작명소.html'), 'w', encoding='utf-8').write(head + single + '\n</html>\n')
 
 # ② 설치형 웹앱
 pwa = (head + '<meta name="theme-color" content="#121826">\n'
@@ -75,7 +71,7 @@ pwa = (head + '<meta name="theme-color" content="#121826">\n'
        '<meta name="apple-mobile-web-app-title" content="가치작명소">\n'
        '<meta name="apple-mobile-web-app-status-bar-style" content="default">\n')
 pwa += body + ("\n<script>if ('serviceWorker' in navigator && location.protocol === 'https:') "
-               "navigator.serviceWorker.register('sw.js').catch(function () {});</script>\n</body>\n</html>\n")
+               "navigator.serviceWorker.register('sw.js').catch(function () {});</script>\n</html>\n")
 open(os.path.join(D, 'index.html'), 'w', encoding='utf-8').write(pwa)
 for f in ['admin.html', 'privacy.html', 'icon-96.png', 'hanja-data.js', 'hanja-dict.js', 'hanja-ext.js', 'favicon.ico']:   # 관리자 화면이 한자 데이터로 '추가됨'을 확인 · favicon.ico는 /favicon.ico 404 방지용
     shutil.copy(os.path.join(R, f), os.path.join(D, f))
