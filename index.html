@@ -608,6 +608,17 @@ table.vs td:nth-child(2) { color: var(--ink) }
 }
 
 @media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease both } @keyframes rise { from { transform: translateY(6px); opacity: .4 } } }
+/* 원하는 이름 조건 (이름 추천) */
+.cond { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: block }
+.cond > summary { cursor: pointer; font-size: 14px; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
+.cond > summary::-webkit-details-marker { display: none }
+.cond > summary::after { content: "⌄"; margin-left: auto; color: var(--muted) } .cond[open] > summary::after { content: "⌃" }
+.cond[open] > summary { margin-bottom: 10px }
+.cond .row + .row { margin-top: 10px } .cond small { display: block; margin-top: 8px; font-size: 12px }
+.cond-sum { font-size: 12px; font-weight: 600; color: var(--gold) }
+.hext { font-style: normal; color: var(--gold); font-weight: 600 }
+.inm.ext { color: var(--muted); font-weight: 500 }
+
 /* 대법원 인명용 한자 표시 */
 .inm { margin: 0; font-size: 12.5px; font-weight: 600; display: flex; gap: 6px; align-items: baseline; line-height: 1.5 }
 .inm small { font-weight: 400; color: var(--muted) }
@@ -720,6 +731,18 @@ td .inm { font-size: 12px; display: inline }
       </div>
       <div class="field"><label for="hangSel">항렬자 한자</label><select id="hangSel"></select><small class="muted" id="hangHint"></small></div>
       <label class="check"><input type="checkbox" id="allowOne"> 외자 이름 포함</label>
+      <details class="cond" id="recCond">
+        <summary>원하는 이름 조건 <span class="opt">선택</span> <span class="cond-sum" id="condSum"></span></summary>
+        <div class="row">
+          <div class="field"><label for="cFirst">첫 글자</label><input type="text" id="cFirst" maxlength="1" placeholder="예: 서" autocomplete="off"></div>
+          <div class="field"><label for="cLast">끝 글자</label><input type="text" id="cLast" maxlength="1" placeholder="예: 윤" autocomplete="off"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="cBat">받침</label><select id="cBat"><option value="">상관없음</option><option value="none">받침 없는 이름만</option><option value="last">끝 글자만 받침 없음</option></select></div>
+          <div class="field"><label for="cStyle">이름 스타일</label><select id="cStyle"><option value="pop">인기 이름 위주</option><option value="new">인기 + 새로운 이름</option></select></div>
+        </div>
+        <small class="muted">‘새로운 이름’은 이름에 잘 쓰는 글자를 조합해 흔하지 않은 이름까지 함께 찾아요</small>
+      </details>
       <button class="btn" type="submit">이름 추천 받기</button>
       </div>
       <div id="sajuOut" class="sajuout"></div>
@@ -820,6 +843,7 @@ td .inm { font-size: 12px; display: inline }
         <div class="field" data-req><label for="wantName">이름 (성 제외) <em class="req-badge">필수</em></label><input type="text" id="wantName" maxlength="2" placeholder="예: 서윤" required></div>
       </div>
       <label class="check"><input type="checkbox" id="useSaju"> 생년월일시(사주)도 반영하기 <span class="opt">선택</span></label>
+      <label class="check"><input type="checkbox" id="useExt"> 인명용 한자 전체에서 찾기 <span class="opt">약 9,000자</span></label>
       <div class="fbody" id="f-birth" hidden>
       <div class="row">
         <div class="field"><label for="f-cal">달력</label><select id="f-cal"><option value="solar">양력</option><option value="lunar">음력</option></select></div>

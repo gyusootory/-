@@ -236,7 +236,7 @@
   }
 
   // ---------- 한자 DB 색인 ----------
-  let BY_READ = null, BY_CHAR = null;
+  let BY_READ = null, BY_CHAR = null, EXT_READ = {}, EXT_ROWS = null;
   function index(HANJA) {
     BY_READ = {}; BY_CHAR = {};
     HANJA.forEach(r => {
@@ -245,8 +245,19 @@
       const keys = new Set([h.eum, dooeum(h.eum)]);
       keys.forEach(k => (BY_READ[k] = BY_READ[k] || []).push(h));
     });
+    if (EXT_ROWS) indexExt(EXT_ROWS);
   }
-  const candidates = syl => (BY_READ[syl] || []);
+  // 인명용 한자 확장 사전 (hanja-ext.js): 직접 찾을 때만 씀 · 자동 추천에는 쓰지 않음
+  function indexExt(rows) {
+    EXT_ROWS = rows; EXT_READ = {};
+    rows.forEach(r => {
+      if ((BY_READ[r[1]] || []).some(x => x.ch === r[0])) return;
+      const h = { ch: r[0], eum: r[1], hun: r[2], strokes: r[3], el: r[4], mean: `‘${r[2]}’의 뜻`, inm: true, ext: true };
+      if (!BY_CHAR[h.ch]) BY_CHAR[h.ch] = h;
+      new Set([h.eum, dooeum(h.eum)]).forEach(k => (EXT_READ[k] = EXT_READ[k] || []).push(h));
+    });
+  }
+  const candidates = (syl, ext) => ext ? [...(BY_READ[syl] || []), ...(EXT_READ[syl] || [])] : (BY_READ[syl] || []);
 
   // 뜻이 이름에 어색한 글자(어조사·사물 등): 자동 추천에서 제외, 직접 찾기에서는 감점
   const AWKWARD = new Set('哉可那奈由唯汝如細勢歲兒阿斗島男南台認印授持枝宅鳴菜茶多栗汎'.split(''));
@@ -335,9 +346,9 @@
   }
 
   // 한 한글 이름에 대해 가능한 모든 한자 조합을 평가해 점수순 정렬
-  function rankHanja(sur, nameSyl, sj, fixed, strict) {
+  function rankHanja(sur, nameSyl, sj, fixed, strict, ext) {
     const lists = nameSyl.map((s, i) => (fixed && fixed[i]) ? [fixed[i]]
-      : candidates(s).filter(h => !strict || !(AWKWARD.has(h.ch) || BULYONG.has(h.ch) || OLDSTYLE.has(h.ch) || !h.inm)));   // 자동 추천에서는 인명용 확인 안 된 글자 제외
+      : candidates(s, ext && !strict).filter(h => !strict || !(AWKWARD.has(h.ch) || BULYONG.has(h.ch) || OLDSTYLE.has(h.ch) || !h.inm)));   // 자동 추천에서는 인명용 확인 안 된 글자 제외
     if (lists.some(l => !l.length)) return [];
     const out = [];
     const rec = (i, acc) => {
@@ -354,6 +365,6 @@
   }
 
   root.Naming = { STEMS, BRANCHES, ELS, EL_KO, GEN, CTRL, CHO_NAME, relation, suri, GRADE_KO, numEl,
-    decompose, dooeum, soundEl, jdn, sunLongitude, saju, index, candidates, evaluate, rankHanja,
+    decompose, dooeum, soundEl, jdn, sunLongitude, saju, index, indexExt, candidates, evaluate, rankHanja,
     byChar: c => BY_CHAR && BY_CHAR[c] };
 })(typeof window !== 'undefined' ? window : globalThis);

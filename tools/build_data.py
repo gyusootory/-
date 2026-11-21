@@ -136,6 +136,29 @@ for ch, (c0, rs, tot, hg) in sorted(want.items()):
     snds = list(dict.fromkeys(common + INM_SND.get(ch, []))) if ch in INM_SND else common
     hun = '|'.join(f'{x}:{INM_HUN.get(ch, {})[x]}' for x in snds if x in INM_HUN.get(ch, {}))
     lines.append(f'{ch}{r},{won},{"".join(snds)},{1 if inmyeong(ch) else 0},{hun}')
+# ---------- 앱용 '인명용 한자 전체' 확장 사전 (한자 찾기·이름 비교에서 필요할 때만 불러옴) ----------
+# 기본 엄선 한자에 없는 (글자, 소리)만 · 휴대폰에서 잘 보이는 기본 한자 영역만 · 소리별 사전 뜻(훈)이 있고 자원오행을 정할 수 있는 글자만
+base_pairs = {(h[0], h[1]) for h in out}
+ext, skipped = [], {'영역': 0, '뜻없음': 0, '오행없음': 0}
+for l in lines:
+    ch = l[0]
+    if ch not in INM_SND: continue
+    cp = ord(ch)
+    if not (0x4E00 <= cp <= 0x9FFF or 0xF900 <= cp <= 0xFAFF): skipped['영역'] += 1; continue
+    r_, won_ = [int(x) for x in l[len(ch):].split(',')[:2]]
+    el = OVR.get(ch) or ELEM.get(r_)
+    if not el: skipped['오행없음'] += 1; continue
+    hn = INM_HUN.get(ch, {})
+    got = False
+    for snd in INM_SND[ch]:
+        if snd in hn and (ch, snd) not in base_pairs:
+            ext.append([ch, snd, hn[snd], won_, el]); got = True
+    if not got and not any(s in hn for s in INM_SND[ch]): skipped['뜻없음'] += 1
+ej = '// 자동 생성 파일 (tools/build_data.py) — 인명용 한자 확장 사전 [한자, 소리, 사전 뜻(훈), 원획, 자원오행]\n'
+ej += 'window.HANJA_EXT = ' + json.dumps(ext, ensure_ascii=False, separators=(',', ':')) + ';\n'
+open(os.path.join(ROOT, 'hanja-ext.js'), 'w', encoding='utf-8').write(ej)
+print('확장 사전', len(ext), '개(글자·소리)', round(len(ej.encode()) / 1024), 'KB · 제외', skipped)
+
 el_r = {}
 for r, e in ELEM.items(): el_r.setdefault(e, []).append(r)
 adm = '// 자동 생성 파일 (tools/build_data.py) — 관리자 화면 전용 한자 사전\n'
