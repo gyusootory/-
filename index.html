@@ -608,6 +608,12 @@ table.vs td:nth-child(2) { color: var(--ink) }
 }
 
 @media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease both } @keyframes rise { from { transform: translateY(6px); opacity: .4 } } }
+/* 선택 사항 구역 (항렬자·외자·이름 조건) */
+.optsec { margin: 4px 0 -4px; display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .04em }
+.optsec::before, .optsec::after { content: ""; flex: 1; height: 1px; background: var(--line) }
+.hangbox { display: grid; gap: 12px; padding: 12px; border-radius: 12px; background: var(--bg); border: 1px dashed var(--line); margin-top: -4px }
+.hangbox[hidden] { display: none }
+
 /* 원하는 이름 조건 (이름 추천) */
 .cond { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: block }
 .cond > summary { cursor: pointer; font-size: 14px; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
@@ -746,11 +752,15 @@ td .inm { font-size: 12px; display: inline }
         <p class="ex">예) 오전 <b>7:20</b> 출생 → 실제 해 시각 <b>6:50</b> → <b>묘시(卯時)</b><br><span>보정하지 않으면 진시(辰時)로 계산돼 시주가 달라져요.</span></p>
         <p class="tip">✓ 대부분의 작명소·만세력이 쓰는 방식이라 <b>켜 두시는 걸 권해요.</b> 태어난 시각을 모르면 영향이 없어요.</p>
       </div>
-      <div class="row">
-        <div class="field"><label for="hangEum">항렬자 음 <span class="opt">선택</span></label><input type="text" id="hangEum" placeholder="예: 준, 영, 수" maxlength="1"></div>
-        <div class="field"><label for="hangPos">위치</label><select id="hangPos"><option value="0">이름 첫 글자</option><option value="1">이름 끝 글자</option></select></div>
+      <p class="optsec"><span>선택 사항</span></p>
+      <label class="check"><input type="checkbox" id="useHang" aria-controls="hangBox" aria-expanded="false"> 항렬자(돌림자) 반영</label>
+      <div class="hangbox" id="hangBox" hidden>
+        <div class="row">
+          <div class="field"><label for="hangEum">항렬자 음</label><input type="text" id="hangEum" placeholder="예: 준, 영, 수" maxlength="1"></div>
+          <div class="field"><label for="hangPos">위치</label><select id="hangPos"><option value="0">이름 첫 글자</option><option value="1">이름 끝 글자</option></select></div>
+        </div>
+        <div class="field"><label for="hangSel">항렬자 한자</label><select id="hangSel"></select><small class="muted" id="hangHint"></small></div>
       </div>
-      <div class="field"><label for="hangSel">항렬자 한자</label><select id="hangSel"></select><small class="muted" id="hangHint"></small></div>
       <label class="check"><input type="checkbox" id="allowOne"> 외자 이름 포함</label>
       <details class="cond" id="recCond">
         <summary>원하는 이름 조건 <span class="opt">선택</span> <span class="cond-sum" id="condSum"></span></summary>

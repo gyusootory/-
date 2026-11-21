@@ -471,6 +471,7 @@
   // ---------- 기능 1: 사주 맞춤 추천 ----------
   let pool = [];
   function hangSpec() {
+    if (!$('#useHang').checked) return null;   // 항렬자 반영을 켠 사람만
     const v = $('#hangSel').value; if (!v) return null;
     return { h: N.byChar(v), pos: +$('#hangPos').value };
   }
@@ -743,7 +744,7 @@
     ['cal', 'bdate', 'btime'].forEach(id => ($('#' + id).value = $('#m-' + id).value));
     ['leap', 'tunknown', 'correct'].forEach(id => ($('#' + id).checked = $('#m-' + id).checked));
     $('#leapWrap').hidden = $('#cal').value !== 'lunar'; $('#btime').disabled = $('#tunknown').checked;
-    $('#hangEum').value = ''; fillHangSel();
+    $('#hangEum').value = ''; fillHangSel(); $('#useHang').checked = false; $('#hangBox').hidden = true;
     setTab('rec'); markNeed(); updateSummary();
     showRecs(true); $('#fsum').hidden = false; if (mobile.matches) setCollapsed(true);
     window.scrollTo(0, 0); T('rename_go');
@@ -823,7 +824,7 @@
     const d = fmtDate($('#bdate').value);
     const t = $('#tunknown').checked ? '시간 모름' : ($('#btime').value || '시간 모름');
     const cal = $('#cal').value === 'lunar' ? ('음력' + ($('#leap').checked ? '(윤)' : '')) : '양력';
-    const hs = $('#hangSel').value;
+    const hs = hangSpec() ? $('#hangSel').value : '';
     $('#fsumText').textContent = `${surSel.value.replace('|', '(')}) · ${g} · ${cal} ${d} ${t}${hs ? ' · 항렬 ' + hs : ''}`;
   }
   function setCollapsed(c) {
@@ -899,6 +900,12 @@
     if (findList.length && $('#wantName').value && surname('f-')) showFind(); // 이미 결과가 있으면 다시 계산
   });
   $('#hangEum').addEventListener('input', fillHangSel);
+  // 항렬자 반영: 켠 사람에게만 입력칸을 보여 줌 (기본은 끔)
+  $('#useHang').addEventListener('change', () => {
+    const on = $('#useHang').checked; $('#hangBox').hidden = !on; $('#useHang').setAttribute('aria-expanded', on);
+    if (on) setTimeout(() => $('#hangEum').focus(), 50);
+    updateSummary();
+  });
   // 생년월일이 틀렸으면 칸 아래에 이유를 보여 주고 결과를 만들지 않음
   function birthOk(p) {
     const inp = $('#' + p + 'bdate'), fld = inp.closest('.field'), old = fld.querySelector('.ferr.bad'); if (old) old.remove();
@@ -915,7 +922,7 @@
     if (!validate($('#recForm')) || !birthOk('')) return;
     showRecs(true); $('#fsum').hidden = false;
     T('recommend', { gender: $('#gender').value, has_time: !!$('#btime').value && !$('#tunknown').checked,
-      lunar: $('#cal').value === 'lunar', hangyeol: !!$('#hangSel').value, candidates: pool.length });
+      lunar: $('#cal').value === 'lunar', hangyeol: !!hangSpec(), candidates: pool.length });
     if (mobile.matches) { setCollapsed(true); $('#recOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
   $('#moreBtn').addEventListener('click', () => goRecPage(recPage + 1));
